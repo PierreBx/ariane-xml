@@ -1,54 +1,41 @@
-# Known Issues - Phase 1 MVP
+# Known Issues - Phase 2
 
 ## Working Features
-- ✅ Basic SELECT queries with single and multiple fields
+- ✅ Basic SELECT queries with single and multiple fields (column order preserved)
 - ✅ WHERE clause with all comparison operators (=, !=, <, >, <=, >=)
+- ✅ WHERE clause with AND/OR logical operators
 - ✅ Numeric and string comparisons in WHERE clause
+- ✅ ORDER BY clause with automatic type detection
+- ✅ LIMIT clause for result pagination
 - ✅ File and directory scanning
 - ✅ FILE_NAME special field
 - ✅ Lexer and parser for SQL-like syntax
 - ✅ pugixml integration via CMake FetchContent
 - ✅ Help command
 - ✅ Cross-file queries (multiple XML files in directory)
+- ✅ Quoted and unquoted file paths in FROM clause
 
-## Issues to Fix
+## Fixed Issues (Phase 2)
 
-### 1. Multi-Field Query Column Ordering Issue (Priority: MEDIUM)
-**Status:** Data correct, ordering wrong
-**Description:** When selecting multiple fields, columns appear in alphabetical order instead of the order specified in the query.
+### ✅ Multi-Field Query Column Ordering (FIXED)
+**Status:** Fixed in Phase 2
+**Solution:** Replaced `std::map` with `std::vector<std::pair<>>` to preserve insertion order.
+**Result:** Columns now appear in the order specified in the query.
 
-**Example:**
+### ✅ Unquoted Path Support (FIXED)
+**Status:** Fixed in Phase 2
+**Solution:** Enhanced parser to collect path tokens (/, ., identifiers) in FROM clause context.
+**Result:** Both quoted and unquoted paths now work:
 ```bash
-./xmlquery 'SELECT breakfast_menu/food/name,breakfast_menu/food/calories FROM "examples"'
-# Output: calories | name (alphabetically sorted)
-# Expected: name | calories (as specified in query)
+./xmlquery "SELECT name FROM /path/to/files"  # WORKS
+./xmlquery 'SELECT name FROM "../examples"'    # ALSO WORKS
 ```
-
-**Root Cause:** Using `std::map<std::string, std::string>` for ResultRow, which orders keys alphabetically, not by insertion order.
-
-**Fix Required:** Replace ResultRow with `std::vector<std::pair<std::string, std::string>>` or use a custom ordered map structure that preserves insertion order.
 
 ---
 
-### 2. Path Without Quotes Parsing Issue (Priority: LOW)
-**Status:** Workaround available
-**Description:** Paths in FROM clause must be quoted. Paths like `../examples` or `/home/user/data` fail without quotes.
+## Known Limitations
 
-**Example:**
-```bash
-./xmlquery "SELECT name FROM ../examples"  # FAILS
-./xmlquery 'SELECT name FROM "../examples"'  # WORKS
-```
-
-**Root Cause:** The lexer tokenizes `/` and `.` as operators, not as part of paths.
-
-**Fix Required:**
-- Option 1: Update lexer to recognize filesystem path patterns
-- Option 2: Document that paths must be quoted (simpler)
-
----
-
-### 3. Mixed Root Elements Across Files (Priority: LOW)
+### 1. Mixed Root Elements Across Files
 **Status:** May cause issues
 **Description:** If XML files in a directory have different root elements, queries may produce unexpected results.
 

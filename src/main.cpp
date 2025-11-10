@@ -15,10 +15,11 @@ void printUsage(const char* programName) {
     std::cout << "  [LIMIT <number>]\n\n";
     std::cout << "Examples:\n";
     std::cout << "  " << programName << " \"SELECT name FROM ./data WHERE calories < 500\"\n";
-    std::cout << "  " << programName << " \"SELECT name FROM ./data WHERE year > 2000 AND price < 30\"\n";
-    std::cout << "  " << programName << " \"SELECT name,price FROM ./data ORDER BY price LIMIT 5\"\n\n";
+    std::cout << "  " << programName << " \"SELECT name FROM /path/to/files WHERE year > 2000 AND price < 30\"\n";
+    std::cout << "  " << programName << " \"SELECT name,price FROM ../data ORDER BY price LIMIT 5\"\n\n";
     std::cout << "Features:\n";
     std::cout << "  - Field paths can use '.' or '/' as separators (e.g., food.name or food/name)\n";
+    std::cout << "  - File paths can be quoted or unquoted (e.g., ./data or \"./data\")\n";
     std::cout << "  - Special field: FILE_NAME returns the name of the XML file\n";
     std::cout << "  - Comparison operators: =, !=, <, >, <=, >=\n";
     std::cout << "  - Logical operators: AND, OR (AND has higher precedence)\n";

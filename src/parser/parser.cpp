@@ -22,11 +22,7 @@ std::unique_ptr<Query> Parser::parse() {
     // Parse FROM clause
     expect(TokenType::FROM, "Expected FROM keyword");
 
-    if (peek().type != TokenType::IDENTIFIER && peek().type != TokenType::STRING_LITERAL) {
-        throw ParseError("Expected directory path after FROM");
-    }
-
-    query->from_path = advance().value;
+    query->from_path = parseFilePath();
 
     // Parse optional WHERE clause
     if (match(TokenType::WHERE)) {
@@ -117,6 +113,47 @@ FieldPath Parser::parseFieldPath() {
     }
 
     return field;
+}
+
+std::string Parser::parseFilePath() {
+    // If it's a string literal (quoted path), just return it
+    if (peek().type == TokenType::STRING_LITERAL) {
+        return advance().value;
+    }
+
+    // Otherwise, collect tokens to build the path (unquoted)
+    // Path can contain: identifiers, dots, slashes
+    // Stop when we hit: WHERE, ORDER, LIMIT, END_OF_INPUT
+    std::string path;
+
+    while (!isAtEnd()) {
+        Token current = peek();
+
+        // Stop if we hit a keyword
+        if (current.type == TokenType::WHERE ||
+            current.type == TokenType::ORDER ||
+            current.type == TokenType::LIMIT ||
+            current.type == TokenType::END_OF_INPUT) {
+            break;
+        }
+
+        // Collect path components
+        if (current.type == TokenType::IDENTIFIER ||
+            current.type == TokenType::SLASH ||
+            current.type == TokenType::DOT) {
+            path += current.value;
+            advance();
+        } else {
+            // Unknown token in path context
+            break;
+        }
+    }
+
+    if (path.empty()) {
+        throw ParseError("Expected file or directory path after FROM");
+    }
+
+    return path;
 }
 
 // Parse WHERE clause (entry point)
