@@ -242,9 +242,10 @@ void interactiveMode() {
             }
             query += line.substr(0, semicolonPos);
 
-            // Add completed query to history (only if not empty)
+            // Add completed query to history (with semicolon, only if not empty)
             if (!query.empty()) {
-                add_history(query.c_str());
+                std::string historyEntry = query + ";";
+                add_history(historyEntry.c_str());
             }
 
             // Execute the query
