@@ -2,6 +2,8 @@
 #include "parser/parser.h"
 #include "executor/query_executor.h"
 #include "utils/result_formatter.h"
+#include "utils/app_context.h"
+#include "utils/command_handler.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -122,6 +124,11 @@ void printUsage(const char* programName) {
     std::cout << "  Ctrl+C           Exit the program (SIGINT)\n";
     std::cout << "  \\c               Clear screen\n";
     std::cout << "  UP/DOWN arrows   Navigate command history (last 100 queries)\n\n";
+    std::cout << "Configuration Commands:\n";
+    std::cout << "  SET XSD <path>   Set XSD schema file path\n";
+    std::cout << "  SET DEST <path>  Set destination directory path\n";
+    std::cout << "  SHOW XSD         Display current XSD path\n";
+    std::cout << "  SHOW DEST        Display current DEST path\n\n";
 }
 
 void executeQuery(const std::string& query) {
@@ -157,6 +164,10 @@ void interactiveMode() {
 
     // Initialize command history
     initializeHistory();
+
+    // Create application context and command handler
+    expocli::AppContext context;
+    expocli::CommandHandler commandHandler(context);
 
     printWelcome();
 
@@ -248,9 +259,12 @@ void interactiveMode() {
                 add_history(historyEntry.c_str());
             }
 
-            // Execute the query
-            executeQuery(query);
-            std::cout << std::endl;
+            // Check if it's a SET or SHOW command
+            if (!commandHandler.handleCommand(query)) {
+                // Not a command, execute as a query
+                executeQuery(query);
+                std::cout << std::endl;
+            }
 
             // Reset for next query
             query.clear();

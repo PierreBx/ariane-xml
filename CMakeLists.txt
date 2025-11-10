@@ -35,6 +35,8 @@ set(SOURCES
     src/executor/xml_navigator.cpp
     src/utils/xml_loader.cpp
     src/utils/result_formatter.cpp
+    src/utils/app_context.cpp
+    src/utils/command_handler.cpp
 )
 
 # Create executable
