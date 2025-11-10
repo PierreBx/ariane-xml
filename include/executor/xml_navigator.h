@@ -52,6 +52,12 @@ public:
         std::vector<pugi::xml_node>& results
     );
 
+    // Find first element with given name in XML tree (depth-first search)
+    static pugi::xml_node findFirstElementByName(
+        const pugi::xml_node& node,
+        const std::string& name
+    );
+
 private:
 
     // Get value from node for comparison

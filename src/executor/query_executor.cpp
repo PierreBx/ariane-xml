@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 namespace expocli {
 
@@ -185,7 +186,63 @@ std::vector<ResultRow> QueryExecutor::processFile(
         FieldPath whereField = extractFieldPathFromWhere(query.where.get());
 
         if (whereField.components.size() < 2) {
-            // Simple case: condition on root-level elements
+            // Shorthand path: find all nodes that contain the WHERE attribute
+            // and evaluate the condition on parent nodes that have the attribute as a child
+            std::function<void(const pugi::xml_node&)> searchTree =
+                [&](const pugi::xml_node& node) {
+                    if (!node) return;
+
+                    // Check if this node has the WHERE attribute as a direct child
+                    pugi::xml_node whereAttrNode = XmlNavigator::findFirstElementByName(node, whereField.components[0]);
+                    if (whereAttrNode && whereAttrNode.parent() == node) {
+                        // This node has the attribute we're filtering on
+                        // Evaluate WHERE condition on this node
+                        if (XmlNavigator::evaluateWhereExpr(node, query.where.get(), 0)) {
+                            ResultRow row;
+
+                            for (const auto& field : query.select_fields) {
+                                std::string fieldName;
+                                std::string value;
+
+                                if (field.include_filename) {
+                                    fieldName = "FILE_NAME";
+                                    value = filename;
+                                } else {
+                                    fieldName = field.components.back();
+
+                                    // Use shorthand search from this node
+                                    if (field.components.size() == 1) {
+                                        pugi::xml_node foundNode = XmlNavigator::findFirstElementByName(node, field.components[0]);
+                                        if (foundNode) {
+                                            value = foundNode.child_value();
+                                        }
+                                    } else {
+                                        // Use full path navigation
+                                        pugi::xml_node targetNode = node;
+                                        for (const auto& component : field.components) {
+                                            targetNode = targetNode.child(component.c_str());
+                                            if (!targetNode) break;
+                                        }
+                                        if (targetNode) {
+                                            value = targetNode.child_value();
+                                        }
+                                    }
+                                }
+
+                                row.push_back({fieldName, value});
+                            }
+
+                            results.push_back(row);
+                        }
+                    }
+
+                    // Recursively search children
+                    for (pugi::xml_node child : node.children()) {
+                        searchTree(child);
+                    }
+                };
+
+            searchTree(*doc);
             return results;
         }
 
@@ -215,33 +272,41 @@ std::vector<ResultRow> QueryExecutor::processFile(
                     } else {
                         fieldName = field.components.back();
 
-                        // Calculate overlap between field path and parent path
-                        // to use relative navigation from the candidate node
-                        size_t skipComponents = 0;
+                        // Shorthand: use first element search
+                        if (field.components.size() == 1) {
+                            pugi::xml_node foundNode = XmlNavigator::findFirstElementByName(node, field.components[0]);
+                            if (foundNode) {
+                                value = foundNode.child_value();
+                            }
+                        } else {
+                            // Calculate overlap between field path and parent path
+                            // to use relative navigation from the candidate node
+                            size_t skipComponents = 0;
 
-                        // Check if field path starts with parent path
-                        if (field.components.size() >= parentPath.size()) {
-                            bool matches = true;
-                            for (size_t i = 0; i < parentPath.size(); ++i) {
-                                if (field.components[i] != parentPath[i]) {
-                                    matches = false;
-                                    break;
+                            // Check if field path starts with parent path
+                            if (field.components.size() >= parentPath.size()) {
+                                bool matches = true;
+                                for (size_t i = 0; i < parentPath.size(); ++i) {
+                                    if (field.components[i] != parentPath[i]) {
+                                        matches = false;
+                                        break;
+                                    }
+                                }
+                                if (matches) {
+                                    skipComponents = parentPath.size();
                                 }
                             }
-                            if (matches) {
-                                skipComponents = parentPath.size();
+
+                            // Navigate from the candidate node using relative path
+                            pugi::xml_node targetNode = node;
+                            for (size_t i = skipComponents; i < field.components.size(); ++i) {
+                                targetNode = targetNode.child(field.components[i].c_str());
+                                if (!targetNode) break;
                             }
-                        }
 
-                        // Navigate from the candidate node using relative path
-                        pugi::xml_node targetNode = node;
-                        for (size_t i = skipComponents; i < field.components.size(); ++i) {
-                            targetNode = targetNode.child(field.components[i].c_str());
-                            if (!targetNode) break;
-                        }
-
-                        if (targetNode) {
-                            value = targetNode.child_value();
+                            if (targetNode) {
+                                value = targetNode.child_value();
+                            }
                         }
                     }
 
