@@ -5,6 +5,7 @@
 #include <pugixml.hpp>
 #include <string>
 #include <memory>
+#include <map>
 
 namespace expocli {
 
@@ -14,6 +15,9 @@ public:
     static std::unique_ptr<XsdSchema> parse(const std::string& xsd_file_path);
 
 private:
+    // Store named types for lookup
+    static std::map<std::string, std::shared_ptr<XsdElement>> named_types_;
+
     static std::shared_ptr<XsdElement> parseElement(
         const pugi::xml_node& node,
         const pugi::xml_document& doc
@@ -29,8 +33,19 @@ private:
         const pugi::xml_document& doc
     );
 
+    static void parseAndStoreNamedTypes(
+        const pugi::xml_node& schemaNode,
+        const pugi::xml_document& doc
+    );
+
+    static std::shared_ptr<XsdElement> createElementFromType(
+        const std::string& typeName,
+        const std::string& elementName
+    );
+
     static XsdType parseType(const std::string& typeName);
     static int parseOccurs(const pugi::xml_node& node, const char* attrName, int defaultValue);
+    static std::string stripNamespacePrefix(const std::string& name);
 };
 
 } // namespace expocli

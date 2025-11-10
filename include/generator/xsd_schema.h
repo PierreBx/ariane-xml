@@ -25,9 +25,11 @@ struct XsdElement {
     XsdType type;
     int minOccurs = 1;  // Default is required
     int maxOccurs = 1;  // Default is single occurrence (-1 means unbounded)
+    bool isAttribute = false;  // True if this is an XML attribute (not element)
 
     // For complex types
     std::vector<std::shared_ptr<XsdElement>> children;
+    std::vector<std::shared_ptr<XsdElement>> attributes;  // XML attributes
 
     // For simple types with restrictions
     std::string pattern;  // Regex pattern if specified
