@@ -5,10 +5,21 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <csignal>
+#include <cstdlib>
+
+// Signal handler for CTRL-C (SIGINT)
+void signalHandler(int signal) {
+    if (signal == SIGINT) {
+        std::cout << "\n\nBye!\n";
+        std::exit(0);
+    }
+}
 
 void printWelcome() {
     std::cout << "XML Query CLI - Phase 2 (Interactive Mode)\n";
-    std::cout << "Type 'help' for usage information, 'exit' or 'quit' to exit.\n";
+    std::cout << "Type 'help' for usage information.\n";
+    std::cout << "Type 'exit', 'quit', or press Ctrl+C to exit.\n";
     std::cout << "Enter SQL-like queries to search XML files.\n";
     std::cout << "Note: Queries must be terminated with a semicolon (;)\n\n";
 }
@@ -44,9 +55,10 @@ void printUsage(const char* programName) {
     std::cout << "  - ORDER BY: Sort results by field (numeric or alphabetic)\n";
     std::cout << "  - LIMIT: Restrict number of results returned\n\n";
     std::cout << "Interactive Commands:\n";
-    std::cout << "  help, \\h     Show this help message\n";
-    std::cout << "  exit, quit   Exit the program\n";
-    std::cout << "  \\c           Clear screen\n\n";
+    std::cout << "  help, \\h         Show this help message\n";
+    std::cout << "  exit, quit       Exit the program\n";
+    std::cout << "  Ctrl+C           Exit the program (SIGINT)\n";
+    std::cout << "  \\c               Clear screen\n\n";
 }
 
 void executeQuery(const std::string& query) {
@@ -77,6 +89,9 @@ void executeQuery(const std::string& query) {
 }
 
 void interactiveMode() {
+    // Register signal handler for CTRL-C
+    std::signal(SIGINT, signalHandler);
+
     printWelcome();
 
     std::string line;
