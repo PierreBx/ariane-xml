@@ -1,6 +1,7 @@
 #include "executor/xml_navigator.h"
 #include <stdexcept>
 #include <typeinfo>
+#include <functional>
 
 namespace expocli {
 
@@ -21,15 +22,27 @@ std::vector<XmlResult> XmlNavigator::extractValues(
         return results;
     }
 
-    // Shorthand: if only one component, search for first occurrence in entire tree
+    // Shorthand: if only one component, search for all occurrences in entire tree
     if (field.components.size() == 1) {
-        pugi::xml_node foundNode = findFirstElementByName(doc, field.components[0]);
-        if (foundNode) {
-            std::string value = foundNode.child_value();
-            if (!value.empty()) {
-                results.push_back({filename, value});
-            }
-        }
+        std::function<void(const pugi::xml_node&)> findAllByName =
+            [&](const pugi::xml_node& node) {
+                if (!node) return;
+
+                // Check if current node matches
+                if (std::string(node.name()) == field.components[0]) {
+                    std::string value = node.child_value();
+                    if (!value.empty()) {
+                        results.push_back({filename, value});
+                    }
+                }
+
+                // Recursively search all children
+                for (pugi::xml_node child : node.children()) {
+                    findAllByName(child);
+                }
+            };
+
+        findAllByName(doc);
         return results;
     }
 
