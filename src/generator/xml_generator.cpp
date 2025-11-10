@@ -58,6 +58,12 @@ pugi::xml_document XmlGenerator::generateDocument(const XsdSchema& schema) {
     if (root) {
         auto rootNode = doc.append_child(root->name.c_str());
 
+        // Generate attributes first
+        for (const auto& attr : root->attributes) {
+            std::string value = data_gen_.generateValue(attr->type);
+            rootNode.append_attribute(attr->name.c_str()).set_value(value.c_str());
+        }
+
         // Generate children for complex type
         if (root->type == XsdType::COMPLEX) {
             for (const auto& child : root->children) {
@@ -81,6 +87,12 @@ void XmlGenerator::generateElement(
 
     for (int i = 0; i < count; ++i) {
         auto node = parent.append_child(element->name.c_str());
+
+        // Generate attributes first
+        for (const auto& attr : element->attributes) {
+            std::string value = data_gen_.generateValue(attr->type);
+            node.append_attribute(attr->name.c_str()).set_value(value.c_str());
+        }
 
         if (element->type == XsdType::COMPLEX) {
             // Complex type - generate children
