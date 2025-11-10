@@ -54,7 +54,7 @@ make
 
 4. **Run queries:**
 ```bash
-./xmlquery "SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 500"
+./expocli "SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 500"
 ```
 
 ### Local Build
@@ -79,22 +79,22 @@ make
 
 **Interactive Mode** (recommended for multiple queries):
 ```bash
-./xmlquery
+./expocli
 ```
 
 **Single Query Mode**:
 ```bash
-./xmlquery "SELECT breakfast_menu/food/name FROM ../examples WHERE breakfast_menu/food/calories < 500"
+./expocli "SELECT breakfast_menu/food/name FROM ../examples WHERE breakfast_menu/food/calories < 500"
 ```
 
 ## Usage Modes
 
 ### Interactive Mode (REPL)
 
-Start interactive mode by running `xmlquery` without arguments:
+Start interactive mode by running `expocli` without arguments:
 
 ```bash
-./xmlquery
+./expocli
 ```
 
 You'll get a prompt where you can enter multiple queries:
@@ -104,19 +104,19 @@ XML Query CLI - Phase 2 (Interactive Mode)
 Type 'help' for usage information, 'exit' or 'quit' to exit.
 Enter SQL-like queries to search XML files.
 
-xmlquery> SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 700
+expocli> SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 700
 Belgian Waffles
 French Toast
 
 2 row(s) returned.
 
-xmlquery> SELECT bookstore/book/title FROM /app/examples/books.xml ORDER BY price LIMIT 2
+expocli> SELECT bookstore/book/title FROM /app/examples/books.xml ORDER BY price LIMIT 2
 Harry Potter
 Everyday Italian
 
 2 row(s) returned.
 
-xmlquery> exit
+expocli> exit
 Bye!
 ```
 
@@ -128,7 +128,7 @@ Bye!
 
 **Multi-line Query Example:**
 ```
-xmlquery> SELECT breakfast_menu/food/name \
+expocli> SELECT breakfast_menu/food/name \
       ... FROM /app/examples \
       ... WHERE breakfast_menu/food/calories < 700
 ```
@@ -138,7 +138,7 @@ xmlquery> SELECT breakfast_menu/food/name \
 Execute a single query from the command line:
 
 ```bash
-./xmlquery "SELECT name FROM /path/to/files WHERE price < 30"
+./expocli "SELECT name FROM /path/to/files WHERE price < 30"
 ```
 
 ## Query Syntax
@@ -177,7 +177,7 @@ Both notations work identically.
 ### Example 1: Basic Query
 **Query:**
 ```bash
-./xmlquery "SELECT breakfast_menu/food/name FROM ./examples"
+./expocli "SELECT breakfast_menu/food/name FROM ./examples"
 ```
 
 **Output:**
@@ -194,7 +194,7 @@ Homestyle Breakfast
 ### Example 2: Query with WHERE Clause
 **Query:**
 ```bash
-./xmlquery "SELECT breakfast_menu/food/name FROM ./examples WHERE breakfast_menu/food/calories < 500"
+./expocli "SELECT breakfast_menu/food/name FROM ./examples WHERE breakfast_menu/food/calories < 500"
 ```
 
 **Output:**
@@ -207,7 +207,7 @@ Homestyle Breakfast
 ### Example 3: Multiple Fields with Filename
 **Query:**
 ```bash
-./xmlquery "SELECT FILE_NAME,breakfast_menu/food/name,breakfast_menu/food/price FROM ./examples"
+./expocli "SELECT FILE_NAME,breakfast_menu/food/name,breakfast_menu/food/price FROM ./examples"
 ```
 
 **Output:**
@@ -224,7 +224,7 @@ test.xml | Homestyle Breakfast | $6.95
 ### Example 4: Query Across Multiple Files
 **Query:**
 ```bash
-./xmlquery "SELECT FILE_NAME,lunch_menu/food/name FROM ./examples WHERE lunch_menu/food/calories < 500"
+./expocli "SELECT FILE_NAME,lunch_menu/food/name FROM ./examples WHERE lunch_menu/food/calories < 500"
 ```
 
 **Output:**

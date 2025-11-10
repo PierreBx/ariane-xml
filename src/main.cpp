@@ -47,20 +47,20 @@ void executeQuery(const std::string& query) {
 
     try {
         // Lexical analysis
-        xmlquery::Lexer lexer(query);
+        expocli::Lexer lexer(query);
         auto tokens = lexer.tokenize();
 
         // Syntax analysis
-        xmlquery::Parser parser(tokens);
+        expocli::Parser parser(tokens);
         auto ast = parser.parse();
 
         // Execute query
-        auto results = xmlquery::QueryExecutor::execute(*ast);
+        auto results = expocli::QueryExecutor::execute(*ast);
 
         // Format and print results
-        xmlquery::ResultFormatter::print(results);
+        expocli::ResultFormatter::print(results);
 
-    } catch (const xmlquery::ParseError& e) {
+    } catch (const expocli::ParseError& e) {
         std::cerr << "Parse Error: " << e.what() << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -76,7 +76,7 @@ void interactiveMode() {
     while (true) {
         // Show prompt
         if (query.empty()) {
-            std::cout << "xmlquery> ";
+            std::cout << "expocli> ";
         } else {
             std::cout << "      ... ";
         }
@@ -105,7 +105,7 @@ void interactiveMode() {
         }
 
         if (line == "help" || line == "\\h" || line == "\\?") {
-            printUsage("xmlquery");
+            printUsage("expocli");
             continue;
         }
 
