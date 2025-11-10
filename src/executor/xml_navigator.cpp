@@ -21,7 +21,19 @@ std::vector<XmlResult> XmlNavigator::extractValues(
         return results;
     }
 
-    // Find all nodes matching the path
+    // Shorthand: if only one component, search for first occurrence in entire tree
+    if (field.components.size() == 1) {
+        pugi::xml_node foundNode = findFirstElementByName(doc, field.components[0]);
+        if (foundNode) {
+            std::string value = foundNode.child_value();
+            if (!value.empty()) {
+                results.push_back({filename, value});
+            }
+        }
+        return results;
+    }
+
+    // Find all nodes matching the full path
     std::vector<pugi::xml_node> nodes;
     findNodes(doc, field.components, 0, nodes);
 
@@ -131,7 +143,16 @@ std::string XmlNavigator::getNodeValue(
         return "";
     }
 
-    // Navigate to the target node
+    // Shorthand: if only one component, search from current node downward
+    if (field.components.size() == 1) {
+        pugi::xml_node foundNode = findFirstElementByName(node, field.components[0]);
+        if (foundNode) {
+            return foundNode.child_value();
+        }
+        return "";
+    }
+
+    // Navigate to the target node using full path
     pugi::xml_node current = node;
 
     for (const auto& component : field.components) {
@@ -150,6 +171,15 @@ std::string XmlNavigator::getNodeValueRelative(
     size_t offset
 ) {
     if (field.components.empty() || offset >= field.components.size()) {
+        return "";
+    }
+
+    // Shorthand: if only one component (after offset), search from current node
+    if (field.components.size() == 1 && offset == 0) {
+        pugi::xml_node foundNode = findFirstElementByName(node, field.components[0]);
+        if (foundNode) {
+            return foundNode.child_value();
+        }
         return "";
     }
 
@@ -213,6 +243,27 @@ bool XmlNavigator::compareValues(
     }
 
     return false;
+}
+
+pugi::xml_node XmlNavigator::findFirstElementByName(
+    const pugi::xml_node& node,
+    const std::string& name
+) {
+    // Check if current node matches
+    if (node && std::string(node.name()) == name) {
+        return node;
+    }
+
+    // Depth-first search through children
+    for (pugi::xml_node child : node.children()) {
+        pugi::xml_node found = findFirstElementByName(child, name);
+        if (found) {
+            return found;
+        }
+    }
+
+    // Not found
+    return pugi::xml_node();
 }
 
 } // namespace expocli
