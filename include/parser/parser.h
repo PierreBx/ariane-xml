@@ -35,6 +35,7 @@ private:
 
     // Parsing methods
     FieldPath parseFieldPath();
+    std::string parseFilePath();  // Parse filesystem path (quoted or unquoted)
     std::unique_ptr<WhereExpr> parseWhereClause();
     std::unique_ptr<WhereExpr> parseWhereExpression();
     std::unique_ptr<WhereExpr> parseWhereOr();
