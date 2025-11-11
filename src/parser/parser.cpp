@@ -54,9 +54,16 @@ std::unique_ptr<Query> Parser::parse() {
     if (!query->for_clauses.empty()) {
         // Check SELECT fields
         for (auto& field : query->select_fields) {
-            if (!field.components.empty() && query->isForVariable(field.components[0])) {
-                field.is_variable_ref = true;
-                field.variable_name = field.components[0];
+            if (!field.components.empty()) {
+                if (query->isForVariable(field.components[0])) {
+                    field.is_variable_ref = true;
+                    field.variable_name = field.components[0];
+                } else if (query->isPositionVariable(field.components[0])) {
+                    // Position variables are single-component identifiers
+                    field.is_variable_ref = true;
+                    field.variable_name = field.components[0];
+                    // Mark as special position variable (we'll handle differently)
+                }
             }
         }
 
@@ -177,7 +184,7 @@ std::string Parser::parseFilePath() {
     return path;
 }
 
-// Parse FOR...IN clause
+// Parse FOR...IN clause (with optional AT position)
 ForClause Parser::parseForClause() {
     ForClause forClause;
 
@@ -195,6 +202,15 @@ ForClause Parser::parseForClause() {
 
     // Parse field path
     forClause.path = parseFieldPath();
+
+    // Optional AT keyword for position variable
+    if (match(TokenType::AT)) {
+        if (peek().type != TokenType::IDENTIFIER) {
+            throw ParseError("Expected position variable name after AT");
+        }
+        forClause.position_var = advance().value;
+        forClause.has_position = true;
+    }
 
     return forClause;
 }
@@ -442,10 +458,15 @@ void Parser::markVariableReferencesInWhere(WhereExpr* expr, const Query& query) 
     if (!expr) return;
 
     if (auto* condition = dynamic_cast<WhereCondition*>(expr)) {
-        // Check if field starts with a variable name
-        if (!condition->field.components.empty() && query.isForVariable(condition->field.components[0])) {
-            condition->field.is_variable_ref = true;
-            condition->field.variable_name = condition->field.components[0];
+        // Check if field starts with a variable name or position variable
+        if (!condition->field.components.empty()) {
+            if (query.isForVariable(condition->field.components[0])) {
+                condition->field.is_variable_ref = true;
+                condition->field.variable_name = condition->field.components[0];
+            } else if (query.isPositionVariable(condition->field.components[0])) {
+                condition->field.is_variable_ref = true;
+                condition->field.variable_name = condition->field.components[0];
+            }
         }
     } else if (auto* logical = dynamic_cast<WhereLogical*>(expr)) {
         // Recursively process left and right expressions

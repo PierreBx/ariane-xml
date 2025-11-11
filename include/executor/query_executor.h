@@ -71,6 +71,7 @@ private:
         const pugi::xml_node& currentContext,
         const Query& query,
         std::map<std::string, pugi::xml_node>& varContext,
+        std::map<std::string, size_t>& positionContext,
         size_t forClauseIndex,
         const std::string& filename,
         std::vector<ResultRow>& results
@@ -80,12 +81,15 @@ private:
     static std::string resolveFieldWithContext(
         const FieldPath& field,
         const std::map<std::string, pugi::xml_node>& varContext,
-        const pugi::xml_node& fallbackContext
+        const std::map<std::string, size_t>& positionContext,
+        const pugi::xml_node& fallbackContext,
+        const Query& query
     );
 
     // Evaluate WHERE expression with variable context
     static bool evaluateWhereWithContext(
         const std::map<std::string, pugi::xml_node>& varContext,
+        const std::map<std::string, size_t>& positionContext,
         const WhereExpr* expr,
         const Query& query
     );

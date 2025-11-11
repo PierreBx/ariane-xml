@@ -28,6 +28,7 @@ enum class TokenType {
     VERBOSE,
     FOR,
     IN,
+    AT,
     IDENTIFIER,
     STRING_LITERAL,
     NUMBER,
@@ -113,10 +114,12 @@ struct WhereLogical : public WhereExpr {
 };
 
 // FOR clause for context binding
-// Example: FOR emp IN employee
+// Example: FOR emp IN employee AT emp_idx
 struct ForClause {
     std::string variable;      // Variable name (e.g., "emp")
     FieldPath path;            // Path to iterate over (e.g., "employee" or "department.employee")
+    std::string position_var;  // Position variable name (e.g., "emp_idx"), empty if no AT
+    bool has_position = false; // True if AT clause is present
 };
 
 // Main Query AST
@@ -132,6 +135,16 @@ struct Query {
     bool isForVariable(const std::string& name) const {
         for (const auto& forClause : for_clauses) {
             if (forClause.variable == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Helper: Check if identifier is a position variable (AT variable)
+    bool isPositionVariable(const std::string& name) const {
+        for (const auto& forClause : for_clauses) {
+            if (forClause.has_position && forClause.position_var == name) {
                 return true;
             }
         }

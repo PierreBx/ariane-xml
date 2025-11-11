@@ -181,6 +181,7 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     if (upper == "VERBOSE") return TokenType::VERBOSE;
     if (upper == "FOR") return TokenType::FOR;
     if (upper == "IN") return TokenType::IN;
+    if (upper == "AT") return TokenType::AT;
 
     return TokenType::IDENTIFIER;
 }

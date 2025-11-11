@@ -137,8 +137,11 @@ std::vector<ResultRow> QueryExecutor::processFileWithForClauses(
     // Variable context: maps variable name -> bound XML node
     std::map<std::string, pugi::xml_node> varContext;
 
+    // Position context: maps position variable name -> current position
+    std::map<std::string, size_t> positionContext;
+
     // Start nested iteration from document root
-    processNestedForClauses(doc.document_element(), query, varContext, 0, filename, results);
+    processNestedForClauses(doc.document_element(), query, varContext, positionContext, 0, filename, results);
 
     return results;
 }
@@ -148,6 +151,7 @@ void QueryExecutor::processNestedForClauses(
     const pugi::xml_node& currentContext,
     const Query& query,
     std::map<std::string, pugi::xml_node>& varContext,
+    std::map<std::string, size_t>& positionContext,
     size_t forClauseIndex,
     const std::string& filename,
     std::vector<ResultRow>& results
@@ -156,7 +160,7 @@ void QueryExecutor::processNestedForClauses(
     if (forClauseIndex >= query.for_clauses.size()) {
         // Check WHERE clause if present
         if (query.where) {
-            if (!evaluateWhereWithContext(varContext, query.where.get(), query)) {
+            if (!evaluateWhereWithContext(varContext, positionContext, query.where.get(), query)) {
                 return; // Skip this combination if WHERE fails
             }
         }
@@ -173,8 +177,8 @@ void QueryExecutor::processNestedForClauses(
             } else {
                 fieldName = field.components.back();
 
-                // Resolve field using variable context
-                value = resolveFieldWithContext(field, varContext, currentContext);
+                // Resolve field using variable context and position context
+                value = resolveFieldWithContext(field, varContext, positionContext, currentContext, query);
             }
 
             row.push_back({fieldName, value});
@@ -246,15 +250,26 @@ void QueryExecutor::processNestedForClauses(
     }
 
     // Iterate over found nodes and recursively process next FOR clause
+    size_t position = 1;  // XQuery positions start at 1
     for (const auto& node : iterationNodes) {
         // Bind this node to the variable
         varContext[forClause.variable] = node;
 
+        // Bind position if AT clause present
+        if (forClause.has_position) {
+            positionContext[forClause.position_var] = position;
+        }
+
         // Recursively process next FOR clause
-        processNestedForClauses(node, query, varContext, forClauseIndex + 1, filename, results);
+        processNestedForClauses(node, query, varContext, positionContext, forClauseIndex + 1, filename, results);
 
         // Unbind variable (cleanup for next iteration)
         varContext.erase(forClause.variable);
+        if (forClause.has_position) {
+            positionContext.erase(forClause.position_var);
+        }
+
+        position++;
     }
 }
 
@@ -262,9 +277,20 @@ void QueryExecutor::processNestedForClauses(
 std::string QueryExecutor::resolveFieldWithContext(
     const FieldPath& field,
     const std::map<std::string, pugi::xml_node>& varContext,
-    const pugi::xml_node& fallbackContext
+    const std::map<std::string, size_t>& positionContext,
+    const pugi::xml_node& fallbackContext,
+    const Query& query
 ) {
     std::string value;
+
+    // Check if this is a position variable reference
+    if (field.is_variable_ref && !field.variable_name.empty() && query.isPositionVariable(field.variable_name)) {
+        auto posIt = positionContext.find(field.variable_name);
+        if (posIt != positionContext.end()) {
+            return std::to_string(posIt->second);
+        }
+        return "";  // Position variable not found
+    }
 
     if (field.is_variable_ref && !field.variable_name.empty()) {
         // Field starts with a variable reference (e.g., "emp.name")
@@ -318,12 +344,48 @@ std::string QueryExecutor::resolveFieldWithContext(
 // Evaluate WHERE expression with variable context
 bool QueryExecutor::evaluateWhereWithContext(
     const std::map<std::string, pugi::xml_node>& varContext,
+    const std::map<std::string, size_t>& positionContext,
     const WhereExpr* expr,
     const Query& query
 ) {
     if (!expr) return true;
 
     if (const auto* condition = dynamic_cast<const WhereCondition*>(expr)) {
+        // Check if this is a position variable in WHERE clause
+        if (condition->field.is_variable_ref && !condition->field.variable_name.empty() &&
+            query.isPositionVariable(condition->field.variable_name)) {
+            // Evaluate condition on position value
+            auto posIt = positionContext.find(condition->field.variable_name);
+            if (posIt != positionContext.end()) {
+                size_t posValue = posIt->second;
+                std::string posStr = std::to_string(posValue);
+
+                // Evaluate the comparison
+                if (condition->op == ComparisonOp::EQUALS) {
+                    return posStr == condition->value;
+                } else if (condition->op == ComparisonOp::NOT_EQUALS) {
+                    return posStr != condition->value;
+                } else if (condition->op == ComparisonOp::LESS_THAN) {
+                    try {
+                        return posValue < std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::GREATER_THAN) {
+                    try {
+                        return posValue > std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::LESS_EQUAL) {
+                    try {
+                        return posValue <= std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::GREATER_EQUAL) {
+                    try {
+                        return posValue >= std::stoull(condition->value);
+                    } catch (...) { return false; }
+                }
+            }
+            return false;
+        }
+
         // Resolve field in condition
         if (condition->field.is_variable_ref && !condition->field.variable_name.empty()) {
             // Use variable context
@@ -355,8 +417,8 @@ bool QueryExecutor::evaluateWhereWithContext(
             return false;
         }
     } else if (const auto* logical = dynamic_cast<const WhereLogical*>(expr)) {
-        bool leftResult = evaluateWhereWithContext(varContext, logical->left.get(), query);
-        bool rightResult = evaluateWhereWithContext(varContext, logical->right.get(), query);
+        bool leftResult = evaluateWhereWithContext(varContext, positionContext, logical->left.get(), query);
+        bool rightResult = evaluateWhereWithContext(varContext, positionContext, logical->right.get(), query);
 
         if (logical->op == LogicalOp::AND) {
             return leftResult && rightResult;
