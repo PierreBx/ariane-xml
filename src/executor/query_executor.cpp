@@ -4,6 +4,11 @@
 #include <iostream>
 #include <algorithm>
 #include <functional>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
+#include <limits>
 
 namespace expocli {
 
@@ -117,6 +122,656 @@ std::vector<std::string> QueryExecutor::getXmlFiles(const std::string& path) {
     return xmlFiles;
 }
 
+// Process a single file with FOR clause context binding
+std::vector<ResultRow> QueryExecutor::processFileWithForClauses(
+    const std::string& filepath,
+    const Query& query,
+    const pugi::xml_document& doc,
+    const std::string& filename
+) {
+    std::vector<ResultRow> results;
+
+    if (query.for_clauses.empty()) {
+        return results;
+    }
+
+    // Variable context: maps variable name -> bound XML node
+    std::map<std::string, pugi::xml_node> varContext;
+
+    // Position context: maps position variable name -> current position
+    std::map<std::string, size_t> positionContext;
+
+    // Start nested iteration from document root
+    processNestedForClauses(doc.document_element(), query, varContext, positionContext, 0, filename, results);
+
+    // If query has aggregations, apply aggregation logic
+    if (query.has_aggregates && !results.empty()) {
+        std::vector<ResultRow> aggregatedResults;
+
+        // For now, assume no GROUP BY - aggregate all results into a single row
+        // TODO: Add GROUP BY support
+        if (query.group_by_fields.empty()) {
+            ResultRow aggregatedRow;
+
+            // Process each SELECT field
+            for (const auto& field : query.select_fields) {
+                if (field.aggregate != AggregateFunc::NONE) {
+                    std::string fieldName = field.alias.empty() ?
+                        (std::string(field.aggregate == AggregateFunc::COUNT ? "COUNT" :
+                                    field.aggregate == AggregateFunc::SUM ? "SUM" :
+                                    field.aggregate == AggregateFunc::AVG ? "AVG" :
+                                    field.aggregate == AggregateFunc::MIN ? "MIN" : "MAX") +
+                         "(" + field.aggregate_arg + ")") : field.alias;
+
+                    // Find this field in the results and aggregate
+                    std::vector<std::string> values;
+                    for (const auto& row : results) {
+                        for (const auto& [name, val] : row) {
+                            if (name == fieldName || name.find(field.aggregate_arg) != std::string::npos) {
+                                values.push_back(val);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Apply aggregation function
+                    std::string aggregatedValue;
+                    switch (field.aggregate) {
+                        case AggregateFunc::COUNT:
+                            aggregatedValue = std::to_string(values.size());
+                            break;
+                        case AggregateFunc::SUM: {
+                            double sum = 0;
+                            for (const auto& v : values) {
+                                try {
+                                    sum += std::stod(v);
+                                } catch (...) {
+                                    // Skip non-numeric values
+                                }
+                            }
+                            aggregatedValue = std::to_string(sum);
+                            break;
+                        }
+                        case AggregateFunc::AVG: {
+                            double sum = 0;
+                            size_t count = 0;
+                            for (const auto& v : values) {
+                                try {
+                                    sum += std::stod(v);
+                                    count++;
+                                } catch (...) {
+                                    // Skip non-numeric values
+                                }
+                            }
+                            aggregatedValue = count > 0 ? std::to_string(sum / count) : "0";
+                            break;
+                        }
+                        case AggregateFunc::MIN: {
+                            double minVal = std::numeric_limits<double>::max();
+                            for (const auto& v : values) {
+                                try {
+                                    double val = std::stod(v);
+                                    if (val < minVal) minVal = val;
+                                } catch (...) {
+                                    // Skip non-numeric values
+                                }
+                            }
+                            aggregatedValue = minVal == std::numeric_limits<double>::max() ? "0" : std::to_string(minVal);
+                            break;
+                        }
+                        case AggregateFunc::MAX: {
+                            double maxVal = std::numeric_limits<double>::lowest();
+                            for (const auto& v : values) {
+                                try {
+                                    double val = std::stod(v);
+                                    if (val > maxVal) maxVal = val;
+                                } catch (...) {
+                                    // Skip non-numeric values
+                                }
+                            }
+                            aggregatedValue = maxVal == std::numeric_limits<double>::lowest() ? "0" : std::to_string(maxVal);
+                            break;
+                        }
+                        default:
+                            aggregatedValue = "0";
+                    }
+
+                    aggregatedRow.push_back({fieldName, aggregatedValue});
+                }
+            }
+
+            aggregatedResults.push_back(aggregatedRow);
+            return aggregatedResults;
+        } else {
+            // Handle GROUP BY aggregations
+            // Group results by GROUP BY field values
+            std::map<std::string, std::vector<ResultRow>> groups;
+
+            for (const auto& row : results) {
+                // Build group key from GROUP BY fields
+                std::string groupKey;
+                for (const auto& groupField : query.group_by_fields) {
+                    std::string groupByFieldName = "__GROUP_BY__" + groupField;
+                    for (const auto& [name, val] : row) {
+                        if (name == groupByFieldName) {
+                            if (!groupKey.empty()) groupKey += "|||";
+                            groupKey += val;
+                            break;
+                        }
+                    }
+                }
+                groups[groupKey].push_back(row);
+            }
+
+            // For each group, compute aggregations
+            for (const auto& [groupKey, groupRows] : groups) {
+                ResultRow aggregatedRow;
+
+                // First, add the GROUP BY field values to the result
+                size_t groupFieldIndex = 0;
+                std::string remainingKey = groupKey;
+                for (const auto& groupField : query.group_by_fields) {
+                    // Extract value from group key
+                    std::string groupValue;
+                    size_t pos = remainingKey.find("|||");
+                    if (pos != std::string::npos) {
+                        groupValue = remainingKey.substr(0, pos);
+                        remainingKey = remainingKey.substr(pos + 3);
+                    } else {
+                        groupValue = remainingKey;
+                    }
+
+                    // Add to result row (use the field name directly, not the __GROUP_BY__ prefix)
+                    aggregatedRow.push_back({groupField, groupValue});
+                    groupFieldIndex++;
+                }
+
+                // Process each SELECT field
+                for (const auto& field : query.select_fields) {
+                    if (field.aggregate != AggregateFunc::NONE) {
+                        std::string fieldName = field.alias.empty() ?
+                            (std::string(field.aggregate == AggregateFunc::COUNT ? "COUNT" :
+                                        field.aggregate == AggregateFunc::SUM ? "SUM" :
+                                        field.aggregate == AggregateFunc::AVG ? "AVG" :
+                                        field.aggregate == AggregateFunc::MIN ? "MIN" : "MAX") +
+                             "(" + field.aggregate_arg + ")") : field.alias;
+
+                        // Collect values from this group
+                        std::vector<std::string> values;
+                        for (const auto& row : groupRows) {
+                            for (const auto& [name, val] : row) {
+                                // Match field name, excluding __GROUP_BY__ fields
+                                if (name.find("__GROUP_BY__") != 0 &&
+                                    (name == fieldName || name.find(field.aggregate_arg) != std::string::npos)) {
+                                    values.push_back(val);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Apply aggregation function
+                        std::string aggregatedValue;
+                        switch (field.aggregate) {
+                            case AggregateFunc::COUNT:
+                                aggregatedValue = std::to_string(values.size());
+                                break;
+                            case AggregateFunc::SUM: {
+                                double sum = 0;
+                                for (const auto& v : values) {
+                                    try {
+                                        sum += std::stod(v);
+                                    } catch (...) {}
+                                }
+                                aggregatedValue = std::to_string(sum);
+                                break;
+                            }
+                            case AggregateFunc::AVG: {
+                                double sum = 0;
+                                size_t count = 0;
+                                for (const auto& v : values) {
+                                    try {
+                                        sum += std::stod(v);
+                                        count++;
+                                    } catch (...) {}
+                                }
+                                aggregatedValue = count > 0 ? std::to_string(sum / count) : "0";
+                                break;
+                            }
+                            case AggregateFunc::MIN: {
+                                double minVal = std::numeric_limits<double>::max();
+                                for (const auto& v : values) {
+                                    try {
+                                        double val = std::stod(v);
+                                        if (val < minVal) minVal = val;
+                                    } catch (...) {}
+                                }
+                                aggregatedValue = minVal == std::numeric_limits<double>::max() ? "0" : std::to_string(minVal);
+                                break;
+                            }
+                            case AggregateFunc::MAX: {
+                                double maxVal = std::numeric_limits<double>::lowest();
+                                for (const auto& v : values) {
+                                    try {
+                                        double val = std::stod(v);
+                                        if (val > maxVal) maxVal = val;
+                                    } catch (...) {}
+                                }
+                                aggregatedValue = maxVal == std::numeric_limits<double>::lowest() ? "0" : std::to_string(maxVal);
+                                break;
+                            }
+                            default:
+                                aggregatedValue = "0";
+                        }
+
+                        aggregatedRow.push_back({fieldName, aggregatedValue});
+                    }
+                }
+
+                aggregatedResults.push_back(aggregatedRow);
+            }
+
+            return aggregatedResults;
+        }
+    }
+
+    return results;
+}
+
+// Recursive function to handle nested FOR clauses
+void QueryExecutor::processNestedForClauses(
+    const pugi::xml_node& currentContext,
+    const Query& query,
+    std::map<std::string, pugi::xml_node>& varContext,
+    std::map<std::string, size_t>& positionContext,
+    size_t forClauseIndex,
+    const std::string& filename,
+    std::vector<ResultRow>& results
+) {
+    // Base case: all FOR clauses processed, now extract SELECT fields
+    if (forClauseIndex >= query.for_clauses.size()) {
+        // Check WHERE clause if present
+        if (query.where) {
+            if (!evaluateWhereWithContext(varContext, positionContext, query.where.get(), query)) {
+                return; // Skip this combination if WHERE fails
+            }
+        }
+
+        // Extract SELECT fields using variable context
+        ResultRow row;
+
+        // If we have GROUP BY, also include GROUP BY fields in the row for grouping
+        // These will be used to group results before aggregation
+        if (query.has_aggregates && !query.group_by_fields.empty()) {
+            for (const auto& groupField : query.group_by_fields) {
+                // Resolve the group by field value
+                FieldPath groupPath;
+                // Parse the group field (could be simple or dotted like dept.name)
+                std::string component;
+                for (char c : groupField) {
+                    if (c == '.') {
+                        if (!component.empty()) {
+                            groupPath.components.push_back(component);
+                            component.clear();
+                        }
+                    } else {
+                        component += c;
+                    }
+                }
+                if (!component.empty()) {
+                    groupPath.components.push_back(component);
+                }
+
+                // Check if it's a variable reference
+                if (!groupPath.components.empty() && query.isForVariable(groupPath.components[0])) {
+                    groupPath.is_variable_ref = true;
+                    groupPath.variable_name = groupPath.components[0];
+                }
+
+                std::string groupValue = resolveFieldWithContext(groupPath, varContext, positionContext, currentContext, query);
+                row.push_back({"__GROUP_BY__" + groupField, groupValue});
+            }
+        }
+
+        for (const auto& field : query.select_fields) {
+            std::string fieldName;
+            std::string value;
+
+            // Handle aggregation functions
+            if (field.aggregate != AggregateFunc::NONE) {
+                // For aggregations, we'll use special field names and values
+                // The actual aggregation computation happens later
+                switch (field.aggregate) {
+                    case AggregateFunc::COUNT:
+                        fieldName = field.alias.empty() ? ("COUNT(" + field.aggregate_arg + ")") : field.alias;
+                        value = "1"; // Each iteration contributes 1 to the count
+                        break;
+                    case AggregateFunc::SUM:
+                    case AggregateFunc::AVG:
+                    case AggregateFunc::MIN:
+                    case AggregateFunc::MAX: {
+                        fieldName = field.alias.empty() ?
+                            (std::string(field.aggregate == AggregateFunc::SUM ? "SUM" :
+                                        field.aggregate == AggregateFunc::AVG ? "AVG" :
+                                        field.aggregate == AggregateFunc::MIN ? "MIN" : "MAX") +
+                             "(" + field.aggregate_arg + ")") : field.alias;
+
+                        // Parse the aggregate_arg which could be:
+                        // - "emp" (variable)
+                        // - "emp.salary" (variable.field)
+                        // - "salary" (field relative to current context)
+
+                        // Split by dot to get components
+                        std::vector<std::string> argComponents;
+                        std::string component;
+                        for (char c : field.aggregate_arg) {
+                            if (c == '.') {
+                                if (!component.empty()) {
+                                    argComponents.push_back(component);
+                                    component.clear();
+                                }
+                            } else {
+                                component += c;
+                            }
+                        }
+                        if (!component.empty()) {
+                            argComponents.push_back(component);
+                        }
+
+                        // Resolve the value
+                        if (!argComponents.empty()) {
+                            // Check if first component is a variable
+                            if (varContext.find(argComponents[0]) != varContext.end()) {
+                                pugi::xml_node varNode = varContext[argComponents[0]];
+                                if (argComponents.size() == 1) {
+                                    // Just the variable - get its text value
+                                    value = varNode.child_value();
+                                } else {
+                                    // Variable.field - navigate to the field
+                                    FieldPath argPath;
+                                    argPath.components = std::vector<std::string>(argComponents.begin() + 1, argComponents.end());
+                                    argPath.is_variable_ref = true;
+                                    argPath.variable_name = argComponents[0];
+
+                                    // Navigate from the variable node
+                                    for (const auto& comp : argPath.components) {
+                                        pugi::xml_node child = varNode.child(comp.c_str());
+                                        if (child) {
+                                            value = child.child_value();
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Not a variable - resolve as field path from current context
+                                FieldPath argPath;
+                                argPath.components = argComponents;
+                                value = resolveFieldWithContext(argPath, varContext, positionContext, currentContext, query);
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        value = "";
+                }
+            } else if (field.include_filename) {
+                fieldName = "FILE_NAME";
+                value = filename;
+            } else {
+                fieldName = field.components.back();
+
+                // Resolve field using variable context and position context
+                value = resolveFieldWithContext(field, varContext, positionContext, currentContext, query);
+            }
+
+            row.push_back({fieldName, value});
+        }
+
+        results.push_back(row);
+        return;
+    }
+
+    // Process current FOR clause
+    const ForClause& forClause = query.for_clauses[forClauseIndex];
+
+    // Find nodes to iterate over
+    std::vector<pugi::xml_node> iterationNodes;
+
+    // Check if FOR path starts with a variable reference
+    if (!forClause.path.components.empty()) {
+        std::string firstComponent = forClause.path.components[0];
+
+        // Check if it's a variable reference
+        auto varIt = varContext.find(firstComponent);
+        if (varIt != varContext.end()) {
+            // Path is relative to a bound variable (e.g., "dept.employee")
+            pugi::xml_node parentNode = varIt->second;
+
+            // Get remaining path components (skip variable name)
+            std::vector<std::string> subPath(
+                forClause.path.components.begin() + 1,
+                forClause.path.components.end()
+            );
+
+            if (subPath.size() == 1) {
+                // Simple child search
+                std::function<void(const pugi::xml_node&)> findElements =
+                    [&](const pugi::xml_node& node) {
+                        if (node.type() == pugi::node_element && node.name() == subPath[0]) {
+                            iterationNodes.push_back(node);
+                        }
+                        for (pugi::xml_node child : node.children()) {
+                            findElements(child);
+                        }
+                    };
+                findElements(parentNode);
+            } else if (!subPath.empty()) {
+                // Multi-component path from parent node
+                XmlNavigator::findNodesByPartialPath(parentNode, subPath, iterationNodes);
+            }
+        } else {
+            // Not a variable reference - search from current context or document root
+            if (forClause.path.components.size() == 1) {
+                // Simple path: find all matching elements
+                std::string elementName = forClause.path.components[0];
+                std::function<void(const pugi::xml_node&)> findElements =
+                    [&](const pugi::xml_node& node) {
+                        if (node.type() == pugi::node_element && node.name() == elementName) {
+                            iterationNodes.push_back(node);
+                        }
+                        for (pugi::xml_node child : node.children()) {
+                            findElements(child);
+                        }
+                    };
+                findElements(currentContext.parent() ? currentContext.root() : currentContext);
+            } else {
+                // Multi-component path
+                pugi::xml_node searchRoot = currentContext.parent() ? currentContext.root() : currentContext;
+                XmlNavigator::findNodesByPartialPath(searchRoot, forClause.path.components, iterationNodes);
+            }
+        }
+    }
+
+    // Iterate over found nodes and recursively process next FOR clause
+    size_t position = 1;  // XQuery positions start at 1
+    for (const auto& node : iterationNodes) {
+        // Bind this node to the variable
+        varContext[forClause.variable] = node;
+
+        // Bind position if AT clause present
+        if (forClause.has_position) {
+            positionContext[forClause.position_var] = position;
+        }
+
+        // Recursively process next FOR clause
+        processNestedForClauses(node, query, varContext, positionContext, forClauseIndex + 1, filename, results);
+
+        // Unbind variable (cleanup for next iteration)
+        varContext.erase(forClause.variable);
+        if (forClause.has_position) {
+            positionContext.erase(forClause.position_var);
+        }
+
+        position++;
+    }
+}
+
+// Resolve field value using variable context
+std::string QueryExecutor::resolveFieldWithContext(
+    const FieldPath& field,
+    const std::map<std::string, pugi::xml_node>& varContext,
+    const std::map<std::string, size_t>& positionContext,
+    const pugi::xml_node& fallbackContext,
+    const Query& query
+) {
+    std::string value;
+
+    // Check if this is a position variable reference
+    if (field.is_variable_ref && !field.variable_name.empty() && query.isPositionVariable(field.variable_name)) {
+        auto posIt = positionContext.find(field.variable_name);
+        if (posIt != positionContext.end()) {
+            return std::to_string(posIt->second);
+        }
+        return "";  // Position variable not found
+    }
+
+    if (field.is_variable_ref && !field.variable_name.empty()) {
+        // Field starts with a variable reference (e.g., "emp.name")
+        auto varIt = varContext.find(field.variable_name);
+        if (varIt != varContext.end()) {
+            pugi::xml_node contextNode = varIt->second;
+
+            // Get remaining path components after variable name
+            std::vector<std::string> subPath;
+            if (field.components.size() > 1) {
+                subPath.assign(field.components.begin() + 1, field.components.end());
+            }
+
+            if (subPath.empty()) {
+                // Just the variable node itself - shouldn't happen but handle it
+                value = contextNode.child_value();
+            } else if (subPath.size() == 1) {
+                // Simple child lookup
+                pugi::xml_node childNode = XmlNavigator::findFirstElementByName(contextNode, subPath[0]);
+                if (childNode) {
+                    value = childNode.child_value();
+                }
+            } else {
+                // Multi-component path from variable node
+                std::vector<pugi::xml_node> fieldNodes;
+                XmlNavigator::findNodesByPartialPath(contextNode, subPath, fieldNodes);
+                if (!fieldNodes.empty()) {
+                    value = fieldNodes[0].child_value();
+                }
+            }
+        }
+    } else {
+        // Normal field (not a variable reference) - use fallback context
+        if (field.components.size() == 1) {
+            pugi::xml_node foundNode = XmlNavigator::findFirstElementByName(fallbackContext, field.components[0]);
+            if (foundNode) {
+                value = foundNode.child_value();
+            }
+        } else {
+            std::vector<pugi::xml_node> fieldNodes;
+            XmlNavigator::findNodesByPartialPath(fallbackContext, field.components, fieldNodes);
+            if (!fieldNodes.empty()) {
+                value = fieldNodes[0].child_value();
+            }
+        }
+    }
+
+    return value;
+}
+
+// Evaluate WHERE expression with variable context
+bool QueryExecutor::evaluateWhereWithContext(
+    const std::map<std::string, pugi::xml_node>& varContext,
+    const std::map<std::string, size_t>& positionContext,
+    const WhereExpr* expr,
+    const Query& query
+) {
+    if (!expr) return true;
+
+    if (const auto* condition = dynamic_cast<const WhereCondition*>(expr)) {
+        // Check if this is a position variable in WHERE clause
+        if (condition->field.is_variable_ref && !condition->field.variable_name.empty() &&
+            query.isPositionVariable(condition->field.variable_name)) {
+            // Evaluate condition on position value
+            auto posIt = positionContext.find(condition->field.variable_name);
+            if (posIt != positionContext.end()) {
+                size_t posValue = posIt->second;
+                std::string posStr = std::to_string(posValue);
+
+                // Evaluate the comparison
+                if (condition->op == ComparisonOp::EQUALS) {
+                    return posStr == condition->value;
+                } else if (condition->op == ComparisonOp::NOT_EQUALS) {
+                    return posStr != condition->value;
+                } else if (condition->op == ComparisonOp::LESS_THAN) {
+                    try {
+                        return posValue < std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::GREATER_THAN) {
+                    try {
+                        return posValue > std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::LESS_EQUAL) {
+                    try {
+                        return posValue <= std::stoull(condition->value);
+                    } catch (...) { return false; }
+                } else if (condition->op == ComparisonOp::GREATER_EQUAL) {
+                    try {
+                        return posValue >= std::stoull(condition->value);
+                    } catch (...) { return false; }
+                }
+            }
+            return false;
+        }
+
+        // Resolve field in condition
+        if (condition->field.is_variable_ref && !condition->field.variable_name.empty()) {
+            // Use variable context
+            auto varIt = varContext.find(condition->field.variable_name);
+            if (varIt != varContext.end()) {
+                pugi::xml_node contextNode = varIt->second;
+
+                // Evaluate condition on this node
+                // Need to adjust the field path to be relative to the bound node
+                WhereCondition adjustedCondition = *condition;
+
+                // Remove variable name from components
+                if (adjustedCondition.field.components.size() > 1) {
+                    adjustedCondition.field.components.erase(adjustedCondition.field.components.begin());
+                } else {
+                    // Condition is on the variable node itself
+                    adjustedCondition.field.components.clear();
+                }
+
+                return XmlNavigator::evaluateCondition(contextNode, adjustedCondition, 0);
+            }
+            return false; // Variable not found
+        } else {
+            // No variable reference - this shouldn't happen with FOR clauses but handle it
+            // Use the last bound variable's context if available
+            if (!varContext.empty()) {
+                return XmlNavigator::evaluateCondition(varContext.rbegin()->second, *condition, 0);
+            }
+            return false;
+        }
+    } else if (const auto* logical = dynamic_cast<const WhereLogical*>(expr)) {
+        bool leftResult = evaluateWhereWithContext(varContext, positionContext, logical->left.get(), query);
+        bool rightResult = evaluateWhereWithContext(varContext, positionContext, logical->right.get(), query);
+
+        if (logical->op == LogicalOp::AND) {
+            return leftResult && rightResult;
+        } else if (logical->op == LogicalOp::OR) {
+            return leftResult || rightResult;
+        }
+    }
+
+    return true;
+}
+
 std::vector<ResultRow> QueryExecutor::processFile(
     const std::string& filepath,
     const Query& query
@@ -128,6 +783,13 @@ std::vector<ResultRow> QueryExecutor::processFile(
 
     // Get filename for FILE_NAME field
     std::string filename = std::filesystem::path(filepath).filename().string();
+
+    // Check if query has FOR clauses
+    if (!query.for_clauses.empty()) {
+        // Process query with FOR clause context binding
+        results = processFileWithForClauses(filepath, query, *doc, filename);
+        return results;
+    }
 
     // If there's no WHERE clause, extract all values
     if (!query.where) {
@@ -396,6 +1058,208 @@ std::vector<std::string> QueryExecutor::checkForAmbiguousAttributes(const Query&
     }
 
     return ambiguousAttrs;
+}
+
+size_t QueryExecutor::getOptimalThreadCount() {
+    // Get hardware concurrency (number of logical CPU cores)
+    size_t hwThreads = std::thread::hardware_concurrency();
+
+    // If we can't detect, default to 4 threads
+    if (hwThreads == 0) {
+        hwThreads = 4;
+    }
+
+    // Cap at 16 threads to avoid excessive overhead
+    return std::min(hwThreads, static_cast<size_t>(16));
+}
+
+bool QueryExecutor::shouldUseThreading(size_t fileCount) {
+    // Smart threshold calculation:
+    // - Single file: never use threading
+    // - 2-4 files: not worth the threading overhead
+    // - 5+ files: use threading
+
+    size_t threshold = 5;
+
+    // Also consider: if we have fewer files than threads,
+    // threading is only beneficial if files are large enough
+    // For now, use simple threshold
+
+    return fileCount >= threshold;
+}
+
+std::vector<ResultRow> QueryExecutor::executeMultithreaded(
+    const std::vector<std::string>& xmlFiles,
+    const Query& query,
+    size_t threadCount,
+    std::atomic<size_t>* completedCounter
+) {
+    std::vector<ResultRow> allResults;
+    std::mutex resultsMutex;
+
+    // Create thread pool
+    std::vector<std::thread> threads;
+    threads.reserve(threadCount);
+
+    // Atomic counter for completed files (local if not provided)
+    std::atomic<size_t> localCompleted{0};
+    std::atomic<size_t>* completed = completedCounter ? completedCounter : &localCompleted;
+
+    // Launch worker threads
+    for (size_t threadId = 0; threadId < threadCount; ++threadId) {
+        threads.emplace_back([&, threadId]() {
+            // Each thread processes every Nth file (strided access for load balancing)
+            for (size_t fileIdx = threadId; fileIdx < xmlFiles.size(); fileIdx += threadCount) {
+                try {
+                    // Process this file
+                    auto fileResults = processFile(xmlFiles[fileIdx], query);
+
+                    // Accumulate results (thread-safe)
+                    {
+                        std::lock_guard<std::mutex> lock(resultsMutex);
+                        allResults.insert(allResults.end(),
+                                        fileResults.begin(),
+                                        fileResults.end());
+                    }
+
+                    // Increment completed counter
+                    (*completed)++;
+
+                } catch (const std::exception& e) {
+                    std::cerr << "Error processing file " << xmlFiles[fileIdx]
+                              << ": " << e.what() << std::endl;
+                    (*completed)++;
+                }
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    return allResults;
+}
+
+std::vector<ResultRow> QueryExecutor::executeWithProgress(
+    const Query& query,
+    ProgressCallback progressCallback,
+    ExecutionStats* stats
+) {
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    // Get all XML files
+    std::vector<std::string> xmlFiles = getXmlFiles(query.from_path);
+
+    if (xmlFiles.empty()) {
+        std::cerr << "Warning: No XML files found in " << query.from_path << std::endl;
+        return std::vector<ResultRow>();
+    }
+
+    size_t fileCount = xmlFiles.size();
+    bool useThreading = shouldUseThreading(fileCount);
+    size_t threadCount = useThreading ? getOptimalThreadCount() : 1;
+
+    // Update stats if provided
+    if (stats) {
+        stats->total_files = fileCount;
+        stats->thread_count = threadCount;
+        stats->used_threading = useThreading;
+    }
+
+    std::vector<ResultRow> allResults;
+
+    if (useThreading) {
+        // Multi-threaded execution with progress tracking
+        std::atomic<size_t> completed{0};
+
+        // Launch a progress monitoring thread
+        std::atomic<bool> done{false};
+        std::thread progressThread([&]() {
+            while (!done) {
+                if (progressCallback) {
+                    progressCallback(completed.load(), fileCount, threadCount);
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        });
+
+        // Execute query with multi-threading
+        allResults = executeMultithreaded(xmlFiles, query, threadCount, &completed);
+
+        // Stop progress thread
+        done = true;
+        progressThread.join();
+
+        // Final progress update
+        if (progressCallback) {
+            progressCallback(fileCount, fileCount, threadCount);
+        }
+
+    } else {
+        // Single-threaded execution (for small file counts)
+        for (size_t i = 0; i < xmlFiles.size(); ++i) {
+            try {
+                auto fileResults = processFile(xmlFiles[i], query);
+                allResults.insert(allResults.end(), fileResults.begin(), fileResults.end());
+
+                if (progressCallback) {
+                    progressCallback(i + 1, fileCount, 1);
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error processing file " << xmlFiles[i] << ": " << e.what() << std::endl;
+            }
+        }
+    }
+
+    // Apply ORDER BY if specified
+    if (!query.order_by_fields.empty()) {
+        const std::string& orderField = query.order_by_fields[0];
+
+        std::sort(allResults.begin(), allResults.end(),
+            [&orderField](const ResultRow& a, const ResultRow& b) {
+                std::string aValue, bValue;
+
+                for (const auto& [field, value] : a) {
+                    if (field == orderField) {
+                        aValue = value;
+                        break;
+                    }
+                }
+
+                for (const auto& [field, value] : b) {
+                    if (field == orderField) {
+                        bValue = value;
+                        break;
+                    }
+                }
+
+                // Try numeric comparison first
+                try {
+                    double aNum = std::stod(aValue);
+                    double bNum = std::stod(bValue);
+                    return aNum < bNum;
+                } catch (...) {
+                    return aValue < bValue;
+                }
+            }
+        );
+    }
+
+    // Apply LIMIT if specified
+    if (query.limit >= 0 && static_cast<size_t>(query.limit) < allResults.size()) {
+        allResults.resize(query.limit);
+    }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = endTime - startTime;
+
+    if (stats) {
+        stats->execution_time_seconds = elapsed.count();
+    }
+
+    return allResults;
 }
 
 } // namespace expocli
