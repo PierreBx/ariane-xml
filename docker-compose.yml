@@ -8,10 +8,14 @@ services:
     volumes:
       - .:/app
       - build-cache:/app/build
+      # Mount user's home directory to access files from anywhere
+      - ${HOME}:/host_home
     working_dir: /app
     stdin_open: true
     tty: true
-    command: /bin/bash
+    # Keep container running in background
+    command: tail -f /dev/null
+    restart: unless-stopped
 
 volumes:
   build-cache:

@@ -199,6 +199,12 @@ echo ""
 
         echo ""
         echo -e "${GREEN}✓${NC} Docker rebuild and compilation complete!"
+
+        # Start the persistent container
+        echo ""
+        echo -e "${BLUE}[Starting]${NC} Starting persistent container..."
+        docker compose up -d
+        echo -e "${GREEN}✓${NC} Container is running and ready to use"
     else
         # Quick rebuild mode - just recompile binary with existing image
         echo -e "${YELLOW}INFO:${NC} Using existing Docker image (use --rebuild-docker to rebuild)"
@@ -255,6 +261,12 @@ echo ""
 
         echo ""
         echo -e "${GREEN}✓${NC} Binary compilation complete!"
+
+        # Start the persistent container
+        echo ""
+        echo -e "${BLUE}[Starting]${NC} Starting persistent container..."
+        docker compose up -d
+        echo -e "${GREEN}✓${NC} Container is running and ready to use"
     fi
 
 # Test the setup
@@ -286,11 +298,11 @@ echo -e "  ${BLUE}expocli 'SELECT name FROM ./data'${NC}         # Single query"
 echo -e "  ${BLUE}expocli --help${NC}                             # Show help"
 echo ""
 echo -e "${BLUE}How it works:${NC}"
-echo "  expocli runs inside Docker containers transparently."
-echo "  Each time you use expocli, it:"
-echo "    1. Starts a temporary container"
-echo "    2. Runs your query"
-echo "    3. Stops and removes the container"
+echo "  expocli runs inside a persistent Docker container transparently."
+echo "  The container:"
+echo "    - Runs in the background (very lightweight)"
+echo "    - Starts automatically when needed"
+echo "    - Executes queries instantly (no container startup overhead)"
 echo "  You won't even notice - it feels like a native command!"
 echo ""
 if [ "$REBUILD_DOCKER" = true ]; then

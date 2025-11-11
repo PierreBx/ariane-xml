@@ -57,7 +57,7 @@ expocli                                    # Interactive mode
 expocli "SELECT name FROM ./data"          # Single query
 ```
 
-The first run will automatically build the Docker image and compile expocli (~1-2 minutes). Subsequent runs are instant!
+The first run will automatically build the Docker image, compile expocli, and start a persistent container (~1-2 minutes). **Subsequent runs are instant!** The container stays running in the background for fast command execution.
 
 👉 **See [INSTALLATION.md](INSTALLATION.md) for detailed installation instructions and troubleshooting.**
 
@@ -65,26 +65,25 @@ The first run will automatically build the Docker image and compile expocli (~1-
 
 ### Alternative: Using Docker Directly
 
-1. **Build the Docker container:**
+1. **Build and start the container:**
 ```bash
 docker compose build
+docker compose up -d
 ```
 
-2. **Start the container:**
+2. **Compile the project inside the container:**
 ```bash
-docker compose run --rm expocli
+docker compose exec expocli bash -c "mkdir -p build && cd build && cmake .. && make"
 ```
 
-3. **Inside the container, build the project:**
+3. **Run queries:**
 ```bash
-mkdir -p build && cd build
-cmake ..
-make
+docker compose exec expocli /app/build/expocli "SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 500"
 ```
 
-4. **Run queries:**
+4. **Stop the container when done:**
 ```bash
-./expocli "SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 500"
+docker compose down
 ```
 
 ### Local Build
@@ -348,17 +347,27 @@ These features are planned for Phase 2 and Phase 3.
 
 ### After Pulling New Updates
 
-If you've pulled new updates from the repository and encounter compilation errors related to missing headers (like `readline/readline.h`), you need to rebuild the Docker image:
+If you've pulled new updates from the repository:
 
 ```bash
-# Force rebuild the Docker image
-docker compose build --no-cache
+# Stop the current container
+cd /path/to/ExpoCLI
+docker compose down
 
-# Or if using the installer, run it again
-./install.sh
+# Rebuild with the --rebuild-docker flag to update dependencies
+./install.sh --rebuild-docker
 ```
 
-The installer (`install.sh`) automatically rebuilds the binary with the latest code, but if you're using Docker directly, you must rebuild the image when dependencies change.
+This will:
+1. Rebuild the Docker image with latest dependencies
+2. Recompile the binary with latest source code
+3. Restart the persistent container
+
+Alternatively, for minor code changes without dependency updates:
+```bash
+# Just rerun the installer (faster)
+./install.sh
+```
 
 ## Troubleshooting
 
@@ -371,10 +380,15 @@ sudo usermod -aG docker $USER
 # Log out and back in
 ```
 
-**Problem:** Port conflicts
+**Problem:** Container issues or need to restart
 ```bash
-# Use docker compose down to clean up
+# Stop and restart the container
+cd /path/to/ExpoCLI
+docker compose restart
+
+# Or completely remove and restart
 docker compose down
+docker compose up -d
 ```
 
 **Problem:** Compilation error: `readline/readline.h: No such file or directory`
