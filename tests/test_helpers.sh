@@ -34,6 +34,10 @@ init_tests() {
     echo -e "${COLOR_BOLD}${COLOR_CYAN}╚════════════════════════════════════════════════════════════════╝${COLOR_RESET}"
     echo ""
 
+    # Show current directory for debugging
+    echo -e "${COLOR_CYAN}Working directory: $(pwd)${COLOR_RESET}"
+    echo ""
+
     # Clean and recreate output directories
     rm -rf "$TEST_OUTPUT_DIR"/* "$TEST_LOG_DIR"/* 2>/dev/null
     mkdir -p "$TEST_OUTPUT_DIR" "$TEST_LOG_DIR"
@@ -41,8 +45,40 @@ init_tests() {
     # Check if binary exists
     if [ ! -f "$EXPOCLI_BIN" ]; then
         echo -e "${COLOR_RED}ERROR: ExpoCLI binary not found at $EXPOCLI_BIN${COLOR_RESET}"
-        echo -e "${COLOR_YELLOW}Please build the project first: mkdir -p build && cd build && cmake .. && make${COLOR_RESET}"
-        exit 1
+        echo -e "${COLOR_YELLOW}The binary needs to be built before running tests.${COLOR_RESET}"
+        echo ""
+        echo "Would you like to build it now? (y/n)"
+        read -r response
+
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            echo ""
+            echo -e "${COLOR_CYAN}Building ExpoCLI...${COLOR_RESET}"
+            mkdir -p build
+            cd build
+            if cmake .. && make -j4; then
+                cd ..
+                echo ""
+                echo -e "${COLOR_GREEN}✓ Build successful!${COLOR_RESET}"
+                echo ""
+            else
+                cd ..
+                echo ""
+                echo -e "${COLOR_RED}✗ Build failed. Please check the errors above.${COLOR_RESET}"
+                exit 1
+            fi
+        else
+            echo ""
+            echo -e "${COLOR_YELLOW}To build manually, run:${COLOR_RESET}"
+            echo "  mkdir -p build && cd build && cmake .. && make"
+            exit 1
+        fi
+    fi
+
+    # Verify binary is executable
+    if [ ! -x "$EXPOCLI_BIN" ]; then
+        echo -e "${COLOR_RED}ERROR: ExpoCLI binary is not executable${COLOR_RESET}"
+        chmod +x "$EXPOCLI_BIN"
+        echo -e "${COLOR_GREEN}Made binary executable${COLOR_RESET}"
     fi
 
     # Record start time

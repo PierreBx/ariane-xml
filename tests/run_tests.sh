@@ -5,7 +5,17 @@
 set -e
 
 # Change to project root directory
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+# Verify we're in the correct directory
+if [ ! -f "CMakeLists.txt" ] || [ ! -d "tests" ]; then
+    echo "ERROR: Could not find project root directory"
+    echo "Expected to find CMakeLists.txt and tests/ directory"
+    echo "Current directory: $(pwd)"
+    exit 1
+fi
 
 # Source helper functions
 source tests/test_helpers.sh
