@@ -88,7 +88,7 @@ If you make code changes and want to rebuild:
 
 ```bash
 # Just delete the binary - the wrapper will rebuild automatically
-docker compose run --rm xml-query-cli rm /app/build/expocli
+docker compose run --rm expocli rm /app/build/expocli
 expocli  # Will trigger rebuild
 ```
 
@@ -96,7 +96,7 @@ Or rebuild manually:
 
 ```bash
 cd /path/to/ExpoCLI
-docker compose run --rm xml-query-cli bash -c "cd /app/build && make"
+docker compose run --rm expocli bash -c "cd /app/build && make"
 ```
 
 ## Uninstalling
@@ -157,7 +157,7 @@ EXPOCLI_QUIET=1 expocli "SELECT ..."
 ### Access Container Directly
 ```bash
 cd /path/to/ExpoCLI
-docker compose run --rm xml-query-cli bash
+docker compose run --rm expocli bash
 ```
 
 ## Benefits of This Approach

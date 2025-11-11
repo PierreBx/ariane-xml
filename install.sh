@@ -111,9 +111,36 @@ cd "${SCRIPT_DIR}"
 
 # Check if Docker is available
 if ! command -v docker &> /dev/null; then
-    echo -e "${YELLOW}⚠${NC}  Docker not found - skipping rebuild"
-    echo "    The binary will be compiled on first run"
-else
+    echo -e "${YELLOW}⚠${NC}  Docker not found!"
+    echo "    Docker is required for expocli to work."
+    echo "    Please install Docker from: https://docs.docker.com/get-docker/"
+    echo ""
+    echo "    Installation incomplete - Docker required."
+    exit 1
+fi
+
+# Check if Docker daemon is running
+if ! docker ps &> /dev/null; then
+    echo -e "${YELLOW}⚠${NC}  Docker daemon is not running!"
+    echo "    Please start Docker and try again."
+    echo ""
+    echo "    Installation incomplete - Docker not running."
+    exit 1
+fi
+
+# Check if Docker Compose is available
+if ! docker compose version &> /dev/null 2>&1; then
+    echo -e "${YELLOW}⚠${NC}  Docker Compose V2 is not available!"
+    echo "    Please update Docker to get Compose V2."
+    echo ""
+    echo "    Installation incomplete - Docker Compose required."
+    exit 1
+fi
+
+echo -e "${GREEN}✓${NC} Docker is available and running"
+echo ""
+
+# Now proceed with build/compile
     if [ "$REBUILD_DOCKER" = true ]; then
         # Full rebuild mode - stop containers and rebuild image
         echo -e "${YELLOW}INFO:${NC} Running with --rebuild-docker flag"
@@ -123,6 +150,7 @@ else
         echo -e "${BLUE}[1/4]${NC} Stopping any running containers..."
         CONTAINER_NAME="expocli_container"
         if docker ps -q -f name="${CONTAINER_NAME}" | grep -q .; then
+            echo "      Stopping expocli_container..."
             docker compose down 2>/dev/null || true
             echo -e "${GREEN}✓${NC} Stopped running container"
         else
@@ -139,20 +167,34 @@ else
         # Step 3: Clean old build directory
         echo ""
         echo -e "${BLUE}[3/4]${NC} Cleaning old build artifacts..."
-        docker compose run --rm --no-TTY expocli bash -c "rm -rf /app/build" 2>/dev/null || true
-        echo -e "${GREEN}✓${NC} Build directory cleaned"
+        echo "      Starting temporary container to clean build directory..."
+        if docker compose run --rm --no-TTY expocli bash -c "rm -rf /app/build" 2>/dev/null; then
+            echo -e "${GREEN}✓${NC} Build directory cleaned (container stopped)"
+        else
+            echo -e "${YELLOW}⚠${NC}  Failed to clean build directory"
+            exit 1
+        fi
 
         # Step 4: Compile the binary with latest code
         echo ""
         echo -e "${BLUE}[4/4]${NC} Compiling expocli with latest source code..."
-        docker compose run --rm --no-TTY expocli bash -c \
-            "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make" 2>&1
+        echo "      Starting temporary container for compilation..."
+        echo "      (This may take 30-60 seconds)"
 
-        if docker compose run --rm --no-TTY expocli test -f /app/build/expocli 2>/dev/null; then
-            echo -e "${GREEN}✓${NC} Compilation successful"
+        if docker compose run --rm --no-TTY expocli bash -c \
+            "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make"; then
+            echo ""
+            # Verify the binary was created
+            if docker compose run --rm --no-TTY expocli test -f /app/build/expocli 2>/dev/null; then
+                echo -e "${GREEN}✓${NC} Compilation successful (container stopped)"
+            else
+                echo -e "${YELLOW}⚠${NC}  Binary not found after compilation"
+                exit 1
+            fi
         else
-            echo -e "${YELLOW}⚠${NC}  Compilation may have failed, but installation continues"
-            echo "    The binary will be compiled on first run if needed"
+            echo ""
+            echo -e "${YELLOW}⚠${NC}  Compilation failed!"
+            exit 1
         fi
 
         echo ""
@@ -163,35 +205,57 @@ else
         echo ""
 
         # Ensure Docker image exists
+        echo "Testing Docker setup..."
         if ! docker compose run --rm --no-TTY expocli true 2>/dev/null; then
-            echo -e "${BLUE}[1/2]${NC} Docker image not found, building..."
-            docker compose build
-            echo -e "${GREEN}✓${NC} Docker image built successfully"
+            echo -e "${BLUE}[Building]${NC} Docker image not found, building it now..."
+            echo "           (This is a one-time setup, takes ~1-2 minutes)"
+            if docker compose build; then
+                echo -e "${GREEN}✓${NC} Docker image built successfully"
+                echo ""
+            else
+                echo -e "${YELLOW}⚠${NC}  Docker build failed!"
+                exit 1
+            fi
+        else
+            echo -e "${GREEN}✓${NC} Docker image exists"
             echo ""
         fi
 
         # Step 1: Clean old build directory
         echo -e "${BLUE}[1/2]${NC} Cleaning old build artifacts..."
-        docker compose run --rm --no-TTY expocli bash -c "rm -rf /app/build" 2>/dev/null || true
-        echo -e "${GREEN}✓${NC} Build directory cleaned"
+        echo "      Starting temporary container..."
+        if docker compose run --rm --no-TTY expocli bash -c "rm -rf /app/build" 2>/dev/null; then
+            echo -e "${GREEN}✓${NC} Build directory cleaned (container stopped)"
+        else
+            echo -e "${YELLOW}⚠${NC}  Failed to clean build directory"
+            exit 1
+        fi
 
         # Step 2: Compile the binary with latest code
         echo ""
         echo -e "${BLUE}[2/2]${NC} Compiling expocli with latest source code..."
-        docker compose run --rm --no-TTY expocli bash -c \
-            "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make" 2>&1
+        echo "      Starting temporary container for compilation..."
+        echo "      (This may take 30-60 seconds)"
 
-        if docker compose run --rm --no-TTY expocli test -f /app/build/expocli 2>/dev/null; then
-            echo -e "${GREEN}✓${NC} Compilation successful"
+        if docker compose run --rm --no-TTY expocli bash -c \
+            "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make"; then
+            echo ""
+            # Verify the binary was created
+            if docker compose run --rm --no-TTY expocli test -f /app/build/expocli 2>/dev/null; then
+                echo -e "${GREEN}✓${NC} Compilation successful (container stopped)"
+            else
+                echo -e "${YELLOW}⚠${NC}  Binary not found after compilation"
+                exit 1
+            fi
         else
-            echo -e "${YELLOW}⚠${NC}  Compilation may have failed, but installation continues"
-            echo "    The binary will be compiled on first run if needed"
+            echo ""
+            echo -e "${YELLOW}⚠${NC}  Compilation failed!"
+            exit 1
         fi
 
         echo ""
         echo -e "${GREEN}✓${NC} Binary compilation complete!"
     fi
-fi
 
 # Test the setup
 echo ""
@@ -220,6 +284,14 @@ echo "Usage examples:"
 echo -e "  ${BLUE}expocli${NC}                                    # Start interactive mode"
 echo -e "  ${BLUE}expocli 'SELECT name FROM ./data'${NC}         # Single query"
 echo -e "  ${BLUE}expocli --help${NC}                             # Show help"
+echo ""
+echo -e "${BLUE}How it works:${NC}"
+echo "  expocli runs inside Docker containers transparently."
+echo "  Each time you use expocli, it:"
+echo "    1. Starts a temporary container"
+echo "    2. Runs your query"
+echo "    3. Stops and removes the container"
+echo "  You won't even notice - it feels like a native command!"
 echo ""
 if [ "$REBUILD_DOCKER" = true ]; then
     echo "Note: Docker image has been rebuilt with latest dependencies."

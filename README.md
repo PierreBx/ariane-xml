@@ -72,7 +72,7 @@ docker compose build
 
 2. **Start the container:**
 ```bash
-docker compose run --rm xml-query-cli
+docker compose run --rm expocli
 ```
 
 3. **Inside the container, build the project:**
