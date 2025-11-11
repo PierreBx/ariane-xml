@@ -80,15 +80,24 @@ run_test() {
         eval "$setup" &>/dev/null
     fi
 
-    # Execute command - replace '; exit;' with newlines, or append exit
+    # Execute command - split multiple commands on separate lines
     local full_command="$command"
-    # Replace '; exit;' or '; quit;' with proper newlines
-    full_command=$(echo "$full_command" | sed 's/; exit;/\nexit;/g' | sed 's/; quit;/\nquit;/g')
+
+    # Replace all '; ' with ';\n' to put each command on its own line
+    # But first handle exit/quit specially
+    if [[ "$full_command" =~ "; exit;" ]]; then
+        full_command=$(echo "$full_command" | sed 's/; exit;/;\nexit;/g')
+    elif [[ "$full_command" =~ "; quit;" ]]; then
+        full_command=$(echo "$full_command" | sed 's/; quit;/;\nquit;/g')
+    fi
+
+    # Now split other semicolons to separate lines (but not the final one we just added)
+    # Replace '; ' (semicolon followed by space) with ';\n' only before exit/quit line
+    full_command=$(echo -e "$full_command" | sed '/^exit;/!s/; /;\n/g' | sed '/^quit;/!s/; /;\n/g')
 
     # If no exit/quit command, append it
     if [[ ! "$full_command" =~ (exit|quit) ]]; then
-        full_command="${full_command}
-exit;"
+        full_command=$(echo -e "${full_command}\nexit;")
     fi
 
     local exit_code=0
