@@ -49,6 +49,7 @@ private:
     void parseOrderByClause(Query& query);
     void parseLimitClause(Query& query);
     void parseGroupByClause(Query& query);  // Parse GROUP BY clause
+    void parseHavingClause(Query& query);   // Parse HAVING clause
     void markVariableReferencesInWhere(WhereExpr* expr, const Query& query);
 };
 

@@ -10,6 +10,7 @@ namespace expocli {
 // Token types for the lexer
 enum class TokenType {
     SELECT,
+    DISTINCT,
     FROM,
     WHERE,
     ORDER,
@@ -152,9 +153,11 @@ struct Query {
     std::vector<ForClause> for_clauses;        // Optional FOR clauses for iteration context
     std::unique_ptr<WhereExpr> where;          // Optional WHERE clause (can be condition or logical)
     std::vector<std::string> group_by_fields;  // GROUP BY fields (Phase 3)
+    std::unique_ptr<WhereExpr> having;         // Optional HAVING clause (filters aggregated results)
     std::vector<std::string> order_by_fields;  // ORDER BY fields (Phase 2)
     int limit = -1;                            // LIMIT value (Phase 2, -1 means no limit)
     bool has_aggregates = false;               // True if SELECT contains aggregation functions
+    bool distinct = false;                     // True if SELECT DISTINCT is used
 
     // Helper: Check if identifier is a FOR variable
     bool isForVariable(const std::string& name) const {
