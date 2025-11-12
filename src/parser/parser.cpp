@@ -12,6 +12,11 @@ std::unique_ptr<Query> Parser::parse() {
     // Parse SELECT clause
     expect(TokenType::SELECT, "Expected SELECT keyword");
 
+    // Parse optional DISTINCT
+    if (match(TokenType::DISTINCT)) {
+        query->distinct = true;
+    }
+
     // Parse field list
     query->select_fields.push_back(parseFieldPath());
 
@@ -37,6 +42,11 @@ std::unique_ptr<Query> Parser::parse() {
     // Parse optional LIMIT clause
     if (check(TokenType::LIMIT)) {
         parseLimitClause(*query);
+    }
+
+    // Parse optional OFFSET clause
+    if (check(TokenType::OFFSET)) {
+        parseOffsetClause(*query);
     }
 
     // Ensure we're at the end
@@ -351,27 +361,35 @@ void Parser::parseOrderByClause(Query& query) {
         throw ParseError("Expected field name after ORDER BY");
     }
 
-    std::string fieldName = advance().value;
-    query.order_by_fields.push_back(fieldName);
+    OrderByField orderByField;
+    orderByField.field_name = advance().value;
 
-    // Skip optional ASC/DESC for now (default is ASC)
-    if (match(TokenType::ASC) || match(TokenType::DESC)) {
-        // For Phase 2, we'll just store the field name
-        // Future enhancement: store sort direction
+    // Parse optional ASC/DESC (default is ASC)
+    if (match(TokenType::DESC)) {
+        orderByField.direction = SortDirection::DESC;
+    } else if (match(TokenType::ASC)) {
+        orderByField.direction = SortDirection::ASC;
     }
+
+    query.order_by_fields.push_back(orderByField);
 
     // Support multiple ORDER BY fields separated by commas
     while (match(TokenType::COMMA)) {
         if (peek().type != TokenType::IDENTIFIER) {
             throw ParseError("Expected field name after comma in ORDER BY");
         }
-        fieldName = advance().value;
-        query.order_by_fields.push_back(fieldName);
 
-        // Skip optional ASC/DESC
-        if (match(TokenType::ASC) || match(TokenType::DESC)) {
-            // Future enhancement: store sort direction
+        orderByField = OrderByField();  // Reset to defaults
+        orderByField.field_name = advance().value;
+
+        // Parse optional ASC/DESC
+        if (match(TokenType::DESC)) {
+            orderByField.direction = SortDirection::DESC;
+        } else if (match(TokenType::ASC)) {
+            orderByField.direction = SortDirection::ASC;
         }
+
+        query.order_by_fields.push_back(orderByField);
     }
 }
 
@@ -391,6 +409,25 @@ void Parser::parseLimitClause(Query& query) {
         throw ParseError("Invalid LIMIT value");
     } catch (const std::out_of_range&) {
         throw ParseError("LIMIT value out of range");
+    }
+}
+
+void Parser::parseOffsetClause(Query& query) {
+    expect(TokenType::OFFSET, "Expected OFFSET keyword");
+
+    if (peek().type != TokenType::NUMBER) {
+        throw ParseError("Expected number after OFFSET");
+    }
+
+    try {
+        query.offset = std::stoi(advance().value);
+        if (query.offset < 0) {
+            throw ParseError("OFFSET value must be non-negative");
+        }
+    } catch (const std::invalid_argument&) {
+        throw ParseError("Invalid OFFSET value");
+    } catch (const std::out_of_range&) {
+        throw ParseError("OFFSET value out of range");
     }
 }
 

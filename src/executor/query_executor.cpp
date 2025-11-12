@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <functional>
+#include <set>
 
 namespace expocli {
 
@@ -49,10 +50,12 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
 
     // Apply ORDER BY if specified
     if (!query.order_by_fields.empty()) {
-        const std::string& orderField = query.order_by_fields[0]; // For Phase 2, support first field only
+        const OrderByField& orderByField = query.order_by_fields[0]; // For now, support first field only
+        const std::string& orderField = orderByField.field_name;
+        bool descending = (orderByField.direction == SortDirection::DESC);
 
         std::sort(allResults.begin(), allResults.end(),
-            [&orderField](const ResultRow& a, const ResultRow& b) {
+            [&orderField, descending](const ResultRow& a, const ResultRow& b) {
                 // Find the field in both rows
                 std::string aValue, bValue;
 
@@ -74,16 +77,48 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
                 try {
                     double aNum = std::stod(aValue);
                     double bNum = std::stod(bValue);
-                    return aNum < bNum;
+                    // For descending, we want larger values first (a > b means a before b)
+                    // For ascending, we want smaller values first (a < b means a before b)
+                    return descending ? (aNum > bNum) : (aNum < bNum);
                 } catch (...) {
                     // Fall back to string comparison
-                    return aValue < bValue;
+                    return descending ? (aValue > bValue) : (aValue < bValue);
                 }
             }
         );
     }
 
-    // Apply LIMIT if specified
+    // Apply DISTINCT if specified (remove duplicate rows)
+    if (query.distinct) {
+        std::vector<ResultRow> uniqueResults;
+        std::set<std::string> seen;  // Store serialized rows for comparison
+
+        for (const auto& row : allResults) {
+            // Serialize the row for comparison
+            std::string rowKey;
+            for (const auto& [field, value] : row) {
+                rowKey += field + ":" + value + "|";
+            }
+
+            // Only add if we haven't seen this row before
+            if (seen.find(rowKey) == seen.end()) {
+                seen.insert(rowKey);
+                uniqueResults.push_back(row);
+            }
+        }
+
+        allResults = std::move(uniqueResults);
+    }
+
+    // Apply OFFSET if specified (skip first N results)
+    if (query.offset >= 0 && static_cast<size_t>(query.offset) < allResults.size()) {
+        allResults.erase(allResults.begin(), allResults.begin() + query.offset);
+    } else if (query.offset >= 0 && static_cast<size_t>(query.offset) >= allResults.size()) {
+        // Offset is beyond the result set, return empty
+        allResults.clear();
+    }
+
+    // Apply LIMIT if specified (after offset)
     if (query.limit >= 0 && static_cast<size_t>(query.limit) < allResults.size()) {
         allResults.resize(query.limit);
     }

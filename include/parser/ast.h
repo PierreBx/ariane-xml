@@ -10,11 +10,13 @@ namespace expocli {
 // Token types for the lexer
 enum class TokenType {
     SELECT,
+    DISTINCT,
     FROM,
     WHERE,
     ORDER,
     BY,
     LIMIT,
+    OFFSET,
     ASC,
     DESC,
     SET,
@@ -107,13 +109,27 @@ struct WhereLogical : public WhereExpr {
     std::unique_ptr<WhereExpr> right;
 };
 
+// Sort direction for ORDER BY
+enum class SortDirection {
+    ASC,
+    DESC
+};
+
+// ORDER BY field with direction
+struct OrderByField {
+    std::string field_name;
+    SortDirection direction = SortDirection::ASC;
+};
+
 // Main Query AST
 struct Query {
     std::vector<FieldPath> select_fields;     // Fields to select
+    bool distinct = false;                     // DISTINCT flag
     std::string from_path;                     // Directory path
     std::unique_ptr<WhereExpr> where;          // Optional WHERE clause (can be condition or logical)
-    std::vector<std::string> order_by_fields;  // ORDER BY fields (Phase 2)
-    int limit = -1;                            // LIMIT value (Phase 2, -1 means no limit)
+    std::vector<OrderByField> order_by_fields; // ORDER BY fields with direction
+    int limit = -1;                            // LIMIT value (-1 means no limit)
+    int offset = -1;                           // OFFSET value (-1 means no offset)
 };
 
 } // namespace expocli

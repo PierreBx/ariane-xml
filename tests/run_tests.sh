@@ -148,6 +148,21 @@ run_test "ORDER-001" \
     'SELECT title FROM "tests/data/books1.xml" ORDER BY year;' \
     "Learning Programming"
 
+run_test "ORDER-002" \
+    "ORDER BY DESC numeric field" \
+    'SELECT title FROM "tests/data/books1.xml" ORDER BY year DESC;' \
+    "The Great Adventure"
+
+run_test "ORDER-003" \
+    "ORDER BY ASC explicit" \
+    'SELECT title FROM "tests/data/books1.xml" ORDER BY price ASC;' \
+    "The Great Adventure"
+
+run_test "ORDER-004" \
+    "ORDER BY DESC with price" \
+    'SELECT title FROM "tests/data/books1.xml" ORDER BY price DESC;' \
+    "Learning Programming"
+
 run_test "LIMIT-001" \
     "LIMIT results" \
     'SELECT title FROM "tests/data/books1.xml" LIMIT 1;' \
@@ -157,6 +172,41 @@ run_test "LIMIT-002" \
     "LIMIT with ORDER BY" \
     'SELECT title FROM "tests/data/books1.xml" ORDER BY price LIMIT 1;' \
     "The Great Adventure"
+
+run_test "LIMIT-003" \
+    "LIMIT with ORDER BY DESC" \
+    'SELECT title FROM "tests/data/books1.xml" ORDER BY price DESC LIMIT 1;' \
+    "Learning Programming"
+
+run_test "OFFSET-001" \
+    "OFFSET without LIMIT" \
+    'SELECT title FROM "tests/data/books1.xml" OFFSET 1;' \
+    "Learning Programming"
+
+run_test "OFFSET-002" \
+    "LIMIT with OFFSET" \
+    'SELECT title FROM "tests/data/books1.xml" LIMIT 1 OFFSET 1;' \
+    "Learning Programming"
+
+run_test "OFFSET-003" \
+    "ORDER BY with LIMIT and OFFSET" \
+    'SELECT title FROM "tests/data/books1.xml" ORDER BY year ASC LIMIT 1 OFFSET 1;' \
+    "The Great Adventure"
+
+run_test "DISTINCT-001" \
+    "DISTINCT removes duplicates" \
+    'SELECT DISTINCT category FROM "tests/data/";' \
+    "3 row"
+
+run_test "DISTINCT-002" \
+    "DISTINCT with ORDER BY" \
+    'SELECT DISTINCT category FROM "tests/data/" ORDER BY category ASC;' \
+    "Fiction"
+
+run_test "DISTINCT-003" \
+    "DISTINCT with LIMIT" \
+    'SELECT DISTINCT category FROM "tests/data/" LIMIT 2;' \
+    "2 row"
 
 # ============================================================================
 # CATEGORY 7: Configuration Commands
