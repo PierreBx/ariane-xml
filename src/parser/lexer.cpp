@@ -157,6 +157,7 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
 
     if (upper == "SELECT") return TokenType::SELECT;
+    if (upper == "DISTINCT") return TokenType::DISTINCT;
     if (upper == "FROM") return TokenType::FROM;
     if (upper == "WHERE") return TokenType::WHERE;
     if (upper == "AND") return TokenType::AND;

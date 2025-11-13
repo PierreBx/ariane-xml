@@ -12,6 +12,11 @@ std::unique_ptr<Query> Parser::parse() {
     // Parse SELECT clause
     expect(TokenType::SELECT, "Expected SELECT keyword");
 
+    // Check for optional DISTINCT keyword
+    if (match(TokenType::DISTINCT)) {
+        query->distinct = true;
+    }
+
     // Parse field list (may include aggregations)
     query->select_fields.push_back(parseSelectField());
 
@@ -45,6 +50,11 @@ std::unique_ptr<Query> Parser::parse() {
     // Parse optional GROUP BY clause
     if (check(TokenType::GROUP)) {
         parseGroupByClause(*query);
+    }
+
+    // Parse optional HAVING clause (must come after GROUP BY)
+    if (check(TokenType::HAVING)) {
+        parseHavingClause(*query);
     }
 
     // Parse optional ORDER BY clause
@@ -611,6 +621,14 @@ void Parser::parseGroupByClause(Query& query) {
 
         query.group_by_fields.push_back(fieldName);
     }
+}
+
+void Parser::parseHavingClause(Query& query) {
+    expect(TokenType::HAVING, "Expected HAVING keyword");
+
+    // HAVING clause uses the same expression syntax as WHERE
+    // It can reference aggregated columns, GROUP BY fields, or aggregation functions
+    query.having = parseWhereExpression();
 }
 
 // Mark variable references in WHERE clause fields
