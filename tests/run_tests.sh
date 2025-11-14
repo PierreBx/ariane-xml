@@ -150,17 +150,17 @@ run_test "ORDER-001" \
 
 run_test "ORDER-002" \
     "ORDER BY DESC numeric field" \
-    'SELECT title FROM "tests/data/books1.xml" ORDER BY year DESC;' \
+    'SELECT .title FROM "tests/data/books1.xml" ORDER BY year DESC;' \
     "The Great Adventure"
 
 run_test "ORDER-003" \
     "ORDER BY ASC explicit" \
-    'SELECT title FROM "tests/data/books1.xml" ORDER BY price ASC;' \
+    'SELECT .title FROM "tests/data/books1.xml" ORDER BY price ASC;' \
     "The Great Adventure"
 
 run_test "ORDER-004" \
     "ORDER BY DESC with price" \
-    'SELECT title FROM "tests/data/books1.xml" ORDER BY price DESC;' \
+    'SELECT .title FROM "tests/data/books1.xml" ORDER BY price DESC;' \
     "Learning Programming"
 
 run_test "LIMIT-001" \
@@ -175,72 +175,72 @@ run_test "LIMIT-002" \
 
 run_test "LIMIT-003" \
     "LIMIT with ORDER BY DESC" \
-    'SELECT title FROM "tests/data/books1.xml" ORDER BY price DESC LIMIT 1;' \
+    'SELECT .title FROM "tests/data/books1.xml" ORDER BY price DESC LIMIT 1;' \
     "Learning Programming"
 
 run_test "OFFSET-001" \
     "OFFSET without LIMIT" \
-    'SELECT title FROM "tests/data/books1.xml" OFFSET 1;' \
+    'SELECT .title FROM "tests/data/books1.xml" OFFSET 1;' \
     "Learning Programming"
 
 run_test "OFFSET-002" \
     "LIMIT with OFFSET" \
-    'SELECT title FROM "tests/data/books1.xml" LIMIT 1 OFFSET 1;' \
+    'SELECT .title FROM "tests/data/books1.xml" LIMIT 1 OFFSET 1;' \
     "Learning Programming"
 
 run_test "OFFSET-003" \
     "ORDER BY with LIMIT and OFFSET" \
-    'SELECT title FROM "tests/data/books1.xml" ORDER BY year ASC LIMIT 1 OFFSET 1;' \
+    'SELECT .title FROM "tests/data/books1.xml" ORDER BY year ASC LIMIT 1 OFFSET 1;' \
     "The Great Adventure"
 
 run_test "DISTINCT-001" \
     "DISTINCT removes duplicates" \
-    'SELECT DISTINCT category FROM "tests/data/";' \
+    'SELECT DISTINCT .category FROM "tests/data/";' \
     "3 row"
 
 run_test "DISTINCT-002" \
     "DISTINCT with ORDER BY" \
-    'SELECT DISTINCT category FROM "tests/data/" ORDER BY category ASC;' \
+    'SELECT DISTINCT .category FROM "tests/data/" ORDER BY category ASC;' \
     "Fiction"
 
 run_test "DISTINCT-003" \
     "DISTINCT with LIMIT" \
-    'SELECT DISTINCT category FROM "tests/data/" LIMIT 2;' \
+    'SELECT DISTINCT .category FROM "tests/data/" LIMIT 2;' \
     "2 row"
 
 run_test "AGG-001" \
-    "COUNT(*) counts all rows" \
-    'SELECT COUNT(*) FROM "tests/data/";' \
-    "3"
+    "COUNT(field) counts all matching elements" \
+    'SELECT COUNT(.price) FROM "tests/data/";' \
+    "10"
 
 run_test "AGG-002" \
     "SUM aggregates numeric values" \
-    'SELECT SUM(price) FROM "tests/data/books1.xml";' \
+    'SELECT SUM(.price) FROM "tests/data/books1.xml";' \
     "79.9"
 
 run_test "AGG-003" \
     "AVG computes average" \
-    'SELECT AVG(price) FROM "tests/data/books1.xml";' \
+    'SELECT AVG(.price) FROM "tests/data/books1.xml";' \
     "39.9"
 
 run_test "AGG-004" \
     "MIN finds minimum value" \
-    'SELECT MIN(price) FROM "tests/data/books1.xml";' \
+    'SELECT MIN(.price) FROM "tests/data/books1.xml";' \
     "29.9"
 
 run_test "AGG-005" \
     "MAX finds maximum value" \
-    'SELECT MAX(price) FROM "tests/data/books1.xml";' \
+    'SELECT MAX(.price) FROM "tests/data/books1.xml";' \
     "49.9"
 
 run_test "AGG-006" \
     "COUNT(field) counts non-null values" \
-    'SELECT COUNT(price) FROM "tests/data/books1.xml";' \
+    'SELECT COUNT(.price) FROM "tests/data/books1.xml";' \
     "2"
 
 run_test "AGG-007" \
     "Multiple aggregates in one query" \
-    'SELECT COUNT(*), SUM(price), AVG(price) FROM "tests/data/books1.xml";' \
+    'SELECT COUNT(.book), SUM(.price), AVG(.price) FROM "tests/data/books1.xml";' \
     "79.9"
 
 # ============================================================================

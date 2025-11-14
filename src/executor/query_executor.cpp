@@ -64,57 +64,53 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
 
         // Convert aggregate fields to regular fields for extraction
         for (const auto& field : query.select_fields) {
-            if (field.aggregate != AggregateFunc::NONE && !field.is_count_star) {
+            if (field.aggregate != AggregateFunc::NONE) {
                 // Extract the underlying field for aggregation
                 FieldPath extractField;
                 extractField.aggregate = AggregateFunc::NONE;
 
                 // If aggregate_arg is set, parse it into components
                 if (!field.aggregate_arg.empty()) {
+                    // Copy the is_partial_path flag from the original field
+                    // (the parser sets this when it encounters a leading dot)
+                    extractField.is_partial_path = field.is_partial_path;
+
+                    // Parse the aggregate_arg into components
+                    // Note: leading dot is already consumed by parser, so aggregate_arg doesn't include it
+                    std::string argToParse = field.aggregate_arg;
                     size_t start = 0;
-                    size_t dot = field.aggregate_arg.find('.');
+                    size_t dot = argToParse.find('.');
                     while (dot != std::string::npos) {
-                        extractField.components.push_back(field.aggregate_arg.substr(start, dot - start));
+                        std::string component = argToParse.substr(start, dot - start);
+                        if (!component.empty()) {
+                            extractField.components.push_back(component);
+                        }
                         start = dot + 1;
-                        dot = field.aggregate_arg.find('.', start);
+                        dot = argToParse.find('.', start);
                     }
-                    extractField.components.push_back(field.aggregate_arg.substr(start));
+                    std::string lastComponent = argToParse.substr(start);
+                    if (!lastComponent.empty()) {
+                        extractField.components.push_back(lastComponent);
+                    }
                 } else {
                     // Otherwise use the existing components
                     extractField.components = field.components;
                     extractField.is_attribute = field.is_attribute;
                     extractField.attribute_name = field.attribute_name;
+                    extractField.is_partial_path = field.is_partial_path;
                 }
 
                 tempQuery.select_fields.push_back(extractField);
             }
         }
 
-        // For COUNT(*) with no other fields, we need at least one field to process
-        // We'll count based on file loading success
-        bool isOnlyCountStar = tempQuery.select_fields.empty();
-
-        if (!isOnlyCountStar) {
-            // Process files to extract field values
-            for (const auto& filepath : xmlFiles) {
-                try {
-                    auto fileResults = processFile(filepath, tempQuery);
-                    allResults.insert(allResults.end(), fileResults.begin(), fileResults.end());
-                } catch (const std::exception& e) {
-                    std::cerr << "Error processing file " << filepath << ": " << e.what() << std::endl;
-                }
-            }
-        } else {
-            // For COUNT(*) only, count files as rows
-            // For now, without WHERE clause support in pure COUNT(*), just count files
-            for (const auto& filepath : xmlFiles) {
-                try {
-                    auto doc = XmlLoader::load(filepath);
-                    // Each successfully loaded file counts as a row for COUNT(*)
-                    allResults.push_back(ResultRow());
-                } catch (const std::exception& e) {
-                    std::cerr << "Error processing file " << filepath << ": " << e.what() << std::endl;
-                }
+        // Process files to extract field values
+        for (const auto& filepath : xmlFiles) {
+            try {
+                auto fileResults = processFile(filepath, tempQuery);
+                allResults.insert(allResults.end(), fileResults.begin(), fileResults.end());
+            } catch (const std::exception& e) {
+                std::cerr << "Error processing file " << filepath << ": " << e.what() << std::endl;
             }
         }
 
@@ -122,30 +118,26 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
         ResultRow aggregateRow;
         for (const auto& field : query.select_fields) {
             std::string fieldName;
-            if (field.is_count_star) {
-                fieldName = "COUNT(*)";
+            std::string path;
+            if (field.is_attribute) {
+                path = "@" + field.attribute_name;
+            } else if (!field.aggregate_arg.empty()) {
+                // Use aggregate_arg if it was set by parseSelectField()
+                path = field.aggregate_arg;
             } else {
-                std::string path;
-                if (field.is_attribute) {
-                    path = "@" + field.attribute_name;
-                } else if (!field.aggregate_arg.empty()) {
-                    // Use aggregate_arg if it was set by parseSelectField()
-                    path = field.aggregate_arg;
-                } else {
-                    for (size_t i = 0; i < field.components.size(); ++i) {
-                        if (i > 0) path += ".";
-                        path += field.components[i];
-                    }
+                for (size_t i = 0; i < field.components.size(); ++i) {
+                    if (i > 0) path += ".";
+                    path += field.components[i];
                 }
+            }
 
-                switch (field.aggregate) {
-                    case AggregateFunc::COUNT: fieldName = "COUNT(" + path + ")"; break;
-                    case AggregateFunc::SUM:   fieldName = "SUM(" + path + ")"; break;
-                    case AggregateFunc::AVG:   fieldName = "AVG(" + path + ")"; break;
-                    case AggregateFunc::MIN:   fieldName = "MIN(" + path + ")"; break;
-                    case AggregateFunc::MAX:   fieldName = "MAX(" + path + ")"; break;
-                    default: break;
-                }
+            switch (field.aggregate) {
+                case AggregateFunc::COUNT: fieldName = "COUNT(" + path + ")"; break;
+                case AggregateFunc::SUM:   fieldName = "SUM(" + path + ")"; break;
+                case AggregateFunc::AVG:   fieldName = "AVG(" + path + ")"; break;
+                case AggregateFunc::MIN:   fieldName = "MIN(" + path + ")"; break;
+                case AggregateFunc::MAX:   fieldName = "MAX(" + path + ")"; break;
+                default: break;
             }
 
             std::string aggregateValue = computeAggregate(field, allResults);
@@ -1577,11 +1569,6 @@ std::vector<ResultRow> QueryExecutor::executeWithProgress(
 }
 
 std::string QueryExecutor::computeAggregate(const FieldPath& field, const std::vector<ResultRow>& allResults) {
-    if (field.is_count_star) {
-        // COUNT(*) - count all rows
-        return std::to_string(allResults.size());
-    }
-
     // Build the field name we're looking for
     std::string targetField;
     if (field.is_attribute) {
