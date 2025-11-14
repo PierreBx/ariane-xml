@@ -160,11 +160,18 @@ FieldPath Parser::parseFieldPath() {
         advance(); // consume aggregate function keyword
         expect(TokenType::LPAREN, "Expected '(' after aggregate function");
 
-        // Check for COUNT(*) special case
+        // Check for COUNT(*) - not supported
         if (field.aggregate == AggregateFunc::COUNT && peek().type == TokenType::ASTERISK) {
-            field.is_count_star = true;
-            advance(); // consume *
-        } else if (peek().type == TokenType::AT) {
+            throw ParseError("COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
+        }
+
+        // Check for leading dot (partial path)
+        if (peek().type == TokenType::DOT) {
+            field.is_partial_path = true;
+            advance(); // consume leading dot
+        }
+
+        if (peek().type == TokenType::AT) {
             // Parse @attribute syntax inside aggregate
             advance(); // consume @
             if (peek().type != TokenType::IDENTIFIER) {
@@ -201,6 +208,12 @@ FieldPath Parser::parseFieldPath() {
         field.include_filename = true;
         advance();
         return field;
+    }
+
+    // Check for leading dot (partial path)
+    if (peek().type == TokenType::DOT) {
+        field.is_partial_path = true;
+        advance(); // consume leading dot
     }
 
     // Check for attribute syntax (@attribute)
@@ -277,16 +290,18 @@ FieldPath Parser::parseSelectField() {
         advance(); // consume function name
         expect(TokenType::LPAREN, "Expected '(' after aggregation function");
 
-        // Special handling for COUNT(*)
+        // Check for COUNT(*) - not supported
         if (aggFunc == AggregateFunc::COUNT && peek().type == TokenType::ASTERISK) {
-            field.aggregate = aggFunc;
-            field.is_count_star = true;
-            advance(); // consume *
-            expect(TokenType::RPAREN, "Expected ')' after *");
-            return field;
+            throw ParseError("COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
         }
 
-        // Parse argument (can be a variable name or field path like emp.salary)
+        // Check for leading dot (partial path)
+        if (peek().type == TokenType::DOT) {
+            field.is_partial_path = true;
+            advance(); // consume leading dot
+        }
+
+        // Parse argument (can be a variable name or field path like emp.salary or .price)
         if (peek().type != TokenType::IDENTIFIER) {
             throw ParseError("Expected identifier in aggregation function");
         }

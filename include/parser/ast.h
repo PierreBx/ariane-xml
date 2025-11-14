@@ -112,11 +112,13 @@ struct FieldPath {
     AggregateFunc aggregate = AggregateFunc::NONE;  // Aggregation function (if any)
     std::string aggregate_arg = "";                  // Argument to aggregation (e.g., variable name for COUNT(emp))
     std::string alias = "";                          // AS alias for the field
-    bool is_count_star = false;                      // Special case for COUNT(*)
 
     // XML attribute support
     bool is_attribute = false;           // True if this is an XML attribute (@attr)
     std::string attribute_name;          // Attribute name (when is_attribute = true)
+
+    // Path resolution
+    bool is_partial_path = false;        // True if path starts with dot (e.g., .price, .book.price)
 };
 
 // Logical operators for combining conditions

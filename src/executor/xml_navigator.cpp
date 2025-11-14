@@ -50,38 +50,113 @@ std::vector<XmlResult> XmlNavigator::extractValues(
         return results;
     }
 
-    // Single component: search recursively through entire document
+    // Single component path resolution
     if (field.components.size() == 1) {
         const std::string& targetName = field.components[0];
 
-        // Recursive search function to find all elements with the target name
-        std::function<void(const pugi::xml_node&)> findAllByName =
-            [&](const pugi::xml_node& node) {
-                if (!node) return;
+        if (!field.is_partial_path) {
+            // No leading dot: match ONLY at document root
+            pugi::xml_node root = doc.document_element();
+            if (root && std::string(root.name()) == targetName) {
+                std::string value = root.child_value();
+                if (!value.empty()) {
+                    results.push_back({filename, value});
+                }
+            }
+            return results;
+        } else {
+            // Leading dot: partial path - search recursively with ambiguity check
+            std::set<std::string> fullPaths;
+            std::function<void(const pugi::xml_node&, const std::string&)> findAllByName =
+                [&](const pugi::xml_node& node, const std::string& currentPath) {
+                    if (!node) return;
 
-                // Check if this element matches the target name
-                if (node.type() == pugi::node_element &&
-                    std::string(node.name()) == targetName) {
-                    std::string value = node.child_value();
-                    if (!value.empty()) {
-                        results.push_back({filename, value});
+                    // Build current path
+                    std::string nodePath = currentPath;
+                    if (node.type() == pugi::node_element) {
+                        if (!nodePath.empty()) nodePath += ".";
+                        nodePath += node.name();
+
+                        // Check if this element matches the target name
+                        if (std::string(node.name()) == targetName) {
+                            fullPaths.insert(nodePath);
+                            std::string value = node.child_value();
+                            if (!value.empty()) {
+                                results.push_back({filename, value});
+                            }
+                        }
                     }
-                }
 
-                // Recursively search all children
-                for (pugi::xml_node child : node.children()) {
-                    findAllByName(child);
-                }
-            };
+                    // Recursively search all children
+                    for (pugi::xml_node child : node.children()) {
+                        findAllByName(child, nodePath);
+                    }
+                };
 
-        findAllByName(doc);
-        return results;
+            findAllByName(doc, "");
+
+            // Check for ambiguity: if multiple different paths found, error
+            if (fullPaths.size() > 1) {
+                std::string pathList;
+                for (const auto& path : fullPaths) {
+                    if (!pathList.empty()) pathList += "\n  - ";
+                    pathList += path;
+                }
+                throw std::runtime_error("Ambiguous path '." + targetName + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
+            }
+
+            return results;
+        }
     }
 
     // Multi-component path: use partial path matching (suffix matching)
-    // This allows "department.name" to match any path ending with those components
+    // This allows ".book.price" to match any path ending with those components
     std::vector<pugi::xml_node> nodes;
     findNodesByPartialPath(doc, field.components, nodes);
+
+    // For partial paths, check for ambiguity
+    if (field.is_partial_path && !nodes.empty()) {
+        // Helper to build full path from node to root
+        auto getNodePath = [](pugi::xml_node n) -> std::vector<std::string> {
+            std::vector<std::string> nodePath;
+            while (n && n.type() == pugi::node_element) {
+                nodePath.insert(nodePath.begin(), std::string(n.name()));
+                n = n.parent();
+            }
+            return nodePath;
+        };
+
+        // Collect all unique full paths
+        std::set<std::string> fullPaths;
+        for (const auto& node : nodes) {
+            if (node) {
+                std::vector<std::string> nodePath = getNodePath(node);
+                std::string pathStr;
+                for (size_t i = 0; i < nodePath.size(); ++i) {
+                    if (i > 0) pathStr += ".";
+                    pathStr += nodePath[i];
+                }
+                fullPaths.insert(pathStr);
+            }
+        }
+
+        // Check for ambiguity: if multiple different paths found, error
+        if (fullPaths.size() > 1) {
+            std::string pathList;
+            for (const auto& path : fullPaths) {
+                if (!pathList.empty()) pathList += "\n  - ";
+                pathList += path;
+            }
+
+            std::string partialPathStr;
+            for (size_t i = 0; i < field.components.size(); ++i) {
+                if (i > 0) partialPathStr += ".";
+                partialPathStr += field.components[i];
+            }
+
+            throw std::runtime_error("Ambiguous path '." + partialPathStr + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
+        }
+    }
 
     // Extract values from found nodes
     for (const auto& node : nodes) {
