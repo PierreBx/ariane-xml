@@ -277,6 +277,15 @@ FieldPath Parser::parseSelectField() {
         advance(); // consume function name
         expect(TokenType::LPAREN, "Expected '(' after aggregation function");
 
+        // Special handling for COUNT(*)
+        if (aggFunc == AggregateFunc::COUNT && peek().type == TokenType::ASTERISK) {
+            field.aggregate = aggFunc;
+            field.is_count_star = true;
+            advance(); // consume *
+            expect(TokenType::RPAREN, "Expected ')' after *");
+            return field;
+        }
+
         // Parse argument (can be a variable name or field path like emp.salary)
         if (peek().type != TokenType::IDENTIFIER) {
             throw ParseError("Expected identifier in aggregation function");
