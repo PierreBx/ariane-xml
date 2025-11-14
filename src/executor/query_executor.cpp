@@ -66,8 +66,26 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
         for (const auto& field : query.select_fields) {
             if (field.aggregate != AggregateFunc::NONE && !field.is_count_star) {
                 // Extract the underlying field for aggregation
-                FieldPath extractField = field;
+                FieldPath extractField;
                 extractField.aggregate = AggregateFunc::NONE;
+
+                // If aggregate_arg is set, parse it into components
+                if (!field.aggregate_arg.empty()) {
+                    size_t start = 0;
+                    size_t dot = field.aggregate_arg.find('.');
+                    while (dot != std::string::npos) {
+                        extractField.components.push_back(field.aggregate_arg.substr(start, dot - start));
+                        start = dot + 1;
+                        dot = field.aggregate_arg.find('.', start);
+                    }
+                    extractField.components.push_back(field.aggregate_arg.substr(start));
+                } else {
+                    // Otherwise use the existing components
+                    extractField.components = field.components;
+                    extractField.is_attribute = field.is_attribute;
+                    extractField.attribute_name = field.attribute_name;
+                }
+
                 tempQuery.select_fields.push_back(extractField);
             }
         }
@@ -110,6 +128,9 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
                 std::string path;
                 if (field.is_attribute) {
                     path = "@" + field.attribute_name;
+                } else if (!field.aggregate_arg.empty()) {
+                    // Use aggregate_arg if it was set by parseSelectField()
+                    path = field.aggregate_arg;
                 } else {
                     for (size_t i = 0; i < field.components.size(); ++i) {
                         if (i > 0) path += ".";
@@ -764,11 +785,14 @@ void QueryExecutor::processNestedForClauses(
             } else if (field.include_filename) {
                 fieldName = "FILE_NAME";
                 value = filename;
-            } else {
+            } else if (!field.components.empty()) {
                 fieldName = field.components.back();
 
                 // Resolve field using variable context and position context
                 value = resolveFieldWithContext(field, varContext, positionContext, currentContext, query);
+            } else {
+                fieldName = "unknown";
+                value = "";
             }
 
             row.push_back({fieldName, value});
@@ -1075,8 +1099,10 @@ std::vector<ResultRow> QueryExecutor::processFile(
                     fieldName = "FILE_NAME";
                 } else if (field.is_attribute) {
                     fieldName = "@" + field.attribute_name;
-                } else {
+                } else if (!field.components.empty()) {
                     fieldName = field.components.back();
+                } else {
+                    fieldName = "unknown";
                 }
 
                 if (i < fr.size()) {
@@ -1169,7 +1195,7 @@ std::vector<ResultRow> QueryExecutor::processFile(
                                     if (attr) {
                                         value = attr.value();
                                     }
-                                } else {
+                                } else if (!field.components.empty()) {
                                     fieldName = field.components.back();
 
                                     // Use shorthand search from this node
@@ -1187,6 +1213,9 @@ std::vector<ResultRow> QueryExecutor::processFile(
                                             value = fieldNodes[0].child_value();
                                         }
                                     }
+                                } else {
+                                    fieldName = "unknown";
+                                    value = "";
                                 }
 
                                 row.push_back({fieldName, value});
@@ -1237,7 +1266,7 @@ std::vector<ResultRow> QueryExecutor::processFile(
                         if (attr) {
                             value = attr.value();
                         }
-                    } else {
+                    } else if (!field.components.empty()) {
                         fieldName = field.components.back();
 
                         // Shorthand: use first element search
@@ -1257,6 +1286,9 @@ std::vector<ResultRow> QueryExecutor::processFile(
                                 value = fieldNodes[0].child_value();
                             }
                         }
+                    } else {
+                        fieldName = "unknown";
+                        value = "";
                     }
 
                     row.push_back({fieldName, value});
@@ -1554,8 +1586,20 @@ std::string QueryExecutor::computeAggregate(const FieldPath& field, const std::v
     std::string targetField;
     if (field.is_attribute) {
         targetField = "@" + field.attribute_name;
-    } else {
+    } else if (!field.aggregate_arg.empty()) {
+        // Use aggregate_arg if it was set by parseSelectField()
+        // Extract just the last component (field name)
+        size_t lastDot = field.aggregate_arg.find_last_of('.');
+        if (lastDot != std::string::npos) {
+            targetField = field.aggregate_arg.substr(lastDot + 1);
+        } else {
+            targetField = field.aggregate_arg;
+        }
+    } else if (!field.components.empty()) {
         targetField = field.components.back();
+    } else {
+        // No field specified - return empty result
+        return "";
     }
 
     // Collect all values for this field
