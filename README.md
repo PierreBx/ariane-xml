@@ -1,472 +1,222 @@
-# XML Query CLI
+# ExpoCLI
 
-A high-performance command-line tool for querying XML files using SQL-like syntax. Built with C++17 and pugixml for efficient XML processing.
+A high-performance SQL-like query tool for XML files with encryption capabilities.
 
-## Overview
+## Features
 
-This tool provides a simple, SQL-like interface for querying XML data. It's designed for users familiar with SQL who need to extract information from multiple large XML files without learning complex tools like xmllint or XPath.
-
-## Features (Phase 2)
-
-- **Interactive CLI Mode**: REPL interface for running multiple queries in a session
-- **Command History**: Navigate previous queries with UP/DOWN arrow keys (last 100 queries)
-- **Single Query Mode**: Execute one-off queries from command line
-- **SQL-like Query Syntax**: SELECT...FROM...WHERE...ORDER BY...LIMIT syntax
-- **Parenthesized Conditions**: Group conditions with parentheses for complex logic
-- **Logical Operators**: AND/OR support in WHERE clause with proper precedence
-- **Multiple File Support**: Query across all XML files in a directory
-- **Flexible Path Notation**: Use either dot (.) or slash (/) notation for XML paths
-- **Comparison Operators**: Support for =, !=, <, >, <=, >=
-- **ORDER BY**: Sort results numerically or alphabetically
-- **LIMIT**: Restrict number of results returned
-- **Multi-line Queries**: Semicolon-terminated queries support line breaks
-- **Docker Support**: Consistent build environment via Docker
-- **High Performance**: Built with pugixml for efficient XML parsing
-
-## Prerequisites
-
-### Option 1: Using Docker (Recommended)
-- Docker installed on your system
-- Docker Compose V2 (integrated into Docker CLI)
-
-### Option 2: Local Build
-- C++17 compatible compiler (GCC 7+, Clang 5+)
-- CMake 3.15+
-- pugixml library
-- readline library (for command history support)
+- 🔍 **SQL-like Query Syntax** - Familiar SELECT/FROM/WHERE/ORDER BY/LIMIT syntax
+- 🚀 **Interactive & Batch Modes** - REPL interface or single-query execution
+- 📊 **Jupyter Integration** - Run queries in notebooks for data exploration
+- 🔐 **XML Encryption** - Format-preserving encryption and French data pseudonymization
+- ⚡ **High Performance** - Built with C++17 and pugixml
+- 🐳 **Docker Support** - Consistent environment, works anywhere
 
 ## Quick Start
 
-### Recommended: Transparent Local Installation
+### Installation
 
-Use expocli as a native command on your machine (it runs in Docker transparently):
-
-1. **Run the installer:**
 ```bash
+# Clone and install (creates transparent local command)
+git clone <repository-url>
+cd expocli
 ./install.sh
+
+# Reload shell
+source ~/.bashrc
 ```
 
-2. **Reload your shell:**
-```bash
-source ~/.bashrc  # or ~/.zshrc for zsh users
-```
-
-3. **Use expocli from anywhere:**
-```bash
-expocli                                    # Interactive mode
-expocli "SELECT name FROM ./data"          # Single query
-```
-
-The first run will automatically build the Docker image, compile expocli, and start a persistent container (~1-2 minutes). **Subsequent runs are instant!** The container stays running in the background for fast command execution.
-
-👉 **See [INSTALLATION.md](INSTALLATION.md) for detailed installation instructions and troubleshooting.**
-
----
-
-### Alternative: Using Docker Directly
-
-1. **Build and start the container:**
-```bash
-docker compose build
-docker compose up -d
-```
-
-2. **Compile the project inside the container:**
-```bash
-docker compose exec expocli bash -c "mkdir -p build && cd build && cmake .. && make"
-```
-
-3. **Run queries:**
-```bash
-docker compose exec expocli /app/build/expocli "SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 500"
-```
-
-4. **Stop the container when done:**
-```bash
-docker compose down
-```
-
-### Local Build
-
-1. **Install dependencies:**
-```bash
-# Ubuntu/Debian
-sudo apt-get install build-essential cmake libpugixml-dev
-
-# macOS
-brew install cmake pugixml
-```
-
-2. **Build the project:**
-```bash
-mkdir build && cd build
-cmake ..
-make
-```
-
-3. **Run queries:**
-
-**Interactive Mode** (recommended for multiple queries):
-```bash
-./expocli
-```
-
-**Single Query Mode**:
-```bash
-./expocli "SELECT breakfast_menu/food/name FROM ../examples WHERE breakfast_menu/food/calories < 500"
-```
-
-## Usage Modes
-
-### Interactive Mode (REPL)
-
-Start interactive mode by running `expocli` without arguments:
+### Run a Query
 
 ```bash
-./expocli
+# Interactive mode
+expocli
+
+# Single query
+expocli "SELECT name FROM ./data WHERE price < 30"
 ```
 
-You'll get a prompt where you can enter multiple queries:
+### Example Queries
 
-```
-XML Query CLI - Phase 2 (Interactive Mode)
-Type 'help' for usage information, 'exit' or 'quit' to exit.
-Enter SQL-like queries to search XML files.
+```sql
+-- Simple query
+SELECT breakfast_menu/food/name FROM ./examples
 
-expocli> SELECT breakfast_menu/food/name FROM /app/examples WHERE breakfast_menu/food/calories < 700
-Belgian Waffles
-French Toast
+-- With conditions
+SELECT name, price FROM ./examples WHERE price < 10
 
-2 row(s) returned.
+-- Multiple files with ordering
+SELECT FILE_NAME, name FROM ./data WHERE calories < 500 ORDER BY price LIMIT 10
 
-expocli> SELECT bookstore/book/title FROM /app/examples/books.xml ORDER BY price LIMIT 2
-Harry Potter
-Everyday Italian
-
-2 row(s) returned.
-
-expocli> exit
-Bye!
+-- Complex conditions
+SELECT name FROM ./data WHERE (price < 50 AND calories < 1000) OR rating > 4
 ```
 
-**Interactive Commands:**
-- `help`, `\h`, `\?` - Show help message
-- `exit`, `quit`, `\q` - Exit the program
-- `\c`, `clear` - Clear screen
-- `\` at end of line - Continue query on next line (multi-line queries)
+## Documentation
 
-**Multi-line Query Example:**
-```
-expocli> SELECT breakfast_menu/food/name \
-      ... FROM /app/examples \
-      ... WHERE breakfast_menu/food/calories < 700
-```
+### Quick Start Guides (5 minutes each)
 
-### Single Query Mode
+- 📘 [CLI Quick Start](expocli_documentation/01a_Quick_Start_CLI.md) - Command-line interface
+- 📙 [Jupyter Quick Start](expocli_documentation/01b_Quick_Start_Jupyter.md) - Notebook interface
+- 📗 [Encryption Quick Start](expocli_documentation/01c_Quick_Start_Encryption.md) - XML encryption
 
-Execute a single query from the command line:
+### Detailed Documentation
+
+- [Installation Guide](expocli_documentation/02_Installation_Guide.md) - Complete installation instructions
+- [Jupyter Integration](expocli_documentation/04_Jupyter_Integration.md) - Full Jupyter documentation
+- [Encryption Module](expocli_documentation/07_Encryption_Module.md) - Complete encryption reference
+- [Known Issues](expocli_documentation/09_Known_Issues.md) - Troubleshooting guide
+- [Architecture](expocli_documentation/10_Architecture_Diagram.md) - System architecture
+
+## Main Components
+
+### 1. ExpoCLI (Query Engine)
+
+Query XML files using SQL-like syntax:
 
 ```bash
-./expocli "SELECT name FROM /path/to/files WHERE price < 30"
+expocli "SELECT name, price FROM ./data WHERE price < 50"
 ```
 
-### Jupyter Notebook Interface (NEW!)
+**Features:**
+- Interactive REPL with command history
+- Single-query batch mode
+- Multi-file queries
+- Complex WHERE conditions with AND/OR/parentheses
+- ORDER BY and LIMIT support
 
-ExpoCLI now supports running queries in Jupyter notebooks for interactive data exploration and analysis.
+### 2. Jupyter Integration
 
-**Key Benefits:**
-- 📊 Cell-based execution with persistent results
-- 📝 Mix queries with documentation and visualizations
-- 🔄 Reproducible workflows saved as `.ipynb` files
-- 🎓 Perfect for tutorials and data exploration
+Run queries in Jupyter notebooks:
 
-**Quick Start with Docker (Recommended):**
+```sql
+-- In a Jupyter cell
+SELECT name FROM /app/examples WHERE calories < 600
+```
+
+**Features:**
+- Cell-based execution
+- Persistent results
+- Mix queries with documentation
+- Export to PDF/HTML
+
+### 3. XML Encryption (expocli-encrypt)
+
+Encrypt and pseudonymize XML data:
+
 ```bash
-# Start Jupyter Lab with everything pre-configured
-docker compose up -d jupyter
-
-# Open browser to http://localhost:8888
-# Navigate to examples/ExpoCLI_Demo.ipynb
+expocli-encrypt encrypt input.xml encrypted.xml -c config.yaml
 ```
 
-**Alternative - Host Installation:**
-```bash
-# Install the Jupyter kernel on your host
-./install_kernel.sh
-
-# Start Jupyter
-jupyter notebook
-
-# Open the demo: examples/ExpoCLI_Demo.ipynb
-```
-
-See [JUPYTER_KERNEL.md](JUPYTER_KERNEL.md) for full documentation and examples.
+**Features:**
+- Format-Preserving Encryption (NIR, SIREN, SIRET)
+- French data pseudonymization (names, addresses)
+- Date pseudonymization with age preservation
+- Full reversibility via encrypted mapping tables
+- YAML-based configuration
 
 ## Query Syntax
 
-### Basic Structure
 ```sql
-SELECT <field>[,<field>...] FROM <path> [WHERE <condition>]
+SELECT <field>[,<field>...]
+FROM <path>
+[WHERE <condition>]
+[ORDER BY <field> [ASC|DESC]]
+[LIMIT n]
 ```
 
-### Components
+**Field Paths:** Use dot or slash notation
+- `breakfast_menu.food.name`
+- `breakfast_menu/food/name`
 
-**SELECT clause:**
-- Specify one or more fields to extract
-- Use `FILE_NAME` to include the source filename
-- Separate multiple fields with commas
+**Special Fields:**
+- `FILE_NAME` - Include source filename in results
 
-**FROM clause:**
-- Path to XML file or directory
-- If directory, all `.xml` files will be queried
+**Operators:** `=`, `!=`, `<`, `>`, `<=`, `>=`, `AND`, `OR`, `()`
 
-**WHERE clause (optional):**
-- Filter results based on conditions
-- Supports numeric and string comparisons
-- Operators: `=`, `!=`, `<`, `>`, `<=`, `>=`
+## Use Cases
 
-### Field Paths
+### Data Analysis
 
-XML paths can use either notation:
-- Dot notation: `breakfast_menu.food.name`
-- Slash notation: `breakfast_menu/food/name`
-
-Both notations work identically.
-
-## Examples
-
-### Example 1: Basic Query
-**Query:**
 ```bash
-./expocli "SELECT breakfast_menu/food/name FROM ./examples"
+# Explore XML data
+expocli "SELECT DISTINCT category FROM ./data"
+
+# Find patterns
+expocli "SELECT name, price FROM ./data WHERE category='books' ORDER BY price"
 ```
 
-**Output:**
-```
-Belgian Waffles
-Strawberry Belgian Waffles
-Berry-Berry Belgian Waffles
-French Toast
-Homestyle Breakfast
+### Data Anonymization
 
-5 row(s) returned.
-```
-
-### Example 2: Query with WHERE Clause
-**Query:**
 ```bash
-./expocli "SELECT breakfast_menu/food/name FROM ./examples WHERE breakfast_menu/food/calories < 500"
+# Encrypt sensitive data for testing
+expocli-encrypt encrypt prod_data.xml test_data.xml -c config.yaml
 ```
 
-**Output:**
-```
-(No results - all breakfast items have >= 600 calories)
+### Interactive Exploration
 
-0 row(s) returned.
-```
-
-### Example 3: Multiple Fields with Filename
-**Query:**
-```bash
-./expocli "SELECT FILE_NAME,breakfast_menu/food/name,breakfast_menu/food/price FROM ./examples"
-```
-
-**Output:**
-```
-test.xml | Belgian Waffles | $5.95
-test.xml | Strawberry Belgian Waffles | $7.95
-test.xml | Berry-Berry Belgian Waffles | $8.95
-test.xml | French Toast | $4.50
-test.xml | Homestyle Breakfast | $6.95
-
-5 row(s) returned.
-```
-
-### Example 4: Query Across Multiple Files
-**Query:**
-```bash
-./expocli "SELECT FILE_NAME,lunch_menu/food/name FROM ./examples WHERE lunch_menu/food/calories < 500"
-```
-
-**Output:**
-```
-lunch.xml | Caesar Salad
-lunch.xml | Veggie Burger
-
-2 row(s) returned.
-```
+Use Jupyter notebooks to:
+- Explore data interactively
+- Document analysis workflows
+- Share reproducible queries
+- Visualize results
 
 ## Project Structure
 
 ```
-ExpoCLI/
-├── CMakeLists.txt              # Build configuration
-├── Dockerfile                  # Docker environment
-├── docker-compose.yml          # Docker Compose config
-├── README.md                   # This file
-│
-├── include/                    # Header files
-│   ├── parser/
-│   │   ├── ast.h              # AST structures and tokens
-│   │   ├── lexer.h            # Tokenizer
-│   │   └── parser.h           # Query parser
-│   ├── executor/
-│   │   ├── query_executor.h   # Query execution engine
-│   │   └── xml_navigator.h    # XML traversal
-│   └── utils/
-│       ├── xml_loader.h       # XML file loading
-│       └── result_formatter.h # Result output formatting
-│
-├── src/                        # Implementation files
-│   ├── main.cpp               # CLI entry point
-│   ├── parser/
-│   │   ├── lexer.cpp
-│   │   └── parser.cpp
-│   ├── executor/
-│   │   ├── query_executor.cpp
-│   │   └── xml_navigator.cpp
-│   └── utils/
-│       ├── xml_loader.cpp
-│       └── result_formatter.cpp
-│
-└── examples/                   # Sample XML files
-    ├── test.xml               # Breakfast menu
-    └── lunch.xml              # Lunch menu
+expocli/
+├── src/                      # C++ source code
+│   ├── main.cpp             # CLI entry point
+│   ├── parser/              # Query parser
+│   ├── executor/            # Query executor
+│   └── utils/               # Utilities
+├── expocli_crypto/          # Python encryption module
+│   ├── cli.py              # Encryption CLI
+│   ├── encryptor.py        # Main encryptor
+│   ├── fpe.py              # Format-Preserving Encryption
+│   └── pseudonymizer.py    # Data pseudonymization
+├── expocli_kernel/          # Jupyter kernel
+├── tests/                   # Test suites
+├── examples/                # Sample data
+└── expocli_documentation/   # Full documentation
 ```
 
-## Architecture
+## Prerequisites
 
-The application follows a clean pipeline architecture:
-
-1. **Lexer** (`lexer.cpp`): Tokenizes the query string
-2. **Parser** (`parser.cpp`): Builds an Abstract Syntax Tree (AST)
-3. **Query Executor** (`query_executor.cpp`): Orchestrates query execution
-4. **XML Navigator** (`xml_navigator.cpp`): Traverses XML and evaluates conditions
-5. **Result Formatter** (`result_formatter.cpp`): Formats output
-
-## Limitations (Phase 1)
-
-- Single WHERE condition only (no AND/OR)
-- No aggregation functions (COUNT, SUM, AVG)
-- No ORDER BY or LIMIT clauses
-- No JOIN operations
-- No wildcard (*) in SELECT
-
-These features are planned for Phase 2 and Phase 3.
-
-## Performance Notes
-
-- Uses pugixml for fast, memory-efficient XML parsing
-- Suitable for processing large numbers of large XML files
-- Memory usage scales with file size (DOM-based parsing)
-
-## Future Enhancements (Phase 2 & 3)
-
-**Phase 2:**
-- Multiple WHERE conditions with AND/OR
-- Wildcard support in SELECT
-- ORDER BY and LIMIT clauses
-- Better error messages
-
-**Phase 3:**
-- Aggregation functions (COUNT, AVG, SUM, etc.)
-- JOIN operations across files
-- Parallel file processing
-- XSD validation support
-- Index building for repeated queries
-
-## Upgrading
-
-### After Pulling New Updates
-
-If you've pulled new updates from the repository:
-
-```bash
-# Stop the current container
-cd /path/to/ExpoCLI
-docker compose down
-
-# Rebuild with the --rebuild-docker flag to update dependencies
-./install.sh --rebuild-docker
-```
-
-This will:
-1. Rebuild the Docker image with latest dependencies
-2. Recompile the binary with latest source code
-3. Restart the persistent container
-
-Alternatively, for minor code changes without dependency updates:
-```bash
-# Just rerun the installer (faster)
-./install.sh
-```
-
-## Troubleshooting
-
-### Docker Issues
-
-**Problem:** Permission denied when running docker commands
-```bash
-# Add your user to docker group
-sudo usermod -aG docker $USER
-# Log out and back in
-```
-
-**Problem:** Container issues or need to restart
-```bash
-# Stop and restart the container
-cd /path/to/ExpoCLI
-docker compose restart
-
-# Or completely remove and restart
-docker compose down
-docker compose up -d
-```
-
-**Problem:** Compilation error: `readline/readline.h: No such file or directory`
-```bash
-# This means the Docker image needs to be rebuilt
-docker compose build --no-cache
-
-# Then run install.sh again to recompile
-./install.sh
-```
-
-### Build Issues
-
-**Problem:** pugixml not found
-```bash
-# Ubuntu/Debian
-sudo apt-get install libpugixml-dev
-
-# Or build from source
-git clone https://github.com/zeux/pugixml.git
-cd pugixml
-mkdir build && cd build
-cmake ..
-make
-sudo make install
-```
-
-**Problem:** C++17 not supported
-```bash
-# Update your compiler
-sudo apt-get install g++-9
-export CXX=g++-9
-```
+- **Docker** (recommended) or
+- **C++17 compiler**, CMake 3.15+, pugixml, readline
 
 ## Contributing
 
-This is Phase 1 (MVP). Contributions welcome for:
-- Bug fixes
-- Performance improvements
-- Documentation enhancements
-- Additional test cases
+Contributions welcome! See our documentation for:
+- Code architecture
+- Development setup
+- Testing guidelines
+
+## Troubleshooting
+
+**Command not found after install:**
+```bash
+source ~/.bashrc  # Reload shell
+```
+
+**Permission denied:**
+```bash
+sudo usermod -aG docker $USER  # Add to docker group
+# Log out and back in
+```
+
+**Docker proxy issues:**
+See [Docker Proxy Fix](expocli_documentation/08b_Docker_Proxy_Fix.md)
+
+**More help:**
+See [Known Issues](expocli_documentation/09_Known_Issues.md)
 
 ## License
 
-MIT License (or specify your license)
+MIT License
 
-## Contact
+## Links
 
-For issues and questions, please open a GitHub issue.
+- 📚 [Full Documentation](expocli_documentation/)
+- 🐛 [Issue Tracker](https://github.com/your-repo/issues)
+- 💬 [Discussions](https://github.com/your-repo/discussions)
