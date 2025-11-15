@@ -13,7 +13,7 @@ import os
 from typing import Dict, Any, List, Optional
 
 
-class ExpoCLIKernel(Kernel):
+class ExpoCLIKernelEnhanced(Kernel):
     """Enhanced Jupyter kernel for ExpoCLI with rich HTML output"""
 
     implementation = 'ExpoCLI'
@@ -371,4 +371,4 @@ Special commands:
 
 if __name__ == '__main__':
     from ipykernel.kernelapp import IPKernelApp
-    IPKernelApp.launch_instance(kernel_class=ExpoCLIKernel)
+    IPKernelApp.launch_instance(kernel_class=ExpoCLIKernelEnhanced)
