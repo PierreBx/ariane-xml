@@ -1,0 +1,116 @@
+# ExpoCLI Encryption Configuration Example
+#
+# This file configures which XML attributes should be encrypted and how.
+# Attributes follow the pattern: S10.G00.XX.YYY
+# You specify rules using the rightmost two segments: XX.YYY
+
+# List of attribute encryption rules
+attributes:
+  # NIR (Numéro d'Inscription au Répertoire) - 30.001 to 30.010
+  # Uses Format-Preserving Encryption to maintain numeric format
+  - pattern: "30.001-30.010"
+    type: "fpe"
+
+  # SIREN/SIRET and other company identifiers - 40.001 to 40.010
+  # Uses Format-Preserving Encryption
+  - pattern: "40.001-40.010"
+    type: "fpe"
+
+  # Personal names - 06.001 to 06.010
+  # Uses Faker to generate realistic French names
+  - pattern: "06.001"
+    type: "faker_name"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.002"
+    type: "faker_name"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.003"
+    type: "faker_name"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.004"
+    type: "faker_name"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.005"
+    type: "faker_name"
+    faker_locale: "fr_FR"
+
+  # Addresses - if 06.006-06.010 are addresses
+  - pattern: "06.006"
+    type: "faker_street"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.007"
+    type: "faker_city"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.008"
+    type: "faker_postal_code"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.009"
+    type: "faker_address"
+    faker_locale: "fr_FR"
+
+  - pattern: "06.010"
+    type: "faker_address"
+    faker_locale: "fr_FR"
+
+  # Other personal data - 11.001 to 11.005
+  # Assuming these might be dates, phones, or other identifiers
+  - pattern: "11.001"
+    type: "date_pseudo"
+    date_variance_days: 30
+
+  - pattern: "11.002"
+    type: "faker_phone"
+    faker_locale: "fr_FR"
+
+  - pattern: "11.003"
+    type: "faker_email"
+    faker_locale: "fr_FR"
+
+  - pattern: "11.004"
+    type: "faker_company"
+    faker_locale: "fr_FR"
+
+  - pattern: "11.005"
+    type: "fpe"
+
+# Format-Preserving Encryption settings
+fpe:
+  # Tweak value for FF3 algorithm (used as additional entropy)
+  tweak: "expocli"
+
+# Faker settings for pseudonymization
+faker:
+  # Locale for generated data (fr_FR for French)
+  locale: "fr_FR"
+  # Optional: Random seed for reproducible pseudonymization (comment out for random)
+  # seed: 42
+
+# Date pseudonymization settings
+date_pseudonymization:
+  # Number of days (+/-) to vary dates while preserving age ranges
+  variance_days: 30
+
+# Mapping table configuration
+mapping_table:
+  # Path to encrypted mapping table (stores original -> encrypted mappings)
+  # This file will be encrypted using the password you provide
+  path: "encryption_mapping.json.enc"
+
+# Supported encryption types:
+#   - fpe: Format-Preserving Encryption for numeric IDs
+#   - faker_name: French names
+#   - faker_address: Full French addresses
+#   - faker_street: Street addresses only
+#   - faker_city: City names
+#   - faker_postal_code: French postal codes
+#   - faker_phone: French phone numbers
+#   - faker_email: Email addresses
+#   - faker_company: Company names
+#   - date_pseudo: Date pseudonymization with age range preservation
