@@ -49,14 +49,15 @@ show_menu() {
     echo ""
 
     echo -e "${COLOR_GREEN}=== Tests ===${COLOR_RESET}"
-    echo " 13. Run light test suite"
-    echo " 14. Run hard test suite"
-    echo " 15. Run hardest test suite"
+    echo " 13. Run light test suite (Docker mode - recommended)"
+    echo " 14. Run light test suite (local mode)"
+    echo " 15. Run hard test suite"
+    echo " 16. Run hardest test suite"
     echo ""
 
     echo -e "${COLOR_GREEN}=== Version history & files summary ===${COLOR_RESET}"
-    echo " 16. Show version history"
-    echo " 17. Show files summary"
+    echo " 17. Show version history"
+    echo " 18. Show files summary"
     echo ""
 
     echo -e "${COLOR_YELLOW}  0. Exit${COLOR_RESET}"
@@ -104,18 +105,21 @@ execute_option() {
             "${MANAGER_DIR}/app-stop.sh"
             ;;
         13)
-            "${MANAGER_DIR}/test-light.sh"
+            "${MANAGER_DIR}/test-light-docker.sh"
             ;;
         14)
-            "${MANAGER_DIR}/test-hard.sh"
+            "${MANAGER_DIR}/test-light.sh"
             ;;
         15)
-            "${MANAGER_DIR}/test-hardest.sh"
+            "${MANAGER_DIR}/test-hard.sh"
             ;;
         16)
-            "${MANAGER_DIR}/version-show-history.sh"
+            "${MANAGER_DIR}/test-hardest.sh"
             ;;
         17)
+            "${MANAGER_DIR}/version-show-history.sh"
+            ;;
+        18)
             "${MANAGER_DIR}/version-show-files-summary.sh"
             ;;
         0)
@@ -148,6 +152,9 @@ main() {
                 "${MANAGER_DIR}/app-start-jupyter.sh"
                 ;;
             --test-light)
+                "${MANAGER_DIR}/test-light-docker.sh"
+                ;;
+            --test-light-local)
                 "${MANAGER_DIR}/test-light.sh"
                 ;;
             --test-hard)
@@ -171,7 +178,8 @@ main() {
                 echo "  $0 --check-env       Check environment"
                 echo "  $0 --cli             Start CLI"
                 echo "  $0 --jupyter         Start Jupyter"
-                echo "  $0 --test-light      Run light tests"
+                echo "  $0 --test-light      Run light tests (Docker mode - recommended)"
+                echo "  $0 --test-light-local Run light tests (local mode)"
                 echo "  $0 --test-hard       Run hard tests"
                 echo "  $0 --test-hardest    Run hardest tests"
                 echo "  $0 --version-history Show version history"
@@ -190,7 +198,7 @@ main() {
     # Interactive mode
     while true; do
         show_menu
-        read -p "Enter your choice [0-17]: " choice
+        read -p "Enter your choice [0-18]: " choice
         echo ""
 
         execute_option "$choice"
