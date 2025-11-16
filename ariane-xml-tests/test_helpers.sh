@@ -28,10 +28,15 @@ export TEST_LOG_DIR="$TEST_DIR/logs"
 
 # Detect ariane-xml binary location with multiple strategies
 # Priority order for testing (wrapper doesn't support piped stdin):
-# 1. ./ariane-xml-c-kernel/build/ariane-xml local build (best for testing)
-# 2. ariane-xml command in PATH
-# 3. ./ariane-xml-scripts/ariane-xml.sh wrapper script (fallback, may not work with tests)
-if [ -f "./ariane-xml-c-kernel/build/ariane-xml" ]; then
+# 1. /app/ariane-xml-c-kernel/build/ariane-xml (inside ariane-xml Docker container)
+# 2. ./ariane-xml-c-kernel/build/ariane-xml (local build in Claude Code/host)
+# 3. ariane-xml command in PATH
+# 4. ./ariane-xml-scripts/ariane-xml.sh wrapper script (fallback, may not work with tests)
+if [ -f "/app/ariane-xml-c-kernel/build/ariane-xml" ]; then
+    # We're inside the ariane-xml Docker container
+    export ARIANE_XML_BIN="/app/ariane-xml-c-kernel/build/ariane-xml"
+    export RUNNING_IN_DOCKER="true"
+elif [ -f "./ariane-xml-c-kernel/build/ariane-xml" ]; then
     export ARIANE_XML_BIN="./ariane-xml-c-kernel/build/ariane-xml"
 elif command -v ariane-xml &> /dev/null; then
     export ARIANE_XML_BIN="ariane-xml"
@@ -53,14 +58,17 @@ init_tests() {
     echo -e "${COLOR_CYAN}Working directory: $(pwd)${COLOR_RESET}"
 
     # Show which binary will be used
-    if [ "$ARIANE_XML_BIN" = "./ariane-xml-c-kernel/build/ariane-xml" ]; then
+    if [ "$RUNNING_IN_DOCKER" = "true" ]; then
+        echo -e "${COLOR_GREEN}Using ariane-xml Docker container binary: $ARIANE_XML_BIN${COLOR_RESET}"
+        echo -e "${COLOR_CYAN}Running tests natively inside container (optimal for piped input)${COLOR_RESET}"
+    elif [ "$ARIANE_XML_BIN" = "./ariane-xml-c-kernel/build/ariane-xml" ]; then
         echo -e "${COLOR_GREEN}Using local build: $ARIANE_XML_BIN${COLOR_RESET}"
     elif command -v ariane-xml &> /dev/null && [ "$ARIANE_XML_BIN" = "ariane-xml" ]; then
         echo -e "${COLOR_GREEN}Using ariane-xml from PATH: $(which ariane-xml)${COLOR_RESET}"
     elif [ "$USING_WRAPPER" = "true" ]; then
         echo -e "${COLOR_YELLOW}Using wrapper script: ./ariane-xml-scripts/ariane-xml.sh${COLOR_RESET}"
         echo -e "${COLOR_YELLOW}Warning: Docker wrapper may not work with piped test input${COLOR_RESET}"
-        echo -e "${COLOR_YELLOW}For reliable testing, build the local binary: mkdir -p ariane-xml-c-kernel/build && cd ariane-xml-c-kernel/build && cmake .. && make${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}For reliable testing, use: ./ariane-xml-manager.sh --test-light-docker${COLOR_RESET}"
     fi
     echo ""
 
