@@ -102,7 +102,7 @@ main() {
 
     docker compose exec ${TTY_FLAG} \
         ariane-xml \
-        bash -c "cd '${CONTAINER_CWD}' 2>/dev/null && ${CONTAINER_BINARY} $(printf '%q ' "$@")"
+        bash -c "cd '${CONTAINER_CWD}' 2>/dev/null && exec ${CONTAINER_BINARY} $(printf '%q ' "$@")"
 
     local EXIT_CODE=$?
 
