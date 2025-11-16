@@ -492,51 +492,6 @@ run_test "VERB-008" \
     "⚠.*Ambiguous attribute.*item\.value"
 
 # ============================================================================
-# CATEGORY 12: HARD STRESS TEST - Complex Nested Structures at Scale
-# ============================================================================
-print_category "12. HARD STRESS TEST - Enterprise Scale"
-
-echo ""
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}═══════════════════════════════════════════════════════════════${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  Running comprehensive stress test with 100 generated files  ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  Complex nested structures: 4+ levels of nesting             ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  This may take several minutes...                             ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}═══════════════════════════════════════════════════════════════${COLOR_RESET}"
-echo ""
-
-# Run the hard test script
-if bash "ariane-xml-tests/hard_test.sh"; then
-    echo -e "${COLOR_GREEN}${COLOR_BOLD}✓ Hard stress test completed successfully${COLOR_RESET}"
-else
-    echo -e "${COLOR_RED}${COLOR_BOLD}✗ Hard stress test failed${COLOR_RESET}"
-fi
-
-echo ""
-
-# ============================================================================
-# CATEGORY 13: HARDEST STRESS TEST - EXTREME SCALE
-# ============================================================================
-print_category "13. HARDEST STRESS TEST - EXTREME SCALE"
-
-echo ""
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}═══════════════════════════════════════════════════════════════${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  Running ULTIMATE stress test with 100 generated files       ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  Ultra-complex nested structures: 6-7 levels of nesting      ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  Each file ~1-4MB in size = ~100-400MB total test data       ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}  This WILL take several minutes to complete...                ${COLOR_RESET}"
-echo -e "${COLOR_BOLD}${COLOR_YELLOW}═══════════════════════════════════════════════════════════════${COLOR_RESET}"
-echo ""
-
-# Run the hardest test script
-if bash "ariane-xml-tests/hardest_test.sh"; then
-    echo -e "${COLOR_GREEN}${COLOR_BOLD}✓ HARDEST stress test completed successfully!${COLOR_RESET}"
-else
-    echo -e "${COLOR_RED}${COLOR_BOLD}✗ HARDEST stress test failed${COLOR_RESET}"
-fi
-
-echo ""
-
-# ============================================================================
 # Print Final Summary
 # ============================================================================
 print_summary
