@@ -42,7 +42,7 @@ ariane-xml-encrypt --help
 ### 1. Copy Example Configuration
 
 ```bash
-cp config/encryption_config.example.yaml my_config.yaml
+cp ariane-xml-config/encryption_config.example.yaml my_config.yaml
 ```
 
 ### 2. Encrypt a File
@@ -50,7 +50,7 @@ cp config/encryption_config.example.yaml my_config.yaml
 ```bash
 # Inside Docker
 docker compose exec ariane-xml bash -c "cd /app/tests/encryption && \
-  ariane-xml-encrypt encrypt sample_data.xml encrypted.xml -c ../../config/encryption_config.example.yaml"
+  ariane-xml-encrypt encrypt sample_data.xml encrypted.xml -c ../../ariane-xml-config/encryption_config.example.yaml"
 
 # You'll be prompted for a password
 Enter encryption password: ****
@@ -269,7 +269,7 @@ FPE requires minimum 6 digits. For shorter IDs, module uses simple substitution 
 
 ```bash
 # 1. Configure
-cp config/encryption_config.example.yaml my_config.yaml
+cp ariane-xml-config/encryption_config.example.yaml my_config.yaml
 nano my_config.yaml
 
 # 2. Test with sample

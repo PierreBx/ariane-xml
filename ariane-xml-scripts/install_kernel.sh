@@ -47,7 +47,7 @@ pip3 install --user -e .
 
 # Run the kernel installation script
 echo ""
-python3 -m ariane-xml_kernel.install "$@"
+python3 -m ariane_xml_jupyter_kernel.install "$@"
 
 echo ""
 echo "Installation complete!"
@@ -55,4 +55,4 @@ echo ""
 echo "Next steps:"
 echo "  1. Start Jupyter: jupyter notebook  (or jupyter lab)"
 echo "  2. Create a new notebook and select 'Ariane-XML' kernel"
-echo "  3. Try the example notebook: examples/Ariane-XML_Demo.ipynb"
+echo "  3. Try the example notebook: ariane-xml-examples/Ariane-XML_Demo.ipynb"

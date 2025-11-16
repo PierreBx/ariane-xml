@@ -20,7 +20,7 @@ pip3 install --user cryptography pyyaml faker lxml ff3
 # Install the encryption module
 echo ""
 echo "Installing Ariane-XML encryption module..."
-pip3 install --user -e ./ariane-xml_crypto
+pip3 install --user -e ./ariane-xml-crypto
 
 echo ""
 echo "============================================"
@@ -31,7 +31,7 @@ echo "The 'ariane-xml-encrypt' command is now available."
 echo ""
 echo "Quick start:"
 echo "  1. Copy the example configuration:"
-echo "     cp config/encryption_config.example.yaml my_config.yaml"
+echo "     cp ariane-xml-config/encryption_config.example.yaml my_config.yaml"
 echo ""
 echo "  2. Edit the configuration to match your needs:"
 echo "     nano my_config.yaml"
