@@ -56,9 +56,11 @@ ensure_container_running() {
 check_and_build_binary() {
     cd "${PROJECT_ROOT}"
     if ! docker compose exec -T ariane-xml test -f "${CONTAINER_BINARY}" 2>/dev/null; then
-        echo "[ariane-xml] Compiling ariane-xml binary (first time)..." >&2
+        echo "[ariane-xml] Compiling ariane-xml binary..." >&2
+
+        # Clean build directory to ensure fresh build with correct binary name
         docker compose exec -T ariane-xml bash -c \
-            "mkdir -p ${CONTAINER_BUILD_DIR} && cd ${CONTAINER_BUILD_DIR} && cmake .. >/dev/null 2>&1 && make >/dev/null 2>&1" >&2
+            "rm -rf ${CONTAINER_BUILD_DIR} && mkdir -p ${CONTAINER_BUILD_DIR} && cd ${CONTAINER_BUILD_DIR} && cmake .. >/dev/null 2>&1 && make >/dev/null 2>&1" >&2
 
         if docker compose exec -T ariane-xml test -f "${CONTAINER_BINARY}" 2>/dev/null; then
             echo "[ariane-xml] Compilation successful." >&2
