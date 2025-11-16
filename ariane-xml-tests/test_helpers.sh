@@ -20,7 +20,7 @@ export TESTS_TOTAL=0
 export TEST_START_TIME=""
 
 # Paths
-export TEST_DIR="./tests"
+export TEST_DIR="./ariane-xml-tests"
 export TEST_DATA_DIR="$TEST_DIR/data"
 export TEST_SCHEMA_DIR="$TEST_DIR/schemas"
 export TEST_OUTPUT_DIR="$TEST_DIR/output"

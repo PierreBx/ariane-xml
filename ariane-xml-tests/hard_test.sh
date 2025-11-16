@@ -15,7 +15,7 @@ source "$SCRIPT_DIR/test_helpers.sh"
 # Test-specific directories
 HARD_TEST_DIR="$TEST_OUTPUT_DIR/hard_test"
 HARD_TEST_DATA="$HARD_TEST_DIR/data"
-HARD_TEST_SCHEMA="ariane-xml-schemas/enterprise_system.xsd"
+HARD_TEST_SCHEMA="ariane-xml-tests/schemas/enterprise_system.xsd"
 
 # Initialize
 print_category "HARD STRESS TEST - Pushing Ariane-XML to the Limit"
