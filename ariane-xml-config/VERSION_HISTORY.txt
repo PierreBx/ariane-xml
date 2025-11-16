@@ -2,7 +2,7 @@
                         ARIANE-XML VERSION HISTORY
 ================================================================================
 
-v1.0.0  | 2025-11-16 | d69757f | Fix Jupyter kernel installation using direct script execution
+v0.9.5  | 2025-11-16 | d69757f | Fix Jupyter kernel installation using direct script execution
 v0.9.4  | 2025-11-16 | e8f26d2 | Fix Jupyter kernel installation using console script entry point
 v0.9.3  | 2025-11-16 | f5a0e08 | Fix Docker build: clean stale CMake cache before building
 v0.9.2  | 2025-11-16 | f15abfb | Add files summary feature with cloc integration
@@ -74,5 +74,5 @@ v0.0.1  | 2025-11-10 | 4f4ab1e | Initial commit
 
 ================================================================================
 Total versions: 69
-Current version: v1.0.0
+Current version: v0.9.5
 ================================================================================
