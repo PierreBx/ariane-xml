@@ -403,17 +403,17 @@ print_category "11. XML Validation"
 
 run_test "CHECK-001" \
     "Validate single file" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK tests/data/books1.xml; exit;' \
+    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/books1.xml; exit;' \
     "✓.*books1.xml"
 
 run_test "CHECK-002" \
     "Validate directory" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK tests/data/; exit;' \
+    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/; exit;' \
     "Validating.*file"
 
 run_test "CHECK-003" \
     "Validate with pattern" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK tests/data/books*.xml; exit;' \
+    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/books*.xml; exit;' \
     "Summary:.*valid"
 
 # ============================================================================
@@ -433,7 +433,7 @@ run_test "ERR-002" \
 
 run_test "ERR-003" \
     "CHECK without XSD" \
-    'CHECK tests/data/books1.xml; exit;' \
+    'CHECK ariane-xml-tests/data/books1.xml; exit;' \
     "XSD path not set"
 
 # ============================================================================
@@ -443,42 +443,42 @@ print_category "11. VERBOSE Mode - Ambiguity Detection"
 
 run_test "VERB-001" \
     "Detect ambiguous attribute" \
-    'SET VERBOSE; SELECT item.name FROM "./tests/data/truly_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT item.name FROM "./ariane-xml-tests/data/truly_ambiguous.xml"; exit;' \
     "⚠.*Ambiguous attribute.*item\.name"
 
 run_test "VERB-002" \
     "Non-ambiguous with full path" \
-    'SET VERBOSE; SELECT section.item.name FROM "./tests/data/truly_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT section.item.name FROM "./ariane-xml-tests/data/truly_ambiguous.xml"; exit;' \
     "✓.*No ambiguous attributes found"
 
 run_test "VERB-003" \
     "Ambiguous in company_ambiguous.xml" \
-    'SET VERBOSE; SELECT address.street FROM "./tests/data/company_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT address.street FROM "./ariane-xml-tests/data/company_ambiguous.xml"; exit;' \
     "⚠.*Ambiguous attribute.*address\.street"
 
 run_test "VERB-004" \
     "Non-ambiguous with specific path" \
-    'SET VERBOSE; SELECT store.address.street FROM "./tests/data/company_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT store.address.street FROM "./ariane-xml-tests/data/company_ambiguous.xml"; exit;' \
     "✓.*No ambiguous attributes found"
 
 run_test "VERB-005" \
     "Top-level attribute (never ambiguous)" \
-    'SET VERBOSE; SELECT name FROM "./tests/data/company_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT name FROM "./ariane-xml-tests/data/company_ambiguous.xml"; exit;' \
     "✓.*No ambiguous attributes found"
 
 run_test "VERB-006" \
     "Multiple ambiguous attributes" \
-    'SET VERBOSE; SELECT item.name, item.value FROM "./tests/data/truly_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT item.name, item.value FROM "./ariane-xml-tests/data/truly_ambiguous.xml"; exit;' \
     "⚠.*Ambiguous attribute.*item\.name.*item\.value"
 
 run_test "VERB-007" \
     "Ambiguous in WHERE clause" \
-    'SET VERBOSE; SELECT name FROM "./tests/data/truly_ambiguous.xml" WHERE item.value > 200; exit;' \
+    'SET VERBOSE; SELECT name FROM "./ariane-xml-tests/data/truly_ambiguous.xml" WHERE item.value > 200; exit;' \
     "⚠.*Ambiguous attribute.*item\.value"
 
 run_test "VERB-008" \
     "Mixed ambiguous and non-ambiguous" \
-    'SET VERBOSE; SELECT section.item.name, item.value FROM "./tests/data/truly_ambiguous.xml"; exit;' \
+    'SET VERBOSE; SELECT section.item.name, item.value FROM "./ariane-xml-tests/data/truly_ambiguous.xml"; exit;' \
     "⚠.*Ambiguous attribute.*item\.value"
 
 # ============================================================================

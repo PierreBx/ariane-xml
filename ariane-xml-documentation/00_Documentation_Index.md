@@ -105,7 +105,7 @@ ariane-xml-encrypt decrypt enc.xml dec.xml -c config.yaml
 
 - **Examples**: `examples/`
 - **Tests**: `tests/`
-- **Configuration**: `config/encryption_config.example.yaml`
+- **Configuration**: `ariane-xml-config/encryption_config.example.yaml`
 - **Build**: `build/`
 - **Source**: `src/`
 

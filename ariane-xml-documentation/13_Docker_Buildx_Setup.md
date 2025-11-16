@@ -34,7 +34,7 @@ WARN[0000] Docker Compose is configured to build using Bake, but buildx isn't in
 Run the installation script:
 
 ```bash
-./scripts/install_buildx.sh
+./ariane-xml-scripts/install_buildx.sh
 ```
 
 This will:
@@ -127,7 +127,7 @@ Buildx:          Layer 1 ┐
 
 Run with your user (not sudo):
 ```bash
-./scripts/install_buildx.sh
+./ariane-xml-scripts/install_buildx.sh
 ```
 
 ### "Command not found" after install
@@ -174,7 +174,7 @@ chmod +x ~/.docker/cli-plugins/docker-buildx
 
 ```bash
 # Install Buildx
-./scripts/install_buildx.sh
+./ariane-xml-scripts/install_buildx.sh
 
 # Verify installation
 docker buildx version

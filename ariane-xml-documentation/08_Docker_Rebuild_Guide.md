@@ -70,14 +70,14 @@ docker compose exec ariane-xml bash
 cd /app/tests/encryption
 
 # Encrypt the sample data
-ariane-xml-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../config/encryption_config.example.yaml
+ariane-xml-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../ariane-xml-config/encryption_config.example.yaml
 # Password: test123
 
 # View the encrypted file
 head -20 encrypted_sample.xml
 
 # Decrypt it back
-ariane-xml-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../config/encryption_config.example.yaml
+ariane-xml-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../ariane-xml-config/encryption_config.example.yaml
 # Password: test123
 
 # Compare - should be identical
@@ -213,7 +213,7 @@ You'll know everything is working when:
 
 2. **Customize your configuration:**
    ```bash
-   cp config/encryption_config.example.yaml my_config.yaml
+   cp ariane-xml-config/encryption_config.example.yaml my_config.yaml
    nano my_config.yaml
    ```
 

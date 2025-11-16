@@ -135,7 +135,7 @@ ariane-xml/
 │   ├── test_encryption.py             # Comprehensive unit tests
 │   └── sample_data.xml                # Sample XML for testing
 │
-├── config/encryption_config.example.yaml     # Example configuration
+├── ariane-xml-config/encryption_config.example.yaml     # Example configuration
 ├── setup_crypto.py                    # Python package setup
 ├── install_crypto.sh                  # Installation script
 ├── ENCRYPTION_MODULE.md               # Full documentation
@@ -231,7 +231,7 @@ attributes:
 
 ```bash
 # Copy and customize configuration
-cp config/encryption_config.example.yaml my_config.yaml
+cp ariane-xml-config/encryption_config.example.yaml my_config.yaml
 nano my_config.yaml
 ```
 
@@ -353,7 +353,7 @@ pip3 install -e . -f setup_crypto.py
 
 1. **ENCRYPTION_QUICKSTART.md** - 5-minute quick start
 2. **ENCRYPTION_MODULE.md** - Complete documentation
-3. **config/encryption_config.example.yaml** - Annotated configuration example
+3. **ariane-xml-config/encryption_config.example.yaml** - Annotated configuration example
 4. **This file** - Implementation summary
 
 ## Questions Addressed
@@ -381,11 +381,11 @@ pip3 install -e . -f setup_crypto.py
 1. **Test the module**:
    ```bash
    cd tests/encryption
-   ariane-xml-encrypt encrypt sample_data.xml encrypted.xml -c ../../config/encryption_config.example.yaml
+   ariane-xml-encrypt encrypt sample_data.xml encrypted.xml -c ../../ariane-xml-config/encryption_config.example.yaml
    ```
 
 2. **Customize configuration**:
-   - Review `config/encryption_config.example.yaml`
+   - Review `ariane-xml-config/encryption_config.example.yaml`
    - Adjust attribute patterns as needed
    - Modify encryption types per your requirements
 
@@ -403,7 +403,7 @@ pip3 install -e . -f setup_crypto.py
 
 - **Documentation**: See `ENCRYPTION_MODULE.md` and `ENCRYPTION_QUICKSTART.md`
 - **Examples**: Check `tests/encryption/` directory
-- **Configuration**: Use `config/encryption_config.example.yaml` as template
+- **Configuration**: Use `ariane-xml-config/encryption_config.example.yaml` as template
 - **Help**: Run `ariane-xml-encrypt --help` or `ariane-xml-encrypt <command> --help`
 
 ---

@@ -36,7 +36,7 @@ pip3 install -e . -f setup_crypto.py
 Copy the example configuration:
 
 ```bash
-cp config/encryption_config.example.yaml my_config.yaml
+cp ariane-xml-config/encryption_config.example.yaml my_config.yaml
 ```
 
 The example configuration is pre-configured for the attributes you specified:
@@ -86,13 +86,13 @@ We've included sample data for testing:
 cd tests/encryption
 
 # Encrypt the sample data
-ariane-xml-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../config/encryption_config.example.yaml
+ariane-xml-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../ariane-xml-config/encryption_config.example.yaml
 
 # View the encrypted file
 cat encrypted_sample.xml
 
 # Decrypt it
-ariane-xml-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../config/encryption_config.example.yaml
+ariane-xml-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../ariane-xml-config/encryption_config.example.yaml
 
 # Compare
 diff sample_data.xml decrypted_sample.xml
