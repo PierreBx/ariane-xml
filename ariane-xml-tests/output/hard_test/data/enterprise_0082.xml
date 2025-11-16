@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Product</name>
+		<founded>797</founded>
+		<revenue>839.07</revenue>
+		<active>false</active>
+	</company>
+	<departments>
+		<department id="Eta">
+			<name>Ultra</name>
+			<budget>569.76</budget>
+			<location>Txqdbrzzaqwsva</location>
+			<employees>
+				<employee>
+					<id>943</id>
+					<name>Pfarkwz</name>
+					<salary>809.24</salary>
+					<position>Ylllhsvlki</position>
+					<skills>
+						<skill>
+							<name>Kjfpdkrsckjiicsvlw</name>
+							<level>321</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Eta</name>
+							<level>78</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Service</name>
+							<level>669</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Lytrjnumgbzym</name>
+							<level>493</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Plus</name>
+							<level>271</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Set</name>
+							<level>256</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Uozmvjtfrrlgeifslb</name>
+							<level>469</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+			</employees>
+			<projects />
+		</department>
+		<department id="Ultra">
+			<name>Ultra</name>
+			<budget>452.52</budget>
+			<location>Cmitpnfhmzvaabej</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Ledrp">
+			<name>Fewdnveqkbsfapvclbdh</name>
+			<budget>765.18</budget>
+			<location>Delta</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Fdmfxrjeogioajsywae">
+			<name>System</name>
+			<budget>15.24</budget>
+			<location>Pctnqc</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Service">
+			<name>Epsilon</name>
+			<budget>400.42</budget>
+			<location>Alpha</location>
+			<employees>
+				<employee>
+					<id>812</id>
+					<name>Eta</name>
+					<salary>698.16</salary>
+					<position>Tool</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>854</id>
+					<name>Standard</name>
+					<salary>479.89</salary>
+					<position>Delta</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>361</id>
+					<name>Widget</name>
+					<salary>3.24</salary>
+					<position>Oxdzc</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>569</id>
+					<name>Eta</name>
+					<salary>770.20</salary>
+					<position>Bffyrvscdkgxsfecx</position>
+					<skills>
+						<skill>
+							<name>Vzozhgggimfdsfo</name>
+							<level>474</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Rfitabspwshuligohjvq</name>
+							<level>817</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>702</id>
+					<name>Lite</name>
+					<salary>889.48</salary>
+					<position>Zeta</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>37</id>
+					<name>Bundle</name>
+					<salary>756.77</salary>
+					<position>Rmpfzffhugjjmj</position>
+					<skills>
+						<skill>
+							<name>Max</name>
+							<level>300</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>System</name>
+							<level>503</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Mylkkccnjszmz</name>
+							<level>306</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Max</name>
+							<level>687</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>670</id>
+					<name>Gadget</name>
+					<salary>381.73</salary>
+					<position>Ultra</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>537</id>
+					<name>Plus</name>
+					<salary>529.68</salary>
+					<position>Premium</position>
+					<skills />
+				</employee>
+			</employees>
+			<projects />
+		</department>
+	</departments>
+	<products>
+		<product sku="Delta">
+			<name>Epsilon</name>
+			<price>778.80</price>
+			<inStock>false</inStock>
+			<features>
+				<feature>
+					<description>Standard</description>
+					<version>Basic</version>
+				</feature>
+			</features>
+			<reviews />
+		</product>
+		<product sku="Gzkkhxedglvghtbv">
+			<name>Component</name>
+			<price>649.71</price>
+			<inStock>false</inStock>
+			<features>
+				<feature>
+					<description>Package</description>
+					<version>Standard</version>
+				</feature>
+				<feature>
+					<description>Rsrpnkxqhwap</description>
+					<version>Eta</version>
+				</feature>
+				<feature>
+					<description>Theta</description>
+					<version>Vudrugokxktzagmel</version>
+				</feature>
+				<feature>
+					<description>Fzvzwoxklhcwmvr</description>
+					<version>Lite</version>
+				</feature>
+				<feature>
+					<description>Product</description>
+					<version>Max</version>
+				</feature>
+			</features>
+			<reviews />
+		</product>
+		<product sku="Item">
+			<name>Max</name>
+			<price>116.58</price>
+			<inStock>true</inStock>
+			<features>
+				<feature>
+					<description>Pevvokrog</description>
+					<version>Sfpcoifzuunwd</version>
+				</feature>
+				<feature>
+					<description>Fqsnagbi</description>
+					<version>Max</version>
+				</feature>
+				<feature>
+					<description>Standard</description>
+					<version>Package</version>
+				</feature>
+				<feature>
+					<description>Gadget</description>
+					<version>Max</version>
+				</feature>
+			</features>
+			<reviews>
+				<review>
+					<rating>55</rating>
+					<comment>Gamma</comment>
+					<verified>true</verified>
+				</review>
+				<review>
+					<rating>940</rating>
+					<comment>Chonqlsstwbiszqsw</comment>
+					<verified>true</verified>
+				</review>
+				<review>
+					<rating>588</rating>
+					<comment>Set</comment>
+					<verified>false</verified>
+				</review>
+			</reviews>
+		</product>
+		<product sku="Jgstdjrfktjzqqk">
+			<name>Hjytg</name>
+			<price>871.95</price>
+			<inStock>false</inStock>
+			<features />
+			<reviews />
+		</product>
+		<product sku="Device">
+			<name>Standard</name>
+			<price>124.15</price>
+			<inStock>false</inStock>
+			<features />
+			<reviews>
+				<review>
+					<rating>305</rating>
+					<comment>Premium</comment>
+					<verified>true</verified>
+				</review>
+				<review>
+					<rating>211</rating>
+					<comment>Iowgcb</comment>
+					<verified>true</verified>
+				</review>
+				<review>
+					<rating>738</rating>
+					<comment>Service</comment>
+					<verified>false</verified>
+				</review>
+				<review>
+					<rating>872</rating>
+					<comment>Pkmdmeyyxvrnhayx</comment>
+					<verified>true</verified>
+				</review>
+				<review>
+					<rating>62</rating>
+					<comment>Kwlymxkotyruhkkaedjq</comment>
+					<verified>true</verified>
+				</review>
+			</reviews>
+		</product>
+		<product sku="Ultra">
+			<name>Rzsoqd</name>
+			<price>621.27</price>
+			<inStock>true</inStock>
+			<features />
+			<reviews />
+		</product>
+	</products>
+</enterprise>

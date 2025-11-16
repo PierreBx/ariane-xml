@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<DeclarationDS xmlns="http://www.dsn-info.fr/XMLSchema">
+    <Salarie>
+        <Individu>
+            <!-- NIR: Format-Preserving Encryption -->
+            <S21.G00.30.001>9282107946190</S21.G00.30.001>
+            <S21.G00.30.002>6472683815325</S21.G00.30.002>
+
+            <!-- Names: Faker pseudonymization -->
+            <S21.G00.06.001>Gérard Delorme</S21.G00.06.001>
+            <S21.G00.06.002>Alexandre Rodriguez</S21.G00.06.002>
+            <S21.G00.06.003>Christophe Leroy</S21.G00.06.003>
+
+            <!-- Addresses: Faker pseudonymization -->
+            <S21.G00.06.006>boulevard Bernadette Dupont</S21.G00.06.006>
+            <S21.G00.06.007>Allard</S21.G00.06.007>
+            <S21.G00.06.008>22170</S21.G00.06.008>
+
+            <!-- Date: Pseudonymization with variance -->
+            <S21.G00.11.001>2000-02-04</S21.G00.11.001>
+
+            <!-- Phone: Faker -->
+            <S21.G00.11.002>0253833208</S21.G00.11.002>
+        </Individu>
+
+        <Employeur>
+            <!-- SIREN/SIRET: Format-Preserving Encryption -->
+            <S21.G00.40.001>21868818606827</S21.G00.40.001>
+            <S21.G00.40.002>19882143898536</S21.G00.40.002>
+
+            <!-- Company: Faker -->
+            <S21.G00.11.004>Antoine</S21.G00.11.004>
+        </Employeur>
+    </Salarie>
+
+    <Salarie>
+        <Individu>
+            <S21.G00.30.001>5771433616301</S21.G00.30.001>
+            <S21.G00.06.001>Odette Parent</S21.G00.06.001>
+            <S21.G00.06.006>54, boulevard de Fontaine</S21.G00.06.006>
+            <S21.G00.06.007>Saint Pauline</S21.G00.06.007>
+            <S21.G00.06.008>38325</S21.G00.06.008>
+            <S21.G00.11.001>1995-06-21</S21.G00.11.001>
+        </Individu>
+    </Salarie>
+</DeclarationDS>

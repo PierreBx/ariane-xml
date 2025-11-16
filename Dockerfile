@@ -26,7 +26,7 @@ WORKDIR /app
 COPY . /app
 
 # Build the Ariane-XML C++ project
-RUN mkdir -p build && cd build && cmake .. && make
+RUN cd ariane-xml-c-kernel && mkdir -p build && cd build && cmake .. && make
 
 # Install Jupyter and the Ariane-XML kernel
 RUN pip3 install --no-cache-dir \
@@ -43,11 +43,11 @@ RUN pip3 install --no-cache-dir \
     lxml \
     ff3
 
-# Install the Ariane-XML kernel package (setup.py is in ariane-xml-kernel/)
-RUN pip3 install -e ./ariane-xml-kernel
+# Install the Ariane-XML kernel package (setup.py is in ariane-xml-jupyter-kernel/)
+RUN pip3 install -e ./ariane-xml-jupyter-kernel
 
 # Install the kernel spec
-RUN python3 -m ariane-xml-kernel.install
+RUN python3 -m ariane_xml_jupyter_kernel.install
 
 # Install the Ariane-XML encryption module (setup.py is in ariane-xml-crypto/)
 RUN pip3 install -e ./ariane-xml-crypto

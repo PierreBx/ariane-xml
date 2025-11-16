@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Ojgemwr</name>
+		<founded>277</founded>
+		<revenue>798.36</revenue>
+		<active>true</active>
+	</company>
+	<departments>
+		<department id="Service">
+			<name>Set</name>
+			<budget>185.05</budget>
+			<location>Widget</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Knavinhchr">
+			<name>Iavfxaht</name>
+			<budget>80.49</budget>
+			<location>Gsmqxkhjdvslyjakgu</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Premium">
+			<name>Max</name>
+			<budget>91.25</budget>
+			<location>Beta</location>
+			<employees>
+				<employee>
+					<id>782</id>
+					<name>Service</name>
+					<salary>968.66</salary>
+					<position>Module</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>540</id>
+					<name>Rxnogtmgfukiuryzjj</name>
+					<salary>928.69</salary>
+					<position>Lite</position>
+					<skills>
+						<skill>
+							<name>Hbnnciytmjehjstw</name>
+							<level>872</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Vcnymzjgzve</name>
+							<level>20</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Kit</name>
+							<level>21</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Module</name>
+							<level>769</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Set</name>
+							<level>23</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Device</name>
+							<level>310</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Tool</name>
+							<level>922</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Tool</name>
+							<level>834</level>
+							<certified>false</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>627</id>
+					<name>Baonlnhbo</name>
+					<salary>939.95</salary>
+					<position>Device</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>962</id>
+					<name>Plus</name>
+					<salary>596.27</salary>
+					<position>Gadget</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>634</id>
+					<name>Item</name>
+					<salary>743.16</salary>
+					<position>Bundle</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>37</id>
+					<name>Dhtwj</name>
+					<salary>221.21</salary>
+					<position>Epsilon</position>
+					<skills>
+						<skill>
+							<name>Kit</name>
+							<level>636</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Rhekox</name>
+							<level>596</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Naqxiinxldouc</name>
+							<level>583</level>
+							<certified>false</certified>
+						</skill>
+					</skills>
+				</employee>
+			</employees>
+			<projects />
+		</department>
+		<department id="Basic">
+			<name>Znobb</name>
+			<budget>952.44</budget>
+			<location>Standard</location>
+			<employees>
+				<employee>
+					<id>456</id>
+					<name>Alpha</name>
+					<salary>773.19</salary>
+					<position>Nspjufpmmp</position>
+					<skills>
+						<skill>
+							<name>Yfanbacmngfnjsxzomvd</name>
+							<level>841</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Zjtjy</name>
+							<level>945</level>
+							<certified>false</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>736</id>
+					<name>Kacvppzjcs</name>
+					<salary>36.96</salary>
+					<position>Epsilon</position>
+					<skills>
+						<skill>
+							<name>Gadget</name>
+							<level>401</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>37</id>
+					<name>Lmgocwcnjavqnlc</name>
+					<salary>820.28</salary>
+					<position>Zeta</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>58</id>
+					<name>Max</name>
+					<salary>812.30</salary>
+					<position>Set</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>251</id>
+					<name>Qfnyetdsjxyw</name>
+					<salary>803.38</salary>
+					<position>Vuswsmjfuogwrfy</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>229</id>
+					<name>Item</name>
+					<salary>566.53</salary>
+					<position>Device</position>
+					<skills />
+				</employee>
+			</employees>
+			<projects />
+		</department>
+	</departments>
+	<products />
+</enterprise>

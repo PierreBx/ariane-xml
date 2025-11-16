@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Mpwfqlbicvh</name>
+		<founded>251</founded>
+		<revenue>657.24</revenue>
+		<active>false</active>
+	</company>
+	<departments>
+		<department id="Eta">
+			<name>Bundle</name>
+			<budget>477.77</budget>
+			<location>Pro</location>
+			<employees />
+			<projects />
+		</department>
+	</departments>
+	<products>
+		<product sku="Tool">
+			<name>Item</name>
+			<price>636.61</price>
+			<inStock>true</inStock>
+			<features />
+			<reviews>
+				<review>
+					<rating>775</rating>
+					<comment>Tool</comment>
+					<verified>true</verified>
+				</review>
+			</reviews>
+		</product>
+		<product sku="Gamma">
+			<name>Module</name>
+			<price>415.79</price>
+			<inStock>true</inStock>
+			<features />
+			<reviews>
+				<review>
+					<rating>141</rating>
+					<comment>Fbjtomkmbnxzzyeoarl</comment>
+					<verified>true</verified>
+				</review>
+			</reviews>
+		</product>
+	</products>
+</enterprise>

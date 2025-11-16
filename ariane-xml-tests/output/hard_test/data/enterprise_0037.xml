@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Eta</name>
+		<founded>400</founded>
+		<revenue>863.80</revenue>
+		<active>true</active>
+	</company>
+	<departments>
+		<department id="Package">
+			<name>Device</name>
+			<budget>467.58</budget>
+			<location>Getlqspapewmwouzcxz</location>
+			<employees />
+			<projects />
+		</department>
+		<department id="Widget">
+			<name>Package</name>
+			<budget>175.92</budget>
+			<location>Standard</location>
+			<employees />
+			<projects>
+				<project>
+					<name>Crrpjqtsvlipbyomf</name>
+					<budget>501.40</budget>
+					<startYear>250</startYear>
+					<priority>713</priority>
+					<milestones>
+						<milestone>
+							<title>Lite</title>
+							<completed>false</completed>
+							<dueDate>Bundle</dueDate>
+						</milestone>
+						<milestone>
+							<title>Gadget</title>
+							<completed>false</completed>
+							<dueDate>Yuqoiihj</dueDate>
+						</milestone>
+						<milestone>
+							<title>Widget</title>
+							<completed>false</completed>
+							<dueDate>Delta</dueDate>
+						</milestone>
+						<milestone>
+							<title>Qnabbzwhwbwgzru</title>
+							<completed>false</completed>
+							<dueDate>Pxzeiuvmqyvp</dueDate>
+						</milestone>
+						<milestone>
+							<title>Nxfyqdguokevuia</title>
+							<completed>false</completed>
+							<dueDate>Product</dueDate>
+						</milestone>
+						<milestone>
+							<title>Set</title>
+							<completed>true</completed>
+							<dueDate>Erjnqezkzjymmcsxvpwd</dueDate>
+						</milestone>
+						<milestone>
+							<title>Service</title>
+							<completed>true</completed>
+							<dueDate>Tool</dueDate>
+						</milestone>
+						<milestone>
+							<title>Gadget</title>
+							<completed>true</completed>
+							<dueDate>Component</dueDate>
+						</milestone>
+					</milestones>
+				</project>
+				<project>
+					<name>Efcngfaubkdz</name>
+					<budget>797.50</budget>
+					<startYear>539</startYear>
+					<priority>628</priority>
+					<milestones />
+				</project>
+				<project>
+					<name>Device</name>
+					<budget>566.84</budget>
+					<startYear>870</startYear>
+					<priority>979</priority>
+					<milestones />
+				</project>
+			</projects>
+		</department>
+		<department id="Zmsrmplpnso">
+			<name>Qwqsnuiusolsct</name>
+			<budget>572.28</budget>
+			<location>Tool</location>
+			<employees>
+				<employee>
+					<id>468</id>
+					<name>Bundle</name>
+					<salary>202.96</salary>
+					<position>Premium</position>
+					<skills>
+						<skill>
+							<name>Ngoywhouh</name>
+							<level>178</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Device</name>
+							<level>367</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Module</name>
+							<level>457</level>
+							<certified>false</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>526</id>
+					<name>Eta</name>
+					<salary>279.93</salary>
+					<position>Vdafd</position>
+					<skills />
+				</employee>
+			</employees>
+			<projects />
+		</department>
+	</departments>
+	<products>
+		<product sku="Mmqpmewwzyuhpef">
+			<name>Theta</name>
+			<price>507.19</price>
+			<inStock>true</inStock>
+			<features>
+				<feature>
+					<description>Whnwcadqllsbpufidc</description>
+					<version>Gqejgkglod</version>
+				</feature>
+				<feature>
+					<description>Gcaettinfskmaeksdxxt</description>
+					<version>Epsilon</version>
+				</feature>
+				<feature>
+					<description>Ygqixuwprsexryshompt</description>
+					<version>Beta</version>
+				</feature>
+			</features>
+			<reviews />
+		</product>
+		<product sku="Gadget">
+			<name>Module</name>
+			<price>896.94</price>
+			<inStock>true</inStock>
+			<features>
+				<feature>
+					<description>Service</description>
+					<version>Standard</version>
+				</feature>
+				<feature>
+					<description>Huqectgqgxhkihxwi</description>
+					<version>Kosewzsoteamqramyc</version>
+				</feature>
+				<feature>
+					<description>Epsilon</description>
+					<version>Item</version>
+				</feature>
+			</features>
+			<reviews />
+		</product>
+	</products>
+</enterprise>

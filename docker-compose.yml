@@ -7,7 +7,7 @@ services:
     container_name: ariane-xml_container
     volumes:
       - .:/app
-      - build-cache:/app/build
+      - build-cache:/app/ariane-xml-c-kernel/build
       # Mount user's home directory to access files from anywhere
       - ${HOME}:/host_home
     working_dir: /app
@@ -25,7 +25,7 @@ services:
     container_name: ariane-xml_jupyter
     volumes:
       - .:/app
-      - build-cache:/app/build
+      - build-cache:/app/ariane-xml-c-kernel/build
       # Mount user's home directory to access files from anywhere
       - ${HOME}:/host_home
     working_dir: /app
@@ -33,7 +33,7 @@ services:
       - "8888:8888"
     environment:
       - JUPYTER_ENABLE_LAB=yes
-    command: /app/scripts/start-jupyter.sh
+    command: /app/ariane-xml-scripts/start-jupyter.sh
     restart: unless-stopped
 
 volumes:

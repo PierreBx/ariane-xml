@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Module</name>
+		<founded>256</founded>
+		<revenue>876.80</revenue>
+		<active>false</active>
+	</company>
+	<departments>
+		<department id="Suigz">
+			<name>Juuevwwbfbeqpnmmc</name>
+			<budget>22.22</budget>
+			<location>Epsilon</location>
+			<employees>
+				<employee>
+					<id>958</id>
+					<name>Service</name>
+					<salary>438.86</salary>
+					<position>Eltmfqdukvmm</position>
+					<skills>
+						<skill>
+							<name>Beta</name>
+							<level>594</level>
+							<certified>false</certified>
+						</skill>
+						<skill>
+							<name>Device</name>
+							<level>795</level>
+							<certified>true</certified>
+						</skill>
+						<skill>
+							<name>Package</name>
+							<level>478</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>987</id>
+					<name>Xwazj</name>
+					<salary>610.69</salary>
+					<position>Salgzh</position>
+					<skills />
+				</employee>
+			</employees>
+			<projects />
+		</department>
+		<department id="Eta">
+			<name>Zeta</name>
+			<budget>20.90</budget>
+			<location>Uoartbrnim</location>
+			<employees />
+			<projects />
+		</department>
+	</departments>
+	<products />
+</enterprise>

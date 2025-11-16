@@ -39,10 +39,10 @@ ariane-xml "SELECT name FROM ./data WHERE price < 30"
 
 ```sql
 -- Simple query
-SELECT breakfast_menu/food/name FROM ./examples
+SELECT breakfast_menu/food/name FROM ./ariane-xml-examples
 
 -- With conditions
-SELECT name, price FROM ./examples WHERE price < 10
+SELECT name, price FROM ./ariane-xml-examples WHERE price < 10
 
 -- Multiple files with ordering
 SELECT FILE_NAME, name FROM ./data WHERE calories < 500 ORDER BY price LIMIT 10
@@ -90,7 +90,7 @@ Run queries in Jupyter notebooks:
 
 ```sql
 -- In a Jupyter cell
-SELECT name FROM /app/examples WHERE calories < 600
+SELECT name FROM /app/ariane-xml-examples WHERE calories < 600
 ```
 
 **Features:**
@@ -164,21 +164,24 @@ Use Jupyter notebooks to:
 
 ```
 ariane-xml/
-├── src/                      # C++ source code
-│   ├── main.cpp             # CLI entry point
-│   ├── parser/              # Query parser
-│   ├── executor/            # Query executor
-│   └── utils/               # Utilities
-├── ariane-xml-crypto/          # Python encryption module
-│   ├── cli.py              # Encryption CLI
-│   ├── encryptor.py        # Main encryptor
-│   ├── fpe.py              # Format-Preserving Encryption
-│   └── pseudonymizer.py    # Data pseudonymization
-├── ariane-xml-kernel/          # Jupyter kernel
-├── scripts/                 # Installation and utility scripts
-├── tests/                   # Test suites
-├── examples/                # Sample data
-└── ariane-xml-documentation/   # Full documentation
+├── ariane-xml-c-kernel/        # C++ query engine
+│   ├── src/                    # C++ source code
+│   │   ├── main.cpp           # CLI entry point
+│   │   ├── parser/            # Query parser
+│   │   ├── executor/          # Query executor
+│   │   └── utils/             # Utilities
+│   ├── include/               # Header files
+│   └── build/                 # Build output directory
+├── ariane-xml-crypto/         # Python encryption module
+│   ├── cli.py                 # Encryption CLI
+│   ├── encryptor.py           # Main encryptor
+│   ├── fpe.py                 # Format-Preserving Encryption
+│   └── pseudonymizer.py       # Data pseudonymization
+├── ariane-xml-jupyter-kernel/ # Jupyter kernel
+├── ariane-xml-scripts/        # Installation and utility scripts
+├── ariane-xml-tests/          # Test suites
+├── ariane-xml-examples/       # Sample data
+└── ariane-xml-documentation/  # Full documentation
 ```
 
 ## Prerequisites

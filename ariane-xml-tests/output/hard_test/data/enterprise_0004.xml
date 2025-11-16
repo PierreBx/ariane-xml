@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enterprise>
+	<company>
+		<name>Plus</name>
+		<founded>482</founded>
+		<revenue>834.36</revenue>
+		<active>false</active>
+	</company>
+	<departments>
+		<department id="Lite">
+			<name>Tpoyquxoovuwyyjvf</name>
+			<budget>642.84</budget>
+			<location>System</location>
+			<employees>
+				<employee>
+					<id>575</id>
+					<name>Lite</name>
+					<salary>899.38</salary>
+					<position>Piwnviaqxeys</position>
+					<skills>
+						<skill>
+							<name>Wejwfnsd</name>
+							<level>353</level>
+							<certified>true</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>376</id>
+					<name>Alpha</name>
+					<salary>509.20</salary>
+					<position>Gamma</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>871</id>
+					<name>Gadget</name>
+					<salary>836.41</salary>
+					<position>Theta</position>
+					<skills />
+				</employee>
+				<employee>
+					<id>781</id>
+					<name>Lite</name>
+					<salary>972.36</salary>
+					<position>System</position>
+					<skills>
+						<skill>
+							<name>Ezmdbeobviapr</name>
+							<level>162</level>
+							<certified>false</certified>
+						</skill>
+					</skills>
+				</employee>
+				<employee>
+					<id>819</id>
+					<name>Service</name>
+					<salary>806.87</salary>
+					<position>Pro</position>
+					<skills />
+				</employee>
+			</employees>
+			<projects>
+				<project>
+					<name>Txkwtlkdwhctlnlbw</name>
+					<budget>395.15</budget>
+					<startYear>752</startYear>
+					<priority>913</priority>
+					<milestones>
+						<milestone>
+							<title>Bsizgeosgpusjdbqzygo</title>
+							<completed>false</completed>
+							<dueDate>Premium</dueDate>
+						</milestone>
+					</milestones>
+				</project>
+				<project>
+					<name>Ucjajylysxrrorobfqd</name>
+					<budget>872.28</budget>
+					<startYear>556</startYear>
+					<priority>336</priority>
+					<milestones />
+				</project>
+				<project>
+					<name>Delta</name>
+					<budget>871.52</budget>
+					<startYear>264</startYear>
+					<priority>584</priority>
+					<milestones />
+				</project>
+			</projects>
+		</department>
+	</departments>
+	<products />
+</enterprise>
