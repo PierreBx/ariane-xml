@@ -30,12 +30,12 @@ print_category "1. Basic SELECT Queries"
 
 run_test "SELECT-001" \
     "Select single field" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml";' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml";' \
     "The Great Adventure"
 
 run_test "SELECT-002" \
     "Select multiple fields" \
-    'SELECT book.title,book.price FROM "ariane-xml-tests/data/books1.xml";' \
+    'SELECT .book.title, .book.price FROM "ariane-xml-tests/data/books1.xml";' \
     "29.99"
 
 run_test "SELECT-003" \
@@ -50,8 +50,18 @@ run_test "SELECT-004" \
 
 run_test "SELECT-005" \
     "Select from multiple files" \
-    'SELECT book.title FROM "ariane-xml-tests/data/";' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/";' \
     ".*"
+
+run_test "SELECT-006" \
+    "Select root element (no leading dot)" \
+    'SELECT library FROM "ariane-xml-tests/data/books1.xml";' \
+    "library"
+
+run_test "SELECT-007" \
+    "Select root with full path matches top-level" \
+    'SELECT library.book FROM "ariane-xml-tests/data/books1.xml";' \
+    "book"
 
 # ============================================================================
 # CATEGORY 2: WHERE Clause - Basic Comparisons
@@ -60,27 +70,27 @@ print_category "2. WHERE Clause - Basic Comparisons"
 
 run_test "WHERE-001" \
     "WHERE equals" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.year = 2020;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.year = 2020;' \
     "The Great Adventure"
 
 run_test "WHERE-002" \
     "WHERE not equals" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.year != 2020;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.year != 2020;' \
     "Learning Programming"
 
 run_test "WHERE-003" \
     "WHERE less than" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.price < 40;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.price < 40;' \
     "The Great Adventure"
 
 run_test "WHERE-004" \
     "WHERE greater than" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.price > 40;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.price > 40;' \
     "Learning Programming"
 
 run_test "WHERE-005" \
     "WHERE string equals" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.category = Fiction;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.category = Fiction;' \
     "The Great Adventure"
 
 # ============================================================================
@@ -90,12 +100,12 @@ print_category "3. WHERE Clause - NULL Operators"
 
 run_test "NULL-001" \
     "IS NULL - find missing elements" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books2.xml" WHERE book.author IS NULL;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books2.xml" WHERE .book.author IS NULL;' \
     "Cooking for Beginners"
 
 run_test "NULL-002" \
     "IS NOT NULL - find present elements" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books2.xml" WHERE book.author IS NOT NULL;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books2.xml" WHERE .book.author IS NOT NULL;' \
     "Data Science Basics"
 
 # ============================================================================
@@ -105,17 +115,17 @@ print_category "4. WHERE Clause - LIKE Operator"
 
 run_test "LIKE-001" \
     "LIKE with pattern" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.title LIKE /Great/;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.title LIKE /Great/;' \
     "The Great Adventure"
 
 run_test "LIKE-002" \
     "LIKE with wildcard" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.title LIKE /.*Programming.*/;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.title LIKE /.*Programming.*/;' \
     "Learning Programming"
 
 run_test "LIKE-003" \
     "IS NOT LIKE" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.title IS NOT LIKE /Great/;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.title IS NOT LIKE /Great/;' \
     "Learning Programming"
 
 # ============================================================================
@@ -125,17 +135,17 @@ print_category "5. WHERE Clause - Logical Operators"
 
 run_test "LOGIC-001" \
     "AND operator" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.year = 2020 AND book.price < 30;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.year = 2020 AND .book.price < 30;' \
     "The Great Adventure"
 
 run_test "LOGIC-002" \
     "OR operator" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" WHERE book.year = 2020 OR book.year = 2019;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" WHERE .book.year = 2020 OR .book.year = 2019;' \
     ".*"
 
 run_test "LOGIC-003" \
     "Parentheses grouping" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books2.xml" WHERE (book.price < 25 OR book.category = Technical) AND book.year > 2019;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books2.xml" WHERE (.book.price < 25 OR .book.category = Technical) AND .book.year > 2019;' \
     "Data Science Basics"
 
 # ============================================================================
@@ -145,7 +155,7 @@ print_category "6. ORDER BY and LIMIT"
 
 run_test "ORDER-001" \
     "ORDER BY numeric field" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" ORDER BY year;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" ORDER BY year;' \
     "Learning Programming"
 
 run_test "ORDER-002" \
@@ -165,12 +175,12 @@ run_test "ORDER-004" \
 
 run_test "LIMIT-001" \
     "LIMIT results" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" LIMIT 1;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" LIMIT 1;' \
     "The Great Adventure"
 
 run_test "LIMIT-002" \
     "LIMIT with ORDER BY" \
-    'SELECT book.title FROM "ariane-xml-tests/data/books1.xml" ORDER BY price LIMIT 1;' \
+    'SELECT .book.title FROM "ariane-xml-tests/data/books1.xml" ORDER BY price LIMIT 1;' \
     "The Great Adventure"
 
 run_test "LIMIT-003" \
@@ -260,22 +270,22 @@ run_test "ATTR-002" \
 
 run_test "ATTR-003" \
     "Mix attribute with regular field" \
-    'SELECT @isbn, title FROM "ariane-xml-tests/data/books1.xml";' \
+    'SELECT @isbn, .title FROM "ariane-xml-tests/data/books1.xml";' \
     "978-1-23-456789-0"
 
 run_test "ATTR-004" \
     "WHERE clause with attribute equals" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn = "978-1-23-456789-0";' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn = "978-1-23-456789-0";' \
     "The Great Adventure"
 
 run_test "ATTR-005" \
     "WHERE clause with attribute LIKE" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn LIKE /978-1-.*/;' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn LIKE /978-1-.*/;' \
     "The Great Adventure"
 
 run_test "ATTR-006" \
     "SELECT attribute with WHERE on attribute" \
-    'SELECT @isbn, title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn = "978-0-12-345678-9";' \
+    'SELECT @isbn, .title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn = "978-0-12-345678-9";' \
     "Learning Programming"
 
 run_test "ATTR-007" \
@@ -305,52 +315,52 @@ print_category "8. IN Operator"
 
 run_test "IN-001" \
     "Basic IN with string values" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE title IN ("The Great Adventure", "Learning Programming");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .title IN ("The Great Adventure", "Learning Programming");' \
     "The Great Adventure"
 
 run_test "IN-002" \
     "IN with single value" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE title IN ("The Great Adventure");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .title IN ("The Great Adventure");' \
     "The Great Adventure"
 
 run_test "IN-003" \
     "IN with numeric values" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE year IN (2019, 2020);' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .year IN (2019, 2020);' \
     "Learning Programming"
 
 run_test "IN-004" \
     "IN with no matches" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE title IN ("Nonexistent Book");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .title IN ("Nonexistent Book");' \
     "No results found"
 
 run_test "IN-005" \
     "NOT IN operator" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE title NOT IN ("The Great Adventure");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .title NOT IN ("The Great Adventure");' \
     "Learning Programming"
 
 run_test "IN-006" \
     "NOT IN with multiple values" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE year NOT IN (2019);' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .year NOT IN (2019);' \
     "The Great Adventure"
 
 run_test "IN-007" \
     "IN with attributes" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn IN ("978-1-23-456789-0", "978-0-12-345678-9");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn IN ("978-1-23-456789-0", "978-0-12-345678-9");' \
     "The Great Adventure"
 
 run_test "IN-008" \
     "NOT IN with attributes" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn NOT IN ("978-0-12-345678-9");' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn NOT IN ("978-0-12-345678-9");' \
     "The Great Adventure"
 
 run_test "IN-009" \
     "IN with mixed SELECT fields" \
-    'SELECT title, @isbn FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn IN ("978-1-23-456789-0");' \
+    'SELECT .title, @isbn FROM "ariane-xml-tests/data/books1.xml" WHERE @isbn IN ("978-1-23-456789-0");' \
     "978-1-23-456789-0"
 
 run_test "IN-010" \
     "IN combined with AND" \
-    'SELECT title FROM "ariane-xml-tests/data/books1.xml" WHERE title IN ("The Great Adventure", "Learning Programming") AND year = 2020;' \
+    'SELECT .title FROM "ariane-xml-tests/data/books1.xml" WHERE .title IN ("The Great Adventure", "Learning Programming") AND .year = 2020;' \
     "The Great Adventure"
 
 # ============================================================================
