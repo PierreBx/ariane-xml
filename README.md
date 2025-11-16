@@ -114,44 +114,6 @@ expocli-encrypt encrypt input.xml encrypted.xml -c config.yaml
 - Full reversibility via encrypted mapping tables
 - YAML-based configuration
 
-### XML Encryption Module (NEW!)
-
-ExpoCLI now includes a comprehensive encryption and pseudonymization module for XML data, designed for French administrative data with GDPR compliance in mind.
-
-**Key Features:**
-- 🔐 Format-Preserving Encryption (FPE) for numeric IDs (NIR, SIREN, SIRET)
-- 🇫🇷 French data pseudonymization with Faker (names, addresses, phone numbers)
-- 📅 Date pseudonymization with age range preservation
-- 🔄 Full reversibility via encrypted mapping tables
-- 🔑 Password-based encryption with PBKDF2 key derivation
-- ⚙️ YAML-based configuration for flexible attribute selection
-
-**Quick Start:**
-```bash
-# Copy example configuration
-cp encryption_config.example.yaml my_config.yaml
-
-# Encrypt an XML file
-expocli-encrypt encrypt input.xml encrypted.xml -c my_config.yaml
-
-# Decrypt when needed
-expocli-encrypt decrypt encrypted.xml decrypted.xml -c my_config.yaml
-
-# View mapping statistics
-expocli-encrypt stats -c my_config.yaml
-```
-
-**Documentation:**
-- [Quick Start Guide](ENCRYPTION_QUICKSTART.md) - Get started in 5 minutes
-- [Full Documentation](ENCRYPTION_MODULE.md) - Complete reference
-- [Implementation Summary](ENCRYPTION_IMPLEMENTATION_SUMMARY.md) - Technical details
-
-**Use Cases:**
-- Anonymize production data for testing/development
-- GDPR-compliant data pseudonymization
-- Secure data sharing with reversibility
-- Protect sensitive French administrative data (NIR, SIREN, etc.)
-
 ## Query Syntax
 
 ```sql
