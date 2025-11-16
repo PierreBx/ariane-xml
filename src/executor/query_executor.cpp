@@ -295,7 +295,7 @@ static bool evaluateHavingCondition(const ResultRow& row, const WhereExpr* expr)
 
 // Process a single file with FOR clause context binding
 std::vector<ResultRow> QueryExecutor::processFileWithForClauses(
-    const std::string& filepath,
+    [[maybe_unused]] const std::string& filepath,
     const Query& query,
     const pugi::xml_document& doc,
     const std::string& filename
