@@ -70,14 +70,14 @@ docker compose exec expocli bash
 cd /app/tests/encryption
 
 # Encrypt the sample data
-expocli-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../encryption_config.example.yaml
+expocli-encrypt encrypt sample_data.xml encrypted_sample.xml -c ../../config/encryption_config.example.yaml
 # Password: test123
 
 # View the encrypted file
 head -20 encrypted_sample.xml
 
 # Decrypt it back
-expocli-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../encryption_config.example.yaml
+expocli-encrypt decrypt encrypted_sample.xml decrypted_sample.xml -c ../../config/encryption_config.example.yaml
 # Password: test123
 
 # Compare - should be identical
@@ -213,7 +213,7 @@ You'll know everything is working when:
 
 2. **Customize your configuration:**
    ```bash
-   cp encryption_config.example.yaml my_config.yaml
+   cp config/encryption_config.example.yaml my_config.yaml
    nano my_config.yaml
    ```
 

@@ -104,7 +104,7 @@ expocli-encrypt decrypt enc.xml dec.xml -c config.yaml
 
 - **Examples**: `examples/`
 - **Tests**: `tests/`
-- **Configuration**: `encryption_config.example.yaml`
+- **Configuration**: `config/encryption_config.example.yaml`
 - **Build**: `build/`
 - **Source**: `src/`
 

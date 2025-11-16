@@ -72,7 +72,7 @@ pip install cryptography pyyaml faker lxml ff3
 
 ## Configuration
 
-Create a YAML configuration file to specify which attributes to encrypt. See `encryption_config.example.yaml` for a complete example.
+Create a YAML configuration file to specify which attributes to encrypt. See `config/encryption_config.example.yaml` for a complete example.
 
 ### Basic Configuration Structure
 
@@ -194,7 +194,7 @@ print(f"Decrypted {stats['encrypted_attributes']} attributes")
 Copy and customize the example:
 
 ```bash
-cp encryption_config.example.yaml my_config.yaml
+cp config/encryption_config.example.yaml my_config.yaml
 # Edit my_config.yaml to match your needs
 ```
 

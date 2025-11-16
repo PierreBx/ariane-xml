@@ -42,7 +42,7 @@ expocli-encrypt --help
 ### 1. Copy Example Configuration
 
 ```bash
-cp encryption_config.example.yaml my_config.yaml
+cp config/encryption_config.example.yaml my_config.yaml
 ```
 
 ### 2. Encrypt a File
@@ -50,7 +50,7 @@ cp encryption_config.example.yaml my_config.yaml
 ```bash
 # Inside Docker
 docker compose exec expocli bash -c "cd /app/tests/encryption && \
-  expocli-encrypt encrypt sample_data.xml encrypted.xml -c ../../encryption_config.example.yaml"
+  expocli-encrypt encrypt sample_data.xml encrypted.xml -c ../../config/encryption_config.example.yaml"
 
 # You'll be prompted for a password
 Enter encryption password: ****
@@ -269,7 +269,7 @@ FPE requires minimum 6 digits. For shorter IDs, module uses simple substitution 
 
 ```bash
 # 1. Configure
-cp encryption_config.example.yaml my_config.yaml
+cp config/encryption_config.example.yaml my_config.yaml
 nano my_config.yaml
 
 # 2. Test with sample

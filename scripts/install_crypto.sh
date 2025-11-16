@@ -20,7 +20,7 @@ pip3 install --user cryptography pyyaml faker lxml ff3
 # Install the encryption module
 echo ""
 echo "Installing ExpoCLI encryption module..."
-pip3 install --user -e . -f setup_crypto.py
+pip3 install --user -e . -f expocli_crypto/setup_crypto.py
 
 echo ""
 echo "============================================"
@@ -31,7 +31,7 @@ echo "The 'expocli-encrypt' command is now available."
 echo ""
 echo "Quick start:"
 echo "  1. Copy the example configuration:"
-echo "     cp encryption_config.example.yaml my_config.yaml"
+echo "     cp config/encryption_config.example.yaml my_config.yaml"
 echo ""
 echo "  2. Edit the configuration to match your needs:"
 echo "     nano my_config.yaml"

@@ -40,7 +40,22 @@
       "WebSearch",
       "WebFetch(domain:www.oreilly.com)",
       "Bash(bash install.sh:*)",
-      "Bash(build/expocli:*)"
+      "Bash(build/expocli:*)",
+      "Bash(git mv:*)",
+      "Bash(expocli_documentation/06_Encryption_Quick_Start.md)",
+      "Bash(expocli_documentation/07_Encryption_Module.md)",
+      "Bash(expocli_documentation/07b_Encryption_Implementation.md)",
+      "Bash(expocli_documentation/07c_Encryption_Setup.md)",
+      "Bash(expocli_documentation/08_Docker_Rebuild_Guide.md)",
+      "Bash(expocli_documentation/08b_Docker_Proxy_Fix.md)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(curl:*)",
+      "Bash(./scripts/expocli.sh:*)",
+      "Bash(./install.sh:*)",
+      "Bash(git log:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

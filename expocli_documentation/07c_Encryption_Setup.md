@@ -36,7 +36,7 @@ expocli_crypto/
 - `ENCRYPTION_QUICKSTART.md` - 5-minute quick start (6 KB)
 - `ENCRYPTION_MODULE.md` - Full documentation (9 KB)
 - `ENCRYPTION_IMPLEMENTATION_SUMMARY.md` - Technical details (12 KB)
-- `encryption_config.example.yaml` - Pre-configured for your attributes (3 KB)
+- `config/encryption_config.example.yaml` - Pre-configured for your attributes (3 KB)
 
 ### Setup & Tests
 - `setup_crypto.py` - Python package setup
@@ -92,8 +92,8 @@ docker compose exec expocli expocli-encrypt --help
 # Test with sample data
 docker compose exec expocli bash -c "
   cd tests/encryption &&
-  expocli-encrypt encrypt sample_data.xml encrypted.xml -c ../../encryption_config.example.yaml -p test123 &&
-  expocli-encrypt decrypt encrypted.xml decrypted.xml -c ../../encryption_config.example.yaml -p test123 &&
+  expocli-encrypt encrypt sample_data.xml encrypted.xml -c ../../config/encryption_config.example.yaml -p test123 &&
+  expocli-encrypt decrypt encrypted.xml decrypted.xml -c ../../config/encryption_config.example.yaml -p test123 &&
   diff sample_data.xml decrypted.xml
 "
 
@@ -128,7 +128,7 @@ After setup, read these in order:
 
 ## Configuration for Your Requirements
 
-The example configuration (`encryption_config.example.yaml`) is already set up for your specified attributes:
+The example configuration (`config/encryption_config.example.yaml`) is already set up for your specified attributes:
 
 ```yaml
 attributes:
@@ -249,7 +249,7 @@ Once the Docker image is rebuilt with the fix:
 | `ENCRYPTION_QUICKSTART.md` | 5-minute quick start guide |
 | `ENCRYPTION_MODULE.md` | Full encryption documentation |
 | `DOCKER_PROXY_FIX.md` | Proxy troubleshooting details |
-| `encryption_config.example.yaml` | Ready-to-use configuration |
+| `config/encryption_config.example.yaml` | Ready-to-use configuration |
 
 ---
 
