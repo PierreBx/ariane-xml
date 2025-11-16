@@ -47,8 +47,8 @@ RUN pip3 install --no-cache-dir \
 # Install the Ariane-XML kernel package (setup.py is in ariane-xml-jupyter-kernel/)
 RUN pip3 install -e ./ariane-xml-jupyter-kernel
 
-# Install the kernel spec using the console script entry point
-RUN ariane-xml-jupyter-kernel-install
+# Install the kernel spec by running install.py directly
+RUN cd ariane-xml-jupyter-kernel && python3 install.py
 
 # Install the Ariane-XML encryption module (setup.py is in ariane-xml-crypto/)
 RUN pip3 install -e ./ariane-xml-crypto
