@@ -33,7 +33,7 @@ services:
       - "8888:8888"
     environment:
       - JUPYTER_ENABLE_LAB=yes
-    command: /app/start-jupyter.sh
+    command: /app/scripts/start-jupyter.sh
     restart: unless-stopped
 
 volumes:
