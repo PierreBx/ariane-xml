@@ -26,8 +26,8 @@ WORKDIR /app
 # Copy project files
 COPY . /app
 
-# Build the Ariane-XML C++ project
-RUN cd ariane-xml-c-kernel && mkdir -p build && cd build && cmake .. && make
+# Build the Ariane-XML C++ project (clean stale build cache first)
+RUN cd ariane-xml-c-kernel && rm -rf build && mkdir -p build && cd build && cmake .. && make
 
 # Install Jupyter and the Ariane-XML kernel
 RUN pip3 install --no-cache-dir \
