@@ -36,10 +36,10 @@ show_menu() {
     echo "  6. Full documentation index"
     echo ""
 
-    echo -e "${COLOR_GREEN}=== Environment ===${COLOR_RESET}"
-    echo "  7. Restart containers"
-    echo "  8. Rebuild containers"
-    echo "  9. Stop containers"
+    echo -e "${COLOR_GREEN}=== Docker management ===${COLOR_RESET}"
+    echo "  7. Containers"
+    echo "  8. Images"
+    echo "  9. Docker"
     echo ""
 
     echo -e "${COLOR_GREEN}=== Apps ===${COLOR_RESET}"
@@ -85,13 +85,13 @@ execute_option() {
             "${MANAGER_DIR}/doc-index.sh"
             ;;
         7)
-            "${MANAGER_DIR}/env-restart.sh"
+            "${MANAGER_DIR}/docker-containers.sh"
             ;;
         8)
-            "${MANAGER_DIR}/env-rebuild.sh"
+            "${MANAGER_DIR}/docker-images.sh"
             ;;
         9)
-            "${MANAGER_DIR}/env-stop.sh"
+            "${MANAGER_DIR}/docker-system.sh"
             ;;
         10)
             # Exit manager and launch CLI (replaces manager process)
