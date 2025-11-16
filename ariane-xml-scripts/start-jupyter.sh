@@ -14,13 +14,24 @@ echo "========================================="
 echo ""
 
 # Verify Ariane-XML binary is available
-if [ ! -f "/app/ariane-xml-c-kernel/build/ariane-xml" ]; then
-    echo "ERROR: Ariane-XML binary not found at /app/ariane-xml-c-kernel/build/ariane-xml"
-    echo "The C++ project may not have been built correctly."
+DOCKER_BINARY="/app/ariane-xml-c-kernel/build/ariane-xml"
+HOST_BINARY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/ariane-xml-c-kernel/build/ariane-xml"
+
+if [ -f "$DOCKER_BINARY" ]; then
+    echo "✓ Ariane-XML binary found at $DOCKER_BINARY"
+elif [ -f "$HOST_BINARY" ]; then
+    echo "✓ Ariane-XML binary found at $HOST_BINARY"
+else
+    echo "ERROR: Ariane-XML binary not found"
+    echo "Checked locations:"
+    echo "  - $DOCKER_BINARY (Docker)"
+    echo "  - $HOST_BINARY (Host)"
+    echo ""
+    echo "To build the binary:"
+    echo "  cd $(dirname "$HOST_BINARY")"
+    echo "  cmake .. && make"
     exit 1
 fi
-
-echo "✓ Ariane-XML binary found at /app/ariane-xml-c-kernel/build/ariane-xml"
 
 # Verify the kernel is installed
 if ! jupyter kernelspec list | grep -q ariane-xml; then

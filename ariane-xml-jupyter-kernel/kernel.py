@@ -58,6 +58,12 @@ Special commands:
         if os.path.exists(docker_path):
             return docker_path
 
+        # Check for local build (relative to kernel location)
+        kernel_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        local_build_path = os.path.join(kernel_dir, 'ariane-xml-c-kernel', 'build', 'ariane-xml')
+        if os.path.exists(local_build_path):
+            return local_build_path
+
         # Try common locations
         candidates = [
             '/usr/local/bin/ariane-xml',
