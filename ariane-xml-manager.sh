@@ -89,7 +89,8 @@ execute_option() {
             "${MANAGER_DIR}/env-stop.sh"
             ;;
         10)
-            "${MANAGER_DIR}/app-start-cli.sh"
+            # Exit manager and launch CLI (replaces manager process)
+            exec "${MANAGER_DIR}/app-start-cli.sh"
             ;;
         11)
             "${MANAGER_DIR}/app-start-jupyter.sh"
@@ -130,7 +131,7 @@ main() {
                 "${MANAGER_DIR}/setup-check-env.sh"
                 ;;
             --cli)
-                "${MANAGER_DIR}/app-start-cli.sh"
+                exec "${MANAGER_DIR}/app-start-cli.sh"
                 ;;
             --jupyter)
                 "${MANAGER_DIR}/app-start-jupyter.sh"
