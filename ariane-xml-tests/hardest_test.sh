@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/test_helpers.sh"
 # Test-specific directories
 HARDEST_TEST_DIR="$TEST_OUTPUT_DIR/hardest_test"
 HARDEST_TEST_DATA="$HARDEST_TEST_DIR/data"
-HARDEST_TEST_SCHEMA="ariane-xml-schemas/mega_enterprise.xsd"
+HARDEST_TEST_SCHEMA="ariane-xml-tests/schemas/mega_enterprise.xsd"
 
 # File generation parameters
 NUM_FILES=100
