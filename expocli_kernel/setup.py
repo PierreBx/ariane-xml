@@ -6,20 +6,32 @@ Setup script for ExpoCLI Jupyter Kernel
 from setuptools import setup, find_packages
 import os
 
-# Read version from package
+# Get the directory where setup.py is located
+setup_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Read version from package __init__.py in the same directory
 version = {}
-with open(os.path.join("expocli_kernel", "__init__.py")) as f:
+version_file = os.path.join(setup_dir, "__init__.py")
+with open(version_file) as f:
     exec([line for line in f if line.startswith("__version__")][0], version)
+
+# Read README from parent directory if available
+readme_file = os.path.join(setup_dir, '..', 'README.md')
+long_desc = ''
+if os.path.exists(readme_file):
+    with open(readme_file) as f:
+        long_desc = f.read()
 
 setup(
     name='expocli-kernel',
     version=version['__version__'],
     description='Jupyter kernel for ExpoCLI - SQL-like XML querying',
-    long_description=open('README.md').read() if os.path.exists('README.md') else '',
+    long_description=long_desc,
     long_description_content_type='text/markdown',
     author='ExpoCLI Contributors',
     url='https://github.com/PierreBx/ExpoCLI',
-    packages=find_packages(),
+    packages=['expocli_kernel'],
+    package_dir={'expocli_kernel': '.'},
     package_data={
         'expocli_kernel': ['kernelspec/kernel.json']
     },
