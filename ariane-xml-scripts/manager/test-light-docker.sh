@@ -21,10 +21,10 @@ if ! docker ps -q -f name=ariane-xml_container -f status=running | grep -q .; th
     sleep 2
 fi
 
-# Container paths
-CONTAINER_TEST_SCRIPT="/host_home/$(realpath --relative-to="$HOME" "$PROJECT_ROOT")/ariane-xml-tests/run_tests.sh"
-CONTAINER_OUTPUT_FILE="/tmp/ariane-xml-test-output-$$.log"
-CONTAINER_PID_FILE="/tmp/ariane-xml-test-pid-$$.txt"
+# Container paths - use /app which is the mounted project directory
+CONTAINER_TEST_SCRIPT="/app/ariane-xml-tests/run_tests.sh"
+CONTAINER_OUTPUT_FILE="/tmp/ariane-xml-test-output.log"
+CONTAINER_EXIT_FILE="/tmp/ariane-xml-test-exit.txt"
 
 # Ensure binary is built inside container
 echo "Checking ariane-xml binary in container..."
@@ -39,81 +39,34 @@ if ! docker compose exec -T ariane-xml test -f /app/ariane-xml-c-kernel/build/ar
 fi
 
 echo ""
-echo "Launching tests inside container (background)..."
-echo "Output file (inside container): $CONTAINER_OUTPUT_FILE"
-echo ""
-
-# Launch tests in background inside container
-# Use bash -c with cd to ensure correct working directory
-docker compose exec -T -d ariane-xml bash -c "
-    cd '$CONTAINER_TEST_SCRIPT/../..' || exit 1
-    bash '$CONTAINER_TEST_SCRIPT' > '$CONTAINER_OUTPUT_FILE' 2>&1
-    echo \$? > '${CONTAINER_PID_FILE}.exit'
-" &
-
-DOCKER_EXEC_PID=$!
-
-# Give it a moment to start
-sleep 2
-
-# Monitor progress by tailing the output file
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║                 LIVE TEST OUTPUT (from container)              ║"
+echo "║                      RUNNING TESTS                             ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
-LAST_LINE_COUNT=0
-POLL_INTERVAL=2
-MAX_NO_CHANGE_COUNT=3
-NO_CHANGE_COUNT=0
+# Clean up any previous test output files
+docker compose exec -T ariane-xml rm -f "$CONTAINER_OUTPUT_FILE" "$CONTAINER_EXIT_FILE" 2>/dev/null || true
 
-while true; do
-    # Check if tests are still running by looking for bash process
-    if ! docker compose exec -T ariane-xml pgrep -f "run_tests.sh" > /dev/null 2>&1; then
-        echo ""
-        echo "Tests completed. Fetching final output..."
-        sleep 1
-        break
-    fi
+# Run tests inside container and capture output
+# We use a wrapper script to save exit code
+docker compose exec -T ariane-xml bash -c "
+    cd /app || exit 1
+    bash '$CONTAINER_TEST_SCRIPT' 2>&1 | tee '$CONTAINER_OUTPUT_FILE'
+    echo \${PIPESTATUS[0]} > '$CONTAINER_EXIT_FILE'
+"
 
-    # Fetch current output
-    CURRENT_OUTPUT=$(docker compose exec -T ariane-xml cat "$CONTAINER_OUTPUT_FILE" 2>/dev/null || echo "")
-    CURRENT_LINE_COUNT=$(echo "$CURRENT_OUTPUT" | wc -l)
-
-    # Display only new lines since last check
-    if [ $CURRENT_LINE_COUNT -gt $LAST_LINE_COUNT ]; then
-        NEW_LINES=$((CURRENT_LINE_COUNT - LAST_LINE_COUNT))
-        echo "$CURRENT_OUTPUT" | tail -n $NEW_LINES
-        LAST_LINE_COUNT=$CURRENT_LINE_COUNT
-        NO_CHANGE_COUNT=0
-    else
-        NO_CHANGE_COUNT=$((NO_CHANGE_COUNT + 1))
-
-        # If no output for a while, show a heartbeat
-        if [ $NO_CHANGE_COUNT -ge $MAX_NO_CHANGE_COUNT ]; then
-            echo -n "."
-            NO_CHANGE_COUNT=0
-        fi
-    fi
-
-    sleep $POLL_INTERVAL
-done
-
-# Display final complete output
+# Display final output summary
 echo ""
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║                      FINAL TEST RESULTS                        ║"
+echo "║                      TEST SUMMARY                              ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
-
-FINAL_OUTPUT=$(docker compose exec -T ariane-xml cat "$CONTAINER_OUTPUT_FILE" 2>/dev/null)
-echo "$FINAL_OUTPUT"
 
 # Get exit code
-EXIT_CODE=$(docker compose exec -T ariane-xml cat "${CONTAINER_PID_FILE}.exit" 2>/dev/null || echo "1")
+EXIT_CODE=$(docker compose exec -T ariane-xml cat "$CONTAINER_EXIT_FILE" 2>/dev/null || echo "1")
 
 # Cleanup
-docker compose exec -T ariane-xml rm -f "$CONTAINER_OUTPUT_FILE" "${CONTAINER_PID_FILE}.exit" 2>/dev/null
+docker compose exec -T ariane-xml rm -f "$CONTAINER_OUTPUT_FILE" "$CONTAINER_EXIT_FILE" 2>/dev/null || true
 
 echo ""
 if [ "$EXIT_CODE" -eq 0 ]; then
