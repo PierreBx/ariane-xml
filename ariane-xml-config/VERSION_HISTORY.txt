@@ -1,0 +1,78 @@
+================================================================================
+                        ARIANE-XML VERSION HISTORY
+================================================================================
+
+v1.0.0  | 2025-11-16 | d69757f | Fix Jupyter kernel installation using direct script execution
+v0.9.4  | 2025-11-16 | e8f26d2 | Fix Jupyter kernel installation using console script entry point
+v0.9.3  | 2025-11-16 | f5a0e08 | Fix Docker build: clean stale CMake cache before building
+v0.9.2  | 2025-11-16 | f15abfb | Add files summary feature with cloc integration
+v0.9.1  | 2025-11-16 | a48d61d | Add comprehensive version history tracking system
+v0.9.0  | 2025-11-16 | 360af44 | Unified management console and final ariane-xml branding
+v0.8.6  | 2025-11-16 | 5a949bd | Reorganize documentation and add encryption module
+v0.8.5  | 2025-11-15 | 1782c36 | Enable enhanced HTML table output in Jupyter kernel
+v0.8.4  | 2025-11-15 | f615ced | Add Docker-based Jupyter Lab integration for ExpoCLI
+v0.8.3  | 2025-11-15 | 45bee75 | Implement Jupyter kernel proof-of-concept for ExpoCLI
+v0.8.2  | 2025-11-15 | e7fdaeb | Add comprehensive Jupyter notebook integration analysis
+v0.8.1  | 2025-11-15 | bbbab18 | Complete comprehensive app documentation with 20 examples
+v0.8.0  | 2025-11-15 | 93ee232 | Add APP_DOCUMENTATION.md with first basic example
+v0.7.18 | 2025-11-14 | c3e0450 | Add comprehensive bookstore example data files for documentation
+v0.7.17 | 2025-11-14 | ffc935a | Apply leading dot semantics to FOR clause paths
+v0.7.16 | 2025-11-14 | 605225a | Fix aggregate function display to show leading dot for partial paths
+v0.7.15 | 2025-11-14 | ba0dbdc | Implement leading dot syntax for partial paths and remove COUNT(*)
+v0.7.14 | 2025-11-14 | 918039d | Fix shorthand path resolution for single-component field names
+v0.7.13 | 2025-11-14 | 33955e6 | Fix segmentation faults in aggregate functions
+v0.7.12 | 2025-11-12 | e673a0a | Implement IN and NOT IN operators for WHERE clauses
+v0.7.11 | 2025-11-12 | 6ea3f56 | Implement XML attribute querying with @attr syntax
+v0.7.10 | 2025-11-12 | 2ec6722 | Implement aggregate functions: COUNT, SUM, AVG, MIN, MAX
+v0.7.9  | 2025-11-12 | 01d2ded | Implement ORDER BY DESC, OFFSET, and DISTINCT quick win combo
+v0.7.8  | 2025-11-12 | 7b2adfd | Complete DISTINCT implementation
+v0.7.7  | 2025-11-11 | 225e4e0 | Complete GROUP BY implementation
+v0.7.6  | 2025-11-11 | c014c99 | Implement Phase 3 aggregation functions
+v0.7.5  | 2025-11-11 | 682642f | Complete Phase 3 AT keyword implementation
+v0.7.4  | 2025-11-11 | 9b929c1 | Implement Phase 2 FOR...IN syntax with nested support
+v0.7.3  | 2025-11-11 | 7cedfe5 | Keep hard and hardest test datafiles if already generated
+v0.7.2  | 2025-11-11 | 1b7a6a4 | Add VERBOSE mode and HARDEST test
+v0.7.1  | 2025-11-11 | d05d8d0 | Support top, partial path, and global attributes in SELECT and FROM
+v0.7.0  | 2025-11-11 | e3d8b21 | Add partial path-based attribute selection to disambiguate attributes
+v0.6.15 | 2025-11-11 | 0275728 | Make install.sh non-interactive and fix bc dependency
+v0.6.14 | 2025-11-11 | 22dc116 | Fix hard test failures and add microseconds precision to timing
+v0.6.13 | 2025-11-11 | 64fc20f | Fix install.sh to properly clean Docker volume contents
+v0.6.12 | 2025-11-11 | 4b2ce84 | Fix install.sh to properly use persistent container approach
+v0.6.11 | 2025-11-11 | b07f864 | Refactor to use persistent Docker container for faster execution
+v0.6.10 | 2025-11-11 | 66e7c2b | Fix install.sh to properly verify and show container operations
+v0.6.9  | 2025-11-11 | 61aec8c | Fix hard stress test validation and exit code handling
+v0.6.8  | 2025-11-11 | c05f894 | Updated Docker service names
+v0.6.7  | 2025-11-11 | 7375bd6 | Add comprehensive hard stress test for ExpoCLI
+v0.6.6  | 2025-11-11 | 732face | Rename Docker image and container for better clarity
+v0.6.5  | 2025-11-11 | 82d3dab | Fix test suite binary detection priority for Docker wrapper compatibility
+v0.6.4  | 2025-11-11 | 330e83a | Add support for expocli.sh wrapper script in test suite
+v0.6.3  | 2025-11-11 | daec2ae | Smart binary detection: use installed expocli or local build
+v0.6.2  | 2025-11-11 | 63e3b6c | Make test suite runnable from anywhere with auto-build support
+v0.6.1  | 2025-11-11 | 7d38841 | Fix test suite: achieve 100% test pass rate (33/33 tests)
+v0.6.0  | 2025-11-11 | 5cb0107 | Add comprehensive professional test suite for ExpoCLI
+v0.5.2  | 2025-11-11 | b90a32f | Add CHECK command for XML validation against XSD schemas
+v0.5.1  | 2025-11-10 | fb54963 | Enhance XSD parser to support schemas without explicit root elements
+v0.5.0  | 2025-11-10 | bea0168 | Add GENERATE XML command for creating XML instances from XSD schemas
+v0.4.3  | 2025-11-10 | 23a5918 | Add SET and SHOW commands for configuration management
+v0.4.2  | 2025-11-10 | 686fbb4 | Add IS NULL, IS NOT NULL, LIKE, and IS NOT LIKE operators with blank line separator
+v0.4.1  | 2025-11-10 | b653ace | Add enhanced output formatting with column headers and truncation
+v0.4.0  | 2025-11-10 | 6ab934f | Add shorthand attribute notation for SELECT and WHERE clauses
+v0.3.7  | 2025-11-10 | ac38d99 | Add --rebuild-docker flag to install.sh and fix history semicolons
+v0.3.6  | 2025-11-10 | 5ab8195 | Add command history support with UP/DOWN arrow keys
+v0.3.5  | 2025-11-10 | 41b5458 | Add CTRL-C (SIGINT) support to exit interactive mode
+v0.3.4  | 2025-11-10 | cbd5359 | Enhance interactive CLI to require semicolon-terminated queries
+v0.3.3  | 2025-11-10 | 411de1e | Add support for nested conditions with parentheses in WHERE clause
+v0.3.2  | 2025-11-10 | 2ff4289 | Add transparent local installation with Docker wrapper
+v0.3.1  | 2025-11-10 | 7ce7994 | Rename application from xmlquery to expocli and improve row count output
+v0.3.0  | 2025-11-10 | b29fa72 | Add interactive CLI mode (REPL) with multi-line query support
+v0.2.2  | 2025-11-10 | 6d6dff1 | Add support for unquoted file paths in FROM clause
+v0.2.1  | 2025-11-10 | b308d1b | Update documentation to use Docker Compose V2 syntax
+v0.2.0  | 2025-11-10 | 1350124 | Implement Phase 2 features: AND/OR, ORDER BY, LIMIT, and column ordering fix
+v0.1.1  | 2025-11-10 | a269e75 | Fix WHERE clause and multi-field query logic
+v0.1.0  | 2025-11-10 | 60bddcb | Implement Phase 1 MVP of XML Query CLI
+v0.0.1  | 2025-11-10 | 4f4ab1e | Initial commit
+
+================================================================================
+Total versions: 69
+Current version: v1.0.0
+================================================================================

@@ -54,6 +54,11 @@ show_menu() {
     echo " 15. Run hardest test suite"
     echo ""
 
+    echo -e "${COLOR_GREEN}=== Version history & files summary ===${COLOR_RESET}"
+    echo " 16. Show version history"
+    echo " 17. Show files summary"
+    echo ""
+
     echo -e "${COLOR_YELLOW}  0. Exit${COLOR_RESET}"
     echo ""
 }
@@ -107,6 +112,12 @@ execute_option() {
         15)
             "${MANAGER_DIR}/test-hardest.sh"
             ;;
+        16)
+            "${MANAGER_DIR}/version-show-history.sh"
+            ;;
+        17)
+            "${MANAGER_DIR}/version-show-files-summary.sh"
+            ;;
         0)
             echo ""
             echo "Goodbye!"
@@ -145,19 +156,27 @@ main() {
             --test-hardest)
                 "${MANAGER_DIR}/test-hardest.sh"
                 ;;
+            --version-history)
+                "${MANAGER_DIR}/version-show-history.sh"
+                ;;
+            --files-summary)
+                "${MANAGER_DIR}/version-show-files-summary.sh"
+                ;;
             --help)
                 echo "Ariane-XML Manager"
                 echo ""
                 echo "Usage:"
-                echo "  $0              Interactive menu"
-                echo "  $0 --install    Run full installation"
-                echo "  $0 --check-env  Check environment"
-                echo "  $0 --cli        Start CLI"
-                echo "  $0 --jupyter    Start Jupyter"
-                echo "  $0 --test-light Run light tests"
-                echo "  $0 --test-hard  Run hard tests"
-                echo "  $0 --test-hardest Run hardest tests"
-                echo "  $0 --help       Show this help"
+                echo "  $0                   Interactive menu"
+                echo "  $0 --install         Run full installation"
+                echo "  $0 --check-env       Check environment"
+                echo "  $0 --cli             Start CLI"
+                echo "  $0 --jupyter         Start Jupyter"
+                echo "  $0 --test-light      Run light tests"
+                echo "  $0 --test-hard       Run hard tests"
+                echo "  $0 --test-hardest    Run hardest tests"
+                echo "  $0 --version-history Show version history"
+                echo "  $0 --files-summary   Show files summary (cloc)"
+                echo "  $0 --help            Show this help"
                 ;;
             *)
                 echo "Unknown option: $1"
@@ -171,7 +190,7 @@ main() {
     # Interactive mode
     while true; do
         show_menu
-        read -p "Enter your choice [0-15]: " choice
+        read -p "Enter your choice [0-17]: " choice
         echo ""
 
         execute_option "$choice"

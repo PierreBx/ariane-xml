@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-venv \
+    cloc \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -25,8 +26,8 @@ WORKDIR /app
 # Copy project files
 COPY . /app
 
-# Build the Ariane-XML C++ project
-RUN cd ariane-xml-c-kernel && mkdir -p build && cd build && cmake .. && make
+# Build the Ariane-XML C++ project (clean stale build cache first)
+RUN cd ariane-xml-c-kernel && rm -rf build && mkdir -p build && cd build && cmake .. && make
 
 # Install Jupyter and the Ariane-XML kernel
 RUN pip3 install --no-cache-dir \
@@ -46,8 +47,8 @@ RUN pip3 install --no-cache-dir \
 # Install the Ariane-XML kernel package (setup.py is in ariane-xml-jupyter-kernel/)
 RUN pip3 install -e ./ariane-xml-jupyter-kernel
 
-# Install the kernel spec
-RUN python3 -m ariane_xml_jupyter_kernel.install
+# Install the kernel spec by running install.py directly
+RUN cd ariane-xml-jupyter-kernel && python3 install.py
 
 # Install the Ariane-XML encryption module (setup.py is in ariane-xml-crypto/)
 RUN pip3 install -e ./ariane-xml-crypto
