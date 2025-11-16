@@ -57,15 +57,28 @@ check_and_build_binary() {
     cd "${PROJECT_ROOT}"
     if ! docker compose exec -T ariane-xml test -f "${CONTAINER_BINARY}" 2>/dev/null; then
         echo "[ariane-xml] Compiling ariane-xml binary..." >&2
+        echo "[ariane-xml] This may take a moment on first run..." >&2
 
         # Clean build directory to ensure fresh build with correct binary name
-        docker compose exec -T ariane-xml bash -c \
-            "rm -rf ${CONTAINER_BUILD_DIR} && mkdir -p ${CONTAINER_BUILD_DIR} && cd ${CONTAINER_BUILD_DIR} && cmake .. >/dev/null 2>&1 && make >/dev/null 2>&1" >&2
+        echo "[ariane-xml] Cleaning build directory..." >&2
+        docker compose exec -T ariane-xml bash -c "rm -rf ${CONTAINER_BUILD_DIR}" >&2
 
+        echo "[ariane-xml] Running cmake..." >&2
+        docker compose exec -T ariane-xml bash -c \
+            "mkdir -p ${CONTAINER_BUILD_DIR} && cd ${CONTAINER_BUILD_DIR} && cmake .." >&2
+
+        echo "[ariane-xml] Running make..." >&2
+        docker compose exec -T ariane-xml bash -c \
+            "cd ${CONTAINER_BUILD_DIR} && make" >&2
+
+        # Verify binary was created
         if docker compose exec -T ariane-xml test -f "${CONTAINER_BINARY}" 2>/dev/null; then
             echo "[ariane-xml] Compilation successful." >&2
         else
             echo "Error: Failed to compile ariane-xml." >&2
+            echo "Binary not found at: ${CONTAINER_BINARY}" >&2
+            echo "Listing build directory contents:" >&2
+            docker compose exec -T ariane-xml bash -c "ls -la ${CONTAINER_BUILD_DIR}" >&2
             exit 1
         fi
     fi
