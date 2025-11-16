@@ -10,9 +10,9 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 # Verify we're in the correct directory
-if [ ! -f "CMakeLists.txt" ] || [ ! -d "ariane-xml-tests" ]; then
+if [ ! -d "ariane-xml-tests" ] || [ ! -f "docker-compose.yml" ]; then
     echo "ERROR: Could not find project root directory"
-    echo "Expected to find CMakeLists.txt and ariane-xml-tests/ directory"
+    echo "Expected to find ariane-xml-tests/ directory and docker-compose.yml"
     echo "Current directory: $(pwd)"
     exit 1
 fi
