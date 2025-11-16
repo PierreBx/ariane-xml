@@ -30,13 +30,13 @@ export TEST_LOG_DIR="$TEST_DIR/logs"
 # Priority order for testing (wrapper doesn't support piped stdin):
 # 1. ./ariane-xml-c-kernel/build/ariane-xml local build (best for testing)
 # 2. ariane-xml command in PATH
-# 3. ./ariane-xml.sh wrapper script (fallback, may not work with tests)
+# 3. ./ariane-xml-scripts/ariane-xml.sh wrapper script (fallback, may not work with tests)
 if [ -f "./ariane-xml-c-kernel/build/ariane-xml" ]; then
     export ARIANE_XML_BIN="./ariane-xml-c-kernel/build/ariane-xml"
 elif command -v ariane-xml &> /dev/null; then
     export ARIANE_XML_BIN="ariane-xml"
-elif [ -f "./ariane-xml.sh" ]; then
-    export ARIANE_XML_BIN="./ariane-xml.sh"
+elif [ -f "./ariane-xml-scripts/ariane-xml.sh" ]; then
+    export ARIANE_XML_BIN="./ariane-xml-scripts/ariane-xml.sh"
     export USING_WRAPPER="true"
 else
     export ARIANE_XML_BIN="./ariane-xml-c-kernel/build/ariane-xml"
@@ -58,7 +58,7 @@ init_tests() {
     elif command -v ariane-xml &> /dev/null && [ "$ARIANE_XML_BIN" = "ariane-xml" ]; then
         echo -e "${COLOR_GREEN}Using ariane-xml from PATH: $(which ariane-xml)${COLOR_RESET}"
     elif [ "$USING_WRAPPER" = "true" ]; then
-        echo -e "${COLOR_YELLOW}Using wrapper script: ./ariane-xml.sh${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}Using wrapper script: ./ariane-xml-scripts/ariane-xml.sh${COLOR_RESET}"
         echo -e "${COLOR_YELLOW}Warning: Docker wrapper may not work with piped test input${COLOR_RESET}"
         echo -e "${COLOR_YELLOW}For reliable testing, build the local binary: mkdir -p ariane-xml-c-kernel/build && cd ariane-xml-c-kernel/build && cmake .. && make${COLOR_RESET}"
     fi
@@ -69,9 +69,9 @@ init_tests() {
     mkdir -p "$TEST_OUTPUT_DIR" "$TEST_LOG_DIR"
 
     # Check if binary exists or is available
-    if [ ! -f "./ariane-xml-c-kernel/build/ariane-xml" ] && ! command -v ariane-xml &> /dev/null && [ ! -f "./ariane-xml.sh" ]; then
+    if [ ! -f "./ariane-xml-c-kernel/build/ariane-xml" ] && ! command -v ariane-xml &> /dev/null && [ ! -f "./ariane-xml-scripts/ariane-xml.sh" ]; then
         echo -e "${COLOR_RED}ERROR: Ariane-XML binary not found${COLOR_RESET}"
-        echo -e "${COLOR_YELLOW}No binary found in: ./ariane-xml-c-kernel/build/ariane-xml, PATH, or ./ariane-xml.sh${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}No binary found in: ./ariane-xml-c-kernel/build/ariane-xml, PATH, or ./ariane-xml-scripts/ariane-xml.sh${COLOR_RESET}"
         echo ""
         echo "Options:"
         echo "  1. Install ariane-xml to your PATH, or"

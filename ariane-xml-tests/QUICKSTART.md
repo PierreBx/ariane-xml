@@ -20,15 +20,15 @@ cd /tmp
 
 The test script is **smart** about finding the Ariane-XML binary with multiple strategies:
 
-1. **First**: Checks for `./ariane-xml.sh` wrapper script (Docker-based execution)
+1. **First**: Checks for `./ariane-xml-c-kernel/build/ariane-xml` (local build - best for testing)
 2. **Second**: Checks if `ariane-xml` is in your PATH (system-installed)
-3. **Third**: Falls back to `./ariane-xml-c-kernel/build/ariane-xml` (local build)
+3. **Third**: Falls back to `./ariane-xml-scripts/ariane-xml.sh` wrapper script (Docker-based execution)
 4. **Finally**: Offers to build it for you if not found
 
 You'll see which one it's using:
 ```
 Working directory: /home/user/Ariane-XML
-Using wrapper script: ./ariane-xml.sh
+Using wrapper script: ./ariane-xml-scripts/ariane-xml.sh
 ```
 
 or
@@ -49,7 +49,7 @@ Using local build: ./ariane-xml-c-kernel/build/ariane-xml
 
 If you have an alias like:
 ```bash
-alias ariane-xml='/path/to/ariane-xml.sh'
+alias ariane-xml='/path/to/ariane-xml-scripts/ariane-xml.sh'
 ```
 
 This alias **won't work** in the test script because:
@@ -57,7 +57,7 @@ This alias **won't work** in the test script because:
 - Test scripts run in non-interactive mode
 - `.bashrc` aliases aren't available
 
-**Solution**: The test script will automatically find `ariane-xml.sh` in the project root, so you don't need the alias for testing!
+**Solution**: The test script will automatically find `ariane-xml-scripts/ariane-xml.sh` in the project, so you don't need the alias for testing!
 
 ## First Time Setup
 
