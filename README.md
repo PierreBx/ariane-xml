@@ -49,7 +49,7 @@ The manager provides an interactive menu for:
 # Clone and install (creates transparent local command)
 git clone <repository-url>
 cd ariane-xml
-./install.sh
+./ariane-xml-scripts/install.sh
 
 # Reload shell
 source ~/.bashrc
