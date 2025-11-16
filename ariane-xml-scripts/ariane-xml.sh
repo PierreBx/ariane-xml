@@ -86,7 +86,12 @@ main() {
     # Map host path to container path
     # User's home directory is mounted at /host_home in container
     HOST_CWD="$(pwd)"
-    CONTAINER_CWD="${HOST_CWD/${HOME}/\/host_home}"
+
+    # Normalize paths to handle case-insensitive filesystems
+    HOST_CWD_REAL="$(realpath "${HOST_CWD}" 2>/dev/null || echo "${HOST_CWD}")"
+    HOME_REAL="$(realpath "${HOME}" 2>/dev/null || echo "${HOME}")"
+
+    CONTAINER_CWD="${HOST_CWD_REAL/${HOME_REAL}/\/host_home}"
 
     # Run ariane-xml inside the persistent container:
     # - Use docker compose exec to reuse running container
@@ -103,8 +108,8 @@ main() {
 
     # If directory doesn't exist in container, show helpful error
     if [ $EXIT_CODE -ne 0 ] && [ -z "$(docker compose exec -T ariane-xml test -d "${CONTAINER_CWD}" 2>/dev/null)" ]; then
-        echo "Error: Current directory '${HOST_CWD}' is not accessible in container." >&2
-        echo "       Only directories under ${HOME} are accessible." >&2
+        echo "Error: Current directory '${HOST_CWD_REAL}' is not accessible in container." >&2
+        echo "       Only directories under ${HOME_REAL} are accessible." >&2
         exit 1
     fi
 
