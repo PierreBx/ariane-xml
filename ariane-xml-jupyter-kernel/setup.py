@@ -9,9 +9,9 @@ import os
 # Get the directory where setup.py is located
 setup_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Read version from package __init__.py in the same directory
+# Read version from package __init__.py
 version = {}
-version_file = os.path.join(setup_dir, "__init__.py")
+version_file = os.path.join(setup_dir, "ariane_xml_jupyter_kernel", "__init__.py")
 with open(version_file) as f:
     exec([line for line in f if line.startswith("__version__")][0], version)
 
@@ -31,7 +31,6 @@ setup(
     author='Ariane-XML Contributors',
     url='https://github.com/PierreBx/Ariane-XML',
     packages=['ariane_xml_jupyter_kernel'],
-    package_dir={'ariane_xml_jupyter_kernel': '.'},
     package_data={
         'ariane_xml_jupyter_kernel': ['kernelspec/kernel.json']
     },
