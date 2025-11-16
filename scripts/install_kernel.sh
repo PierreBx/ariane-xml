@@ -9,6 +9,9 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 echo "ExpoCLI Jupyter Kernel Installer"
 echo "=================================="
 echo ""
@@ -39,6 +42,7 @@ pip3 install --user ipykernel jupyter-client
 # Install the kernel package in development mode
 echo ""
 echo "Installing ExpoCLI kernel package..."
+cd "${PROJECT_ROOT}"
 pip3 install --user -e .
 
 # Run the kernel installation script

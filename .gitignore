@@ -73,3 +73,17 @@ xmlquery
 
 # Test output directories
 tests/output/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+*.egg
+
+# Encryption test outputs
+tests/encryption/*.xml.enc
+tests/encryption/encryption_mapping.json.enc
+tests/encryption/encrypted_*.xml
+tests/encryption/decrypted_*.xml

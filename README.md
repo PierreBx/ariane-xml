@@ -175,6 +175,7 @@ expocli/
 │   ├── fpe.py              # Format-Preserving Encryption
 │   └── pseudonymizer.py    # Data pseudonymization
 ├── expocli_kernel/          # Jupyter kernel
+├── scripts/                 # Installation and utility scripts
 ├── tests/                   # Test suites
 ├── examples/                # Sample data
 └── expocli_documentation/   # Full documentation

@@ -5,6 +5,7 @@
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CONTAINER_NAME="expocli_container"
 CONTAINER_BUILD_DIR="/app/build"
 CONTAINER_BINARY="${CONTAINER_BUILD_DIR}/expocli"
@@ -23,7 +24,7 @@ fi
 
 # Check if container is running, start if needed
 ensure_container_running() {
-    cd "${SCRIPT_DIR}"
+    cd "${PROJECT_ROOT}"
 
     # Check if container exists and is running
     if docker ps -q -f name="${CONTAINER_NAME}" -f status=running | grep -q .; then
@@ -53,7 +54,7 @@ ensure_container_running() {
 
 # Check if binary exists and build if needed
 check_and_build_binary() {
-    cd "${SCRIPT_DIR}"
+    cd "${PROJECT_ROOT}"
     if ! docker compose exec -T expocli test -f "${CONTAINER_BINARY}" 2>/dev/null; then
         echo "[expocli] Compiling expocli binary (first time)..." >&2
         docker compose exec -T expocli bash -c \
@@ -92,7 +93,7 @@ main() {
     # - Change to the mapped directory
     # - Pass through all arguments
     # - Preserve exit code
-    cd "${SCRIPT_DIR}"
+    cd "${PROJECT_ROOT}"
 
     docker compose exec ${TTY_FLAG} \
         expocli \
