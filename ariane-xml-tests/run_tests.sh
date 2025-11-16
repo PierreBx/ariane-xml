@@ -360,13 +360,13 @@ print_category "9. Configuration Commands"
 
 run_test "CONFIG-001" \
     "SET XSD command" \
-    'SET XSD ariane-xml-schemas/library.xsd; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; exit;' \
     "XSD path set to"
 
 run_test "CONFIG-002" \
     "SHOW XSD after SET" \
-    'SET XSD ariane-xml-schemas/library.xsd; SHOW XSD; exit;' \
-    "ariane-xml-schemas/library.xsd"
+    'SET XSD ariane-xml-tests/schemas/library.xsd; SHOW XSD; exit;' \
+    "ariane-xml-tests/schemas/library.xsd"
 
 run_test "CONFIG-003" \
     "SET DEST command" \
@@ -385,12 +385,12 @@ print_category "10. XML Generation"
 
 run_test "GEN-001" \
     "Generate XML files" \
-    'SET XSD ariane-xml-schemas/library.xsd; SET DEST ariane-xml-tests/output; GENERATE XML 2; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; SET DEST ariane-xml-tests/output; GENERATE XML 2; exit;' \
     "Successfully generated 2 XML"
 
 run_test "GEN-002" \
     "Generate with custom prefix" \
-    'SET XSD ariane-xml-schemas/library.xsd; SET DEST ariane-xml-tests/output; GENERATE XML 1 PREFIX test_; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; SET DEST ariane-xml-tests/output; GENERATE XML 1 PREFIX test_; exit;' \
     "Successfully generated 1 XML"
 
 # Clean up generated files
@@ -403,17 +403,17 @@ print_category "11. XML Validation"
 
 run_test "CHECK-001" \
     "Validate single file" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/books1.xml; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; CHECK ariane-xml-tests/data/books1.xml; exit;' \
     "✓.*books1.xml"
 
 run_test "CHECK-002" \
     "Validate directory" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; CHECK ariane-xml-tests/data/; exit;' \
     "Validating.*file"
 
 run_test "CHECK-003" \
     "Validate with pattern" \
-    'SET XSD ariane-xml-schemas/library.xsd; CHECK ariane-xml-tests/data/books*.xml; exit;' \
+    'SET XSD ariane-xml-tests/schemas/library.xsd; CHECK ariane-xml-tests/data/books*.xml; exit;' \
     "Summary:.*valid"
 
 # ============================================================================
@@ -495,7 +495,7 @@ echo -e "${COLOR_BOLD}${COLOR_YELLOW}══════════════�
 echo ""
 
 # Run the hard test script
-if bash "$TEST_DIR/hard_test.sh"; then
+if bash "ariane-xml-tests/hard_test.sh"; then
     echo -e "${COLOR_GREEN}${COLOR_BOLD}✓ Hard stress test completed successfully${COLOR_RESET}"
 else
     echo -e "${COLOR_RED}${COLOR_BOLD}✗ Hard stress test failed${COLOR_RESET}"
@@ -518,7 +518,7 @@ echo -e "${COLOR_BOLD}${COLOR_YELLOW}══════════════�
 echo ""
 
 # Run the hardest test script
-if bash "$TEST_DIR/hardest_test.sh"; then
+if bash "ariane-xml-tests/hardest_test.sh"; then
     echo -e "${COLOR_GREEN}${COLOR_BOLD}✓ HARDEST stress test completed successfully!${COLOR_RESET}"
 else
     echo -e "${COLOR_RED}${COLOR_BOLD}✗ HARDEST stress test failed${COLOR_RESET}"

@@ -154,6 +154,44 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
     }
 
     // Non-aggregate query - process normally
+    // Create a modified select_fields list that includes ORDER BY fields (for sorting)
+    std::vector<FieldPath> modifiedSelectFields = query.select_fields;
+    std::vector<std::string> tempOrderByFields;  // Track which fields we added temporarily
+
+    if (!query.order_by_fields.empty() && !hasAggregates) {
+        for (const auto& orderByField : query.order_by_fields) {
+            // Check if this ORDER BY field is already in SELECT clause
+            bool alreadyInSelect = false;
+            for (const auto& selectField : query.select_fields) {
+                std::string selectFieldName;
+                if (selectField.is_attribute) {
+                    selectFieldName = selectField.attribute_name;
+                } else if (!selectField.components.empty()) {
+                    selectFieldName = selectField.components.back();
+                }
+
+                if (selectFieldName == orderByField.field_name) {
+                    alreadyInSelect = true;
+                    break;
+                }
+            }
+
+            // If not in SELECT, add it temporarily
+            if (!alreadyInSelect) {
+                FieldPath tempField;
+                tempField.is_partial_path = true;  // Use partial path (leading dot)
+                tempField.components.push_back(orderByField.field_name);
+                modifiedSelectFields.push_back(tempField);
+                tempOrderByFields.push_back(orderByField.field_name);
+            }
+        }
+    }
+
+    // Temporarily modify select_fields (we'll use const_cast since we restore it immediately after)
+    auto& mutableQuery = const_cast<Query&>(query);
+    auto originalSelectFields = mutableQuery.select_fields;
+    mutableQuery.select_fields = modifiedSelectFields;
+
     for (const auto& filepath : xmlFiles) {
         try {
             auto fileResults = processFile(filepath, query);
@@ -162,6 +200,9 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
             std::cerr << "Error processing file " << filepath << ": " << e.what() << std::endl;
         }
     }
+
+    // Restore original select_fields
+    mutableQuery.select_fields = originalSelectFields;
 
     // Apply DISTINCT if specified
     if (query.distinct && !allResults.empty()) {
@@ -224,6 +265,27 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
                 }
             }
         );
+    }
+
+    // Remove temporary ORDER BY fields that were added for sorting
+    if (!tempOrderByFields.empty()) {
+        for (auto& row : allResults) {
+            ResultRow filteredRow;
+            for (const auto& [field, value] : row) {
+                // Keep field only if it's not a temporary ORDER BY field
+                bool isTemp = false;
+                for (const auto& tempField : tempOrderByFields) {
+                    if (field == tempField) {
+                        isTemp = true;
+                        break;
+                    }
+                }
+                if (!isTemp) {
+                    filteredRow.push_back({field, value});
+                }
+            }
+            row = std::move(filteredRow);
+        }
     }
 
     // Apply DISTINCT if specified (remove duplicate rows)
@@ -1528,6 +1590,44 @@ std::vector<ResultRow> QueryExecutor::executeWithProgress(
         stats->used_threading = useThreading;
     }
 
+    // Create a modified select_fields list that includes ORDER BY fields (for sorting)
+    std::vector<FieldPath> modifiedSelectFields = query.select_fields;
+    std::vector<std::string> tempOrderByFields;  // Track which fields we added temporarily
+
+    if (!query.order_by_fields.empty()) {
+        for (const auto& orderByField : query.order_by_fields) {
+            // Check if this ORDER BY field is already in SELECT clause
+            bool alreadyInSelect = false;
+            for (const auto& selectField : query.select_fields) {
+                std::string selectFieldName;
+                if (selectField.is_attribute) {
+                    selectFieldName = selectField.attribute_name;
+                } else if (!selectField.components.empty()) {
+                    selectFieldName = selectField.components.back();
+                }
+
+                if (selectFieldName == orderByField.field_name) {
+                    alreadyInSelect = true;
+                    break;
+                }
+            }
+
+            // If not in SELECT, add it temporarily
+            if (!alreadyInSelect) {
+                FieldPath tempField;
+                tempField.is_partial_path = true;  // Use partial path (leading dot)
+                tempField.components.push_back(orderByField.field_name);
+                modifiedSelectFields.push_back(tempField);
+                tempOrderByFields.push_back(orderByField.field_name);
+            }
+        }
+    }
+
+    // Temporarily modify select_fields (we'll use const_cast since we restore it immediately after)
+    auto& mutableQuery = const_cast<Query&>(query);
+    auto originalSelectFields = mutableQuery.select_fields;
+    mutableQuery.select_fields = modifiedSelectFields;
+
     std::vector<ResultRow> allResults;
 
     if (useThreading) {
@@ -1612,7 +1712,39 @@ std::vector<ResultRow> QueryExecutor::executeWithProgress(
         );
     }
 
-    // Apply LIMIT if specified
+    // Restore original select_fields
+    mutableQuery.select_fields = originalSelectFields;
+
+    // Remove temporary ORDER BY fields that were added for sorting
+    if (!tempOrderByFields.empty()) {
+        for (auto& row : allResults) {
+            ResultRow filteredRow;
+            for (const auto& [field, value] : row) {
+                // Keep field only if it's not a temporary ORDER BY field
+                bool isTemp = false;
+                for (const auto& tempField : tempOrderByFields) {
+                    if (field == tempField) {
+                        isTemp = true;
+                        break;
+                    }
+                }
+                if (!isTemp) {
+                    filteredRow.push_back({field, value});
+                }
+            }
+            row = std::move(filteredRow);
+        }
+    }
+
+    // Apply OFFSET if specified (skip first N results)
+    if (query.offset >= 0 && static_cast<size_t>(query.offset) < allResults.size()) {
+        allResults.erase(allResults.begin(), allResults.begin() + query.offset);
+    } else if (query.offset >= 0 && static_cast<size_t>(query.offset) >= allResults.size()) {
+        // Offset is beyond the result set, return empty
+        allResults.clear();
+    }
+
+    // Apply LIMIT if specified (after offset)
     if (query.limit >= 0 && static_cast<size_t>(query.limit) < allResults.size()) {
         allResults.resize(query.limit);
     }
