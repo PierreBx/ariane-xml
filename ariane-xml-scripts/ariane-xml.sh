@@ -94,9 +94,9 @@ main() {
 
     # Determine if we need TTY (interactive mode)
     # -T: No TTY (for non-interactive/piped input)
-    # -i: Keep stdin open (needed for interactive readline)
+    # -it: Interactive with TTY (needed for readline with arrow keys, history, etc.)
     if [ -t 0 ] && [ -t 1 ]; then
-        TTY_FLAG="-i"
+        TTY_FLAG="-it"
     else
         TTY_FLAG="-T"
     fi
