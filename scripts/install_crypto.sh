@@ -20,7 +20,7 @@ pip3 install --user cryptography pyyaml faker lxml ff3
 # Install the encryption module
 echo ""
 echo "Installing ExpoCLI encryption module..."
-pip3 install --user -e . -f expocli_crypto/setup_crypto.py
+pip3 install --user -e ./expocli_crypto
 
 echo ""
 echo "============================================"

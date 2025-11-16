@@ -60,7 +60,7 @@ echo ""
 echo "Step 5: Installing ExpoCLI encryption module..."
 echo ""
 
-pip3 install -e . -f expocli_crypto/setup_crypto.py
+pip3 install -e ./expocli_crypto
 
 echo ""
 echo "============================================"

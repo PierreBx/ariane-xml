@@ -2,14 +2,15 @@
 Setup script for ExpoCLI Encryption Module.
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='expocli-crypto',
     version='1.0.0',
     description='Encryption and pseudonymization module for ExpoCLI XML data',
     author='ExpoCLI Team',
-    packages=find_packages(include=['expocli_crypto', 'expocli_crypto.*']),
+    packages=['expocli_crypto'],
+    package_dir={'expocli_crypto': '.'},
     install_requires=[
         'cryptography>=41.0.0',
         'pyyaml>=6.0',

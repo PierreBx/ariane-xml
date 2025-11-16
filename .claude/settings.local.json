@@ -55,7 +55,9 @@
       "Bash(./install.sh:*)",
       "Bash(git log:*)",
       "Bash(git cherry-pick:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(docker version:*)",
+      "Bash(docker buildx:*)"
     ],
     "deny": [],
     "ask": []
