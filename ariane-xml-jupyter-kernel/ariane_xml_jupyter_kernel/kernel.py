@@ -50,6 +50,7 @@ Special commands:
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ariane_xml_path = self._find_ariane_xml()
+        self.working_directory = self._find_working_directory()
 
     def _find_ariane_xml(self) -> str:
         """Locate the Ariane-XML executable"""
@@ -57,6 +58,16 @@ Special commands:
         docker_path = '/app/ariane-xml-c-kernel/build/ariane-xml'
         if os.path.exists(docker_path):
             return docker_path
+
+        # Check for local development build in standard locations
+        local_dev_paths = [
+            '/home/user/ariane-xml/ariane-xml-c-kernel/build/ariane-xml',
+            os.path.expanduser('~/ariane-xml/ariane-xml-c-kernel/build/ariane-xml'),
+        ]
+
+        for path in local_dev_paths:
+            if os.path.exists(path):
+                return path
 
         # Check for local build (relative to kernel location)
         kernel_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -87,10 +98,25 @@ Special commands:
 
         return docker_path  # Default for Docker environment
 
+    def _find_working_directory(self) -> str:
+        """Find the appropriate working directory for query execution"""
+        # If we're using a development build, use the project root
+        if '/home/user/ariane-xml' in self.ariane_xml_path:
+            return '/home/user/ariane-xml'
+
+        if os.path.expanduser('~/ariane-xml') in self.ariane_xml_path:
+            return os.path.expanduser('~/ariane-xml')
+
+        # For Docker or system-installed versions, use current directory
+        return os.getcwd()
+
     def _execute_query(self, query: str) -> Dict[str, Any]:
         """Execute an Ariane-XML query and return the result"""
         try:
             query = query.strip()
+            # Remove trailing semicolon if present (SQL-style)
+            if query.endswith(';'):
+                query = query[:-1].strip()
             if not query:
                 return {'success': True, 'output': '', 'error': None}
 
@@ -99,7 +125,7 @@ Special commands:
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=os.getcwd()
+                cwd=self.working_directory
             )
 
             if result.returncode == 0:
