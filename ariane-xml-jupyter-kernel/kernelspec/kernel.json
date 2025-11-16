@@ -2,12 +2,12 @@
   "argv": [
     "python3",
     "-m",
-    "expocli_kernel",
+    "ariane_xml_jupyter_kernel",
     "-f",
     "{connection_file}"
   ],
-  "display_name": "ExpoCLI",
-  "language": "expocli-sql",
+  "display_name": "Ariane-XML",
+  "language": "sql",
   "interrupt_mode": "signal",
   "env": {}
 }

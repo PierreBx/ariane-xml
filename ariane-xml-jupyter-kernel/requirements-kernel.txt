@@ -1,4 +1,4 @@
-# Python dependencies for ExpoCLI Jupyter Kernel
+# Python dependencies for Ariane-XML Jupyter Kernel
 # Install with: pip install -r requirements-kernel.txt
 
 ipykernel>=6.0.0
