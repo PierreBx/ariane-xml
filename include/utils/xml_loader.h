@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 
-namespace expocli {
+namespace ariane_xml {
 
 class XmlLoader {
 public:
@@ -16,6 +16,6 @@ public:
     static bool isXmlFile(const std::string& filepath);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XML_LOADER_H

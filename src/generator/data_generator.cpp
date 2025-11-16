@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace expocli {
+namespace ariane_xml {
 
 const std::vector<std::string> DataGenerator::sample_words_ = {
     "Product", "Item", "Service", "Widget", "Gadget", "Tool", "Device",
@@ -147,4 +147,4 @@ std::string DataGenerator::generateDateTime() {
     return oss.str();
 }
 
-} // namespace expocli
+} // namespace ariane_xml

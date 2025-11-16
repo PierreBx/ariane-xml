@@ -1,4 +1,4 @@
-# ExpoCLI
+# Ariane-XML
 
 A high-performance SQL-like query tool for XML files with encryption capabilities.
 
@@ -18,7 +18,7 @@ A high-performance SQL-like query tool for XML files with encryption capabilitie
 ```bash
 # Clone and install (creates transparent local command)
 git clone <repository-url>
-cd expocli
+cd ariane-xml
 ./install.sh
 
 # Reload shell
@@ -29,10 +29,10 @@ source ~/.bashrc
 
 ```bash
 # Interactive mode
-expocli
+ariane-xml
 
 # Single query
-expocli "SELECT name FROM ./data WHERE price < 30"
+ariane-xml "SELECT name FROM ./data WHERE price < 30"
 ```
 
 ### Example Queries
@@ -55,26 +55,26 @@ SELECT name FROM ./data WHERE (price < 50 AND calories < 1000) OR rating > 4
 
 ### Quick Start Guides (5 minutes each)
 
-- 📘 [CLI Quick Start](expocli_documentation/01a_Quick_Start_CLI.md) - Command-line interface
-- 📙 [Jupyter Quick Start](expocli_documentation/01b_Quick_Start_Jupyter.md) - Notebook interface
-- 📗 [Encryption Quick Start](expocli_documentation/01c_Quick_Start_Encryption.md) - XML encryption
+- 📘 [CLI Quick Start](ariane-xml-documentation/01a_Quick_Start_CLI.md) - Command-line interface
+- 📙 [Jupyter Quick Start](ariane-xml-documentation/01b_Quick_Start_Jupyter.md) - Notebook interface
+- 📗 [Encryption Quick Start](ariane-xml-documentation/01c_Quick_Start_Encryption.md) - XML encryption
 
 ### Detailed Documentation
 
-- [Installation Guide](expocli_documentation/02_Installation_Guide.md) - Complete installation instructions
-- [Jupyter Integration](expocli_documentation/04_Jupyter_Integration.md) - Full Jupyter documentation
-- [Encryption Module](expocli_documentation/07_Encryption_Module.md) - Complete encryption reference
-- [Known Issues](expocli_documentation/09_Known_Issues.md) - Troubleshooting guide
-- [Architecture](expocli_documentation/10_Architecture_Diagram.md) - System architecture
+- [Installation Guide](ariane-xml-documentation/02_Installation_Guide.md) - Complete installation instructions
+- [Jupyter Integration](ariane-xml-documentation/04_Jupyter_Integration.md) - Full Jupyter documentation
+- [Encryption Module](ariane-xml-documentation/07_Encryption_Module.md) - Complete encryption reference
+- [Known Issues](ariane-xml-documentation/09_Known_Issues.md) - Troubleshooting guide
+- [Architecture](ariane-xml-documentation/10_Architecture_Diagram.md) - System architecture
 
 ## Main Components
 
-### 1. ExpoCLI (Query Engine)
+### 1. Ariane-XML (Query Engine)
 
 Query XML files using SQL-like syntax:
 
 ```bash
-expocli "SELECT name, price FROM ./data WHERE price < 50"
+ariane-xml "SELECT name, price FROM ./data WHERE price < 50"
 ```
 
 **Features:**
@@ -99,12 +99,12 @@ SELECT name FROM /app/examples WHERE calories < 600
 - Mix queries with documentation
 - Export to PDF/HTML
 
-### 3. XML Encryption (expocli-encrypt)
+### 3. XML Encryption (ariane-xml-encrypt)
 
 Encrypt and pseudonymize XML data:
 
 ```bash
-expocli-encrypt encrypt input.xml encrypted.xml -c config.yaml
+ariane-xml-encrypt encrypt input.xml encrypted.xml -c config.yaml
 ```
 
 **Features:**
@@ -139,17 +139,17 @@ FROM <path>
 
 ```bash
 # Explore XML data
-expocli "SELECT DISTINCT category FROM ./data"
+ariane-xml "SELECT DISTINCT category FROM ./data"
 
 # Find patterns
-expocli "SELECT name, price FROM ./data WHERE category='books' ORDER BY price"
+ariane-xml "SELECT name, price FROM ./data WHERE category='books' ORDER BY price"
 ```
 
 ### Data Anonymization
 
 ```bash
 # Encrypt sensitive data for testing
-expocli-encrypt encrypt prod_data.xml test_data.xml -c config.yaml
+ariane-xml-encrypt encrypt prod_data.xml test_data.xml -c config.yaml
 ```
 
 ### Interactive Exploration
@@ -163,22 +163,22 @@ Use Jupyter notebooks to:
 ## Project Structure
 
 ```
-expocli/
+ariane-xml/
 ├── src/                      # C++ source code
 │   ├── main.cpp             # CLI entry point
 │   ├── parser/              # Query parser
 │   ├── executor/            # Query executor
 │   └── utils/               # Utilities
-├── expocli_crypto/          # Python encryption module
+├── ariane-xml-crypto/          # Python encryption module
 │   ├── cli.py              # Encryption CLI
 │   ├── encryptor.py        # Main encryptor
 │   ├── fpe.py              # Format-Preserving Encryption
 │   └── pseudonymizer.py    # Data pseudonymization
-├── expocli_kernel/          # Jupyter kernel
+├── ariane-xml-kernel/          # Jupyter kernel
 ├── scripts/                 # Installation and utility scripts
 ├── tests/                   # Test suites
 ├── examples/                # Sample data
-└── expocli_documentation/   # Full documentation
+└── ariane-xml-documentation/   # Full documentation
 ```
 
 ## Prerequisites
@@ -207,10 +207,10 @@ sudo usermod -aG docker $USER  # Add to docker group
 ```
 
 **Docker proxy issues:**
-See [Docker Proxy Fix](expocli_documentation/08b_Docker_Proxy_Fix.md)
+See [Docker Proxy Fix](ariane-xml-documentation/08b_Docker_Proxy_Fix.md)
 
 **More help:**
-See [Known Issues](expocli_documentation/09_Known_Issues.md)
+See [Known Issues](ariane-xml-documentation/09_Known_Issues.md)
 
 ## License
 
@@ -218,6 +218,6 @@ MIT License
 
 ## Links
 
-- 📚 [Full Documentation](expocli_documentation/)
+- 📚 [Full Documentation](ariane-xml-documentation/)
 - 🐛 [Issue Tracker](https://github.com/your-repo/issues)
 - 💬 [Discussions](https://github.com/your-repo/discussions)

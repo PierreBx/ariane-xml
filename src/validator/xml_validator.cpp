@@ -9,7 +9,7 @@
 #include <set>
 #include <cstring>
 
-namespace expocli {
+namespace ariane_xml {
 
 std::vector<std::string> XmlValidator::expandPattern(const std::string& pattern) {
     std::vector<std::string> files;
@@ -377,4 +377,4 @@ bool XmlValidator::matchesType(const std::string& value, XsdType type) {
     }
 }
 
-} // namespace expocli
+} // namespace ariane_xml

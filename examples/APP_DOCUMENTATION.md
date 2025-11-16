@@ -27,12 +27,12 @@ The XML structure being queried:
 
 ### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name FROM "/home/user/ExpoCLI/examples/test.xml"'
+./build/ariane-xml 'SELECT breakfast_menu/food/name FROM "/home/user/Ariane-XML/examples/test.xml"'
 ```
 
 Or with relative path:
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name FROM "examples/test.xml"'
+./build/ariane-xml 'SELECT breakfast_menu/food/name FROM "examples/test.xml"'
 ```
 
 ### Expected Results
@@ -76,7 +76,7 @@ This example demonstrates how to retrieve multiple fields from a single XML file
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml"'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml"'
 ```
 
 #### Expected Results
@@ -115,7 +115,7 @@ This example introduces the WHERE clause to filter results based on a numeric co
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 700'
+./build/ariane-xml 'SELECT breakfast_menu/food/name FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 700'
 ```
 
 #### Expected Results
@@ -151,7 +151,7 @@ This example demonstrates string-based filtering using the equality operator. It
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/price FROM "examples/test.xml" WHERE breakfast_menu/food/name = "French Toast"'
+./build/ariane-xml 'SELECT breakfast_menu/food/price FROM "examples/test.xml" WHERE breakfast_menu/food/name = "French Toast"'
 ```
 
 #### Expected Results
@@ -186,7 +186,7 @@ This example demonstrates the `>=` (greater than or equal) operator to find high
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories >= 900'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories >= 900'
 ```
 
 #### Expected Results
@@ -225,7 +225,7 @@ This example combines multiple field selection with WHERE clause filtering, demo
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 700'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 700'
 ```
 
 #### Expected Results
@@ -261,7 +261,7 @@ This example demonstrates the ORDER BY clause to sort results. The query sorts b
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" ORDER BY price'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" ORDER BY price'
 ```
 
 #### Expected Results
@@ -301,7 +301,7 @@ This example shows how to sort results in descending order (highest to lowest) u
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/calories FROM "examples/test.xml" ORDER BY calories DESC'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/calories FROM "examples/test.xml" ORDER BY calories DESC'
 ```
 
 #### Expected Results
@@ -341,7 +341,7 @@ This example demonstrates the LIMIT clause to restrict the number of rows return
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name FROM "examples/test.xml" LIMIT 3'
+./build/ariane-xml 'SELECT breakfast_menu/food/name FROM "examples/test.xml" LIMIT 3'
 ```
 
 #### Expected Results
@@ -379,7 +379,7 @@ This example combines ORDER BY and LIMIT to find the "top N" items based on a cr
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" ORDER BY price DESC LIMIT 2'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" ORDER BY price DESC LIMIT 2'
 ```
 
 #### Expected Results
@@ -418,7 +418,7 @@ This example demonstrates the special `FILE_NAME` field, which returns the name 
 
 #### Command
 ```bash
-./build/expocli 'SELECT FILE_NAME,breakfast_menu/food/name FROM "examples/test.xml"'
+./build/ariane-xml 'SELECT FILE_NAME,breakfast_menu/food/name FROM "examples/test.xml"'
 ```
 
 #### Expected Results
@@ -458,7 +458,7 @@ This example shows how to query multiple XML files at once by specifying a direc
 
 #### Command
 ```bash
-./build/expocli 'SELECT FILE_NAME,breakfast_menu/food/name FROM "examples"'
+./build/ariane-xml 'SELECT FILE_NAME,breakfast_menu/food/name FROM "examples"'
 ```
 
 #### Expected Results
@@ -498,7 +498,7 @@ This example combines multi-file querying with WHERE clause filtering. It search
 
 #### Command
 ```bash
-./build/expocli 'SELECT FILE_NAME,lunch_menu/food/name FROM "examples" WHERE lunch_menu/food/calories < 500'
+./build/ariane-xml 'SELECT FILE_NAME,lunch_menu/food/name FROM "examples" WHERE lunch_menu/food/calories < 500'
 ```
 
 #### Expected Results
@@ -537,7 +537,7 @@ This example demonstrates the AND logical operator to combine multiple condition
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories > 600 AND breakfast_menu/food/price < "$7"'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price,breakfast_menu/food/calories FROM "examples/test.xml" WHERE breakfast_menu/food/calories > 600 AND breakfast_menu/food/price < "$7"'
 ```
 
 #### Expected Results
@@ -574,7 +574,7 @@ This example demonstrates the OR logical operator to match items that satisfy at
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 650 OR breakfast_menu/food/calories > 900'
+./build/ariane-xml 'SELECT breakfast_menu/food/name FROM "examples/test.xml" WHERE breakfast_menu/food/calories < 650 OR breakfast_menu/food/calories > 900'
 ```
 
 #### Expected Results
@@ -611,7 +611,7 @@ This example demonstrates using parentheses to group conditions and control eval
 
 #### Command
 ```bash
-./build/expocli 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" WHERE (breakfast_menu/food/calories < 650 OR breakfast_menu/food/calories > 900) AND breakfast_menu/food/price > "$6"'
+./build/ariane-xml 'SELECT breakfast_menu/food/name,breakfast_menu/food/price FROM "examples/test.xml" WHERE (breakfast_menu/food/calories < 650 OR breakfast_menu/food/calories > 900) AND breakfast_menu/food/price > "$6"'
 ```
 
 #### Expected Results
@@ -649,7 +649,7 @@ This example demonstrates the DISTINCT keyword to eliminate duplicate values fro
 
 #### Command
 ```bash
-./build/expocli 'SELECT DISTINCT breakfast_menu/food/calories FROM "examples/test.xml"'
+./build/ariane-xml 'SELECT DISTINCT breakfast_menu/food/calories FROM "examples/test.xml"'
 ```
 
 #### Expected Results
@@ -688,7 +688,7 @@ This example introduces the FOR clause, which creates a variable that iterates o
 
 #### Command
 ```bash
-./build/expocli 'SELECT b/title,b/price FROM "examples/books.xml" FOR b IN bookstore/book WHERE b/price > 35'
+./build/ariane-xml 'SELECT b/title,b/price FROM "examples/books.xml" FOR b IN bookstore/book WHERE b/price > 35'
 ```
 
 #### Expected Results
@@ -727,7 +727,7 @@ Note: The current implementation requires specific syntax for aggregation functi
 
 #### Command
 ```bash
-./build/expocli 'SELECT DISTINCT bookstore/book/category FROM "examples/books.xml"'
+./build/ariane-xml 'SELECT DISTINCT bookstore/book/category FROM "examples/books.xml"'
 ```
 
 #### Expected Results
@@ -775,7 +775,7 @@ The XML structure being queried:
 
 #### Command
 ```bash
-./build/expocli 'SELECT b/title,a FROM "examples/books.xml" FOR b IN bookstore/book FOR a IN b/author'
+./build/ariane-xml 'SELECT b/title,a FROM "examples/books.xml" FOR b IN bookstore/book FOR a IN b/author'
 ```
 
 #### Expected Results

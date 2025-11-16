@@ -1,6 +1,6 @@
 #include "utils/app_context.h"
 
-namespace expocli {
+namespace ariane_xml {
 
 void AppContext::setXsdPath(const std::string& path) {
     xsd_path_ = path;
@@ -34,4 +34,4 @@ bool AppContext::isVerbose() const {
     return verbose_;
 }
 
-} // namespace expocli
+} // namespace ariane_xml

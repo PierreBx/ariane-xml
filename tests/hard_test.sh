@@ -1,6 +1,6 @@
 #!/bin/bash
-# ExpoCLI Hard Stress Test
-# This test pushes expocli to its limits with:
+# Ariane-XML Hard Stress Test
+# This test pushes ariane-xml to its limits with:
 # - Complex nested XSD schema
 # - 100 generated XML files
 # - Complex SELECT queries with deep nesting
@@ -18,7 +18,7 @@ HARD_TEST_DATA="$HARD_TEST_DIR/data"
 HARD_TEST_SCHEMA="tests/schemas/enterprise_system.xsd"
 
 # Initialize
-print_category "HARD STRESS TEST - Pushing ExpoCLI to the Limit"
+print_category "HARD STRESS TEST - Pushing Ariane-XML to the Limit"
 
 echo -e "${COLOR_CYAN}This test will:${COLOR_RESET}"
 echo "  1. Use a complex XSD with deeply nested structures"
@@ -46,7 +46,7 @@ else
     rm -f "$HARD_TEST_DATA"/enterprise_*.xml 2>/dev/null
 
     GENERATION_START=$(date +%s.%N)
-    echo -e "SET XSD $HARD_TEST_SCHEMA;\nSET DEST $HARD_TEST_DATA;\nGENERATE XML 100 PREFIX enterprise_;\nexit;" | $EXPOCLI_BIN > "$HARD_TEST_DIR/generation.log" 2>&1
+    echo -e "SET XSD $HARD_TEST_SCHEMA;\nSET DEST $HARD_TEST_DATA;\nGENERATE XML 100 PREFIX enterprise_;\nexit;" | $ARIANE_XML_BIN > "$HARD_TEST_DIR/generation.log" 2>&1
 
     if [ $? -ne 0 ]; then
         echo -e "${COLOR_RED}✗ Failed to generate XML files${COLOR_RESET}"
@@ -174,11 +174,11 @@ TESTS_TOTAL=$((TESTS_TOTAL + 1))
 printf "  %-12s %-45s " "[HARD-V01]" "Count company names = file count"
 
 QUERY_OUTPUT="$HARD_TEST_DIR/validation_company_count.out"
-echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT" 2>&1
+echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT" 2>&1
 
 # Count non-empty result lines (excluding headers, prompts, status messages, etc.)
 # More robust filtering to exclude common status messages
-RESULT_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT" | \
+RESULT_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -218,9 +218,9 @@ TESTS_TOTAL=$((TESTS_TOTAL + 1))
 printf "  %-12s %-45s " "[HARD-V02]" "Department query returns results"
 
 QUERY_OUTPUT="$HARD_TEST_DIR/validation_departments.out"
-echo -e "SELECT enterprise.departments.department.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT" 2>&1
+echo -e "SELECT enterprise.departments.department.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT" 2>&1
 
-DEPT_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT" | \
+DEPT_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -261,10 +261,10 @@ printf "  %-12s %-45s " "[HARD-V03]" "Salary filter returns subset"
 QUERY_OUTPUT_ALL="$HARD_TEST_DIR/validation_all_employees.out"
 QUERY_OUTPUT_FILTERED="$HARD_TEST_DIR/validation_filtered_employees.out"
 
-echo -e "SELECT enterprise.departments.department.employees.employee.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT_ALL" 2>&1
-echo -e "SELECT enterprise.departments.department.employees.employee.name FROM \"$HARD_TEST_DATA/\" WHERE enterprise.departments.department.employees.employee.salary > 500;\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT_FILTERED" 2>&1
+echo -e "SELECT enterprise.departments.department.employees.employee.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT_ALL" 2>&1
+echo -e "SELECT enterprise.departments.department.employees.employee.name FROM \"$HARD_TEST_DATA/\" WHERE enterprise.departments.department.employees.employee.salary > 500;\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT_FILTERED" 2>&1
 
-ALL_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT_ALL" | \
+ALL_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT_ALL" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -290,7 +290,7 @@ ALL_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT_ALL" | \
     tail -n +2 | \
     wc -l)
 
-FILTERED_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT_FILTERED" | \
+FILTERED_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT_FILTERED" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -329,9 +329,9 @@ TESTS_TOTAL=$((TESTS_TOTAL + 1))
 printf "  %-12s %-45s " "[HARD-V04]" "LIMIT reduces result count"
 
 QUERY_OUTPUT="$HARD_TEST_DIR/validation_limit.out"
-echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\" LIMIT 5;\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT" 2>&1
+echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\" LIMIT 5;\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT" 2>&1
 
-LIMITED_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT" | \
+LIMITED_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -370,10 +370,10 @@ TESTS_TOTAL=$((TESTS_TOTAL + 1))
 printf "  %-12s %-45s " "[HARD-V05]" "Boolean filter works correctly"
 
 QUERY_OUTPUT="$HARD_TEST_DIR/validation_boolean.out"
-echo -e "SELECT enterprise.products.product.name FROM \"$HARD_TEST_DATA/\" WHERE enterprise.products.product.inStock = true;\nexit;" | $EXPOCLI_BIN > "$QUERY_OUTPUT" 2>&1
+echo -e "SELECT enterprise.products.product.name FROM \"$HARD_TEST_DATA/\" WHERE enterprise.products.product.inStock = true;\nexit;" | $ARIANE_XML_BIN > "$QUERY_OUTPUT" 2>&1
 
 # Check that query returns results (filter out status messages first)
-BOOL_COUNT=$(grep -v "^expocli>" "$QUERY_OUTPUT" | \
+BOOL_COUNT=$(grep -v "^ariane-xml>" "$QUERY_OUTPUT" | \
     grep -v "^SELECT" | \
     grep -v "^$" | \
     grep -v "XSD path" | \
@@ -415,7 +415,7 @@ echo -e "${COLOR_BOLD}${COLOR_YELLOW}Phase 4: Performance Summary${COLOR_RESET}"
 
 # Calculate average query time for a sample query
 PERF_START=$(date +%s.%N)
-echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $EXPOCLI_BIN > /dev/null 2>&1
+echo -e "SELECT enterprise.company.name FROM \"$HARD_TEST_DATA/\";\nexit;" | $ARIANE_XML_BIN > /dev/null 2>&1
 PERF_END=$(date +%s.%N)
 QUERY_TIME=$(awk "BEGIN {print $PERF_END - $PERF_START}")
 

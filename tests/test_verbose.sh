@@ -19,12 +19,12 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 # Check if we're running in local mode
-if [ -f "$PROJECT_ROOT/build/expocli" ]; then
-    EXPOCLI="$PROJECT_ROOT/build/expocli"
-    echo -e "${GREEN}Using local build: $EXPOCLI${NC}"
+if [ -f "$PROJECT_ROOT/build/ariane-xml" ]; then
+    ARIANE_XML="$PROJECT_ROOT/build/ariane-xml"
+    echo -e "${GREEN}Using local build: $ARIANE_XML${NC}"
 else
-    EXPOCLI="expocli"
-    echo -e "${YELLOW}Using system expocli${NC}"
+    ARIANE_XML="ariane-xml"
+    echo -e "${YELLOW}Using system ariane-xml${NC}"
 fi
 
 cd "$PROJECT_ROOT"
@@ -42,7 +42,7 @@ run_test() {
     echo -n "  [$test_name] "
     
     # Run query with VERBOSE mode
-    local output=$(echo -e "SET VERBOSE;\n$query\nexit" | $EXPOCLI 2>&1)
+    local output=$(echo -e "SET VERBOSE;\n$query\nexit" | $ARIANE_XML 2>&1)
     
     # Check if output matches expected pattern
     if echo "$output" | grep -qE "$expected_pattern"; then

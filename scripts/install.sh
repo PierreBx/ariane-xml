@@ -1,5 +1,5 @@
 #!/bin/bash
-# install.sh - Install expocli wrapper for easy system-wide access
+# install.sh - Install ariane-xml wrapper for easy system-wide access
 #
 # Usage:
 #   ./install.sh              # Install with existing Docker image
@@ -9,7 +9,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-WRAPPER_SCRIPT="${SCRIPT_DIR}/expocli.sh"
+WRAPPER_SCRIPT="${SCRIPT_DIR}/ariane-xml.sh"
 
 # Parse command line arguments
 REBUILD_DOCKER=false
@@ -34,7 +34,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║        expocli Installer               ║${NC}"
+echo -e "${BLUE}║        ariane-xml Installer               ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -73,33 +73,33 @@ echo "Shell RC file: $SHELL_RC"
 echo ""
 
 # Create the alias
-ALIAS_CMD="alias expocli='${WRAPPER_SCRIPT}'"
+ALIAS_CMD="alias ariane-xml='${WRAPPER_SCRIPT}'"
 
 # Check if alias already exists
-echo "Checking expocli alias status..."
-if grep -q "alias expocli=" "$SHELL_RC" 2>/dev/null; then
+echo "Checking ariane-xml alias status..."
+if grep -q "alias ariane-xml=" "$SHELL_RC" 2>/dev/null; then
     # Check if the existing alias points to the correct location
-    EXISTING_ALIAS=$(grep "alias expocli=" "$SHELL_RC" | tail -n 1)
+    EXISTING_ALIAS=$(grep "alias ariane-xml=" "$SHELL_RC" | tail -n 1)
     if echo "$EXISTING_ALIAS" | grep -q "'${WRAPPER_SCRIPT}'"; then
-        echo -e "${GREEN}✓${NC} expocli alias already configured correctly in $SHELL_RC"
+        echo -e "${GREEN}✓${NC} ariane-xml alias already configured correctly in $SHELL_RC"
         ALIAS_STATUS="already_exists"
     else
         # Alias exists but points to a different location - update it
-        echo -e "${YELLOW}⚠${NC}  expocli alias exists but points to different location"
+        echo -e "${YELLOW}⚠${NC}  ariane-xml alias exists but points to different location"
         echo "    Updating to: ${WRAPPER_SCRIPT}"
-        sed -i.bak '/alias expocli=/d' "$SHELL_RC"
+        sed -i.bak '/alias ariane-xml=/d' "$SHELL_RC"
         echo "" >> "$SHELL_RC"
-        echo "# expocli - XML Query CLI (transparent Docker wrapper)" >> "$SHELL_RC"
+        echo "# ariane-xml - XML Query CLI (transparent Docker wrapper)" >> "$SHELL_RC"
         echo "$ALIAS_CMD" >> "$SHELL_RC"
-        echo -e "${GREEN}✓${NC} Updated expocli alias in $SHELL_RC"
+        echo -e "${GREEN}✓${NC} Updated ariane-xml alias in $SHELL_RC"
         ALIAS_STATUS="updated"
     fi
 else
     # Alias doesn't exist - add it
     echo "" >> "$SHELL_RC"
-    echo "# expocli - XML Query CLI (transparent Docker wrapper)" >> "$SHELL_RC"
+    echo "# ariane-xml - XML Query CLI (transparent Docker wrapper)" >> "$SHELL_RC"
     echo "$ALIAS_CMD" >> "$SHELL_RC"
-    echo -e "${GREEN}✓${NC} Added expocli alias to $SHELL_RC"
+    echo -e "${GREEN}✓${NC} Added ariane-xml alias to $SHELL_RC"
     ALIAS_STATUS="added"
 fi
 echo ""
@@ -119,7 +119,7 @@ cd "${PROJECT_ROOT}"
 # Check if Docker is available
 if ! command -v docker &> /dev/null; then
     echo -e "${YELLOW}⚠${NC}  Docker not found!"
-    echo "    Docker is required for expocli to work."
+    echo "    Docker is required for ariane-xml to work."
     echo "    Please install Docker from: https://docs.docker.com/get-docker/"
     echo ""
     echo "    Installation incomplete - Docker required."
@@ -155,9 +155,9 @@ echo ""
 
         # Step 1: Stop any running containers
         echo -e "${BLUE}[1/5]${NC} Stopping any running containers..."
-        CONTAINER_NAME="expocli_container"
+        CONTAINER_NAME="ariane-xml_container"
         if docker ps -q -f name="${CONTAINER_NAME}" | grep -q .; then
-            echo "      Stopping expocli_container..."
+            echo "      Stopping ariane-xml_container..."
             docker compose down 2>/dev/null || true
             echo -e "${GREEN}✓${NC} Stopped running container"
         else
@@ -186,7 +186,7 @@ echo ""
         # Step 4: Clean old build directory
         echo ""
         echo -e "${BLUE}[4/5]${NC} Cleaning old build artifacts..."
-        if docker compose exec -T expocli bash -c "rm -rf /app/build/* /app/build/.* 2>/dev/null || true"; then
+        if docker compose exec -T ariane-xml bash -c "rm -rf /app/build/* /app/build/.* 2>/dev/null || true"; then
             echo -e "${GREEN}✓${NC} Build directory cleaned"
         else
             echo -e "${YELLOW}⚠${NC}  Warning: Could not clean build directory, but continuing..."
@@ -194,14 +194,14 @@ echo ""
 
         # Step 5: Compile the binary with latest code
         echo ""
-        echo -e "${BLUE}[5/5]${NC} Compiling expocli with latest source code..."
+        echo -e "${BLUE}[5/5]${NC} Compiling ariane-xml with latest source code..."
         echo "      (This may take 30-60 seconds)"
 
-        if docker compose exec -T expocli bash -c \
+        if docker compose exec -T ariane-xml bash -c \
             "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make"; then
             echo ""
             # Verify the binary was created
-            if docker compose exec -T expocli test -f /app/build/expocli 2>/dev/null; then
+            if docker compose exec -T ariane-xml test -f /app/build/ariane-xml 2>/dev/null; then
                 echo -e "${GREEN}✓${NC} Compilation successful"
             else
                 echo -e "${YELLOW}⚠${NC}  Binary not found after compilation"
@@ -222,7 +222,7 @@ echo ""
 
         # Ensure Docker image exists
         echo "Testing Docker setup..."
-        if ! docker images -q expocli_image | grep -q .; then
+        if ! docker images -q ariane-xml_image | grep -q .; then
             echo -e "${BLUE}[Building]${NC} Docker image not found, building it now..."
             echo "           (This is a one-time setup, takes ~1-2 minutes)"
             if docker compose build; then
@@ -238,7 +238,7 @@ echo ""
         fi
 
         # Start the persistent container if not already running
-        CONTAINER_NAME="expocli_container"
+        CONTAINER_NAME="ariane-xml_container"
         if docker ps -q -f name="${CONTAINER_NAME}" -f status=running | grep -q .; then
             echo -e "${GREEN}✓${NC} Container is already running"
             echo ""
@@ -257,7 +257,7 @@ echo ""
 
         # Step 1: Clean old build directory
         echo -e "${BLUE}[1/2]${NC} Cleaning old build artifacts..."
-        if docker compose exec -T expocli bash -c "rm -rf /app/build/* /app/build/.* 2>/dev/null || true"; then
+        if docker compose exec -T ariane-xml bash -c "rm -rf /app/build/* /app/build/.* 2>/dev/null || true"; then
             echo -e "${GREEN}✓${NC} Build directory cleaned"
         else
             echo -e "${YELLOW}⚠${NC}  Warning: Could not clean build directory, but continuing..."
@@ -265,14 +265,14 @@ echo ""
 
         # Step 2: Compile the binary with latest code
         echo ""
-        echo -e "${BLUE}[2/2]${NC} Compiling expocli with latest source code..."
+        echo -e "${BLUE}[2/2]${NC} Compiling ariane-xml with latest source code..."
         echo "      (This may take 30-60 seconds)"
 
-        if docker compose exec -T expocli bash -c \
+        if docker compose exec -T ariane-xml bash -c \
             "mkdir -p /app/build && cd /app/build && cmake .. >/dev/null 2>&1 && make"; then
             echo ""
             # Verify the binary was created
-            if docker compose exec -T expocli test -f /app/build/expocli 2>/dev/null; then
+            if docker compose exec -T ariane-xml test -f /app/build/ariane-xml 2>/dev/null; then
                 echo -e "${GREEN}✓${NC} Compilation successful"
             else
                 echo -e "${YELLOW}⚠${NC}  Binary not found after compilation"
@@ -294,7 +294,7 @@ echo "Testing setup..."
 cd "${PROJECT_ROOT}"
 
 if bash "${WRAPPER_SCRIPT}" --help >/dev/null 2>&1; then
-    echo -e "${GREEN}✓${NC} expocli wrapper is working correctly"
+    echo -e "${GREEN}✓${NC} ariane-xml wrapper is working correctly"
 else
     echo -e "${YELLOW}⚠${NC}  Initial setup may take a moment (building Docker image and binary)"
 fi
@@ -304,20 +304,20 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║     Installation Complete! 🎉         ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
 echo ""
-echo "To start using expocli, run:"
+echo "To start using ariane-xml, run:"
 echo ""
 echo -e "  ${BLUE}source $SHELL_RC${NC}"
-echo -e "  ${BLUE}expocli${NC}"
+echo -e "  ${BLUE}ariane-xml${NC}"
 echo ""
 echo "Or open a new terminal window."
 echo ""
 echo "Usage examples:"
-echo -e "  ${BLUE}expocli${NC}                                    # Start interactive mode"
-echo -e "  ${BLUE}expocli 'SELECT name FROM ./data'${NC}         # Single query"
-echo -e "  ${BLUE}expocli --help${NC}                             # Show help"
+echo -e "  ${BLUE}ariane-xml${NC}                                    # Start interactive mode"
+echo -e "  ${BLUE}ariane-xml 'SELECT name FROM ./data'${NC}         # Single query"
+echo -e "  ${BLUE}ariane-xml --help${NC}                             # Show help"
 echo ""
 echo -e "${BLUE}How it works:${NC}"
-echo "  expocli runs inside a persistent Docker container transparently."
+echo "  ariane-xml runs inside a persistent Docker container transparently."
 echo "  The container:"
 echo "    - Is now running in the background (very lightweight)"
 echo "    - Will restart automatically if stopped"

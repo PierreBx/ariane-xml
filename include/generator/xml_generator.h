@@ -7,7 +7,7 @@
 #include <string>
 #include <memory>
 
-namespace expocli {
+namespace ariane_xml {
 
 class XmlGenerator {
 public:
@@ -37,6 +37,6 @@ private:
     int determineRepeatCount(const std::shared_ptr<XsdElement>& element);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XML_GENERATOR_H

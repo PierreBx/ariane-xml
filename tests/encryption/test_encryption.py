@@ -7,11 +7,11 @@ import tempfile
 import os
 from pathlib import Path
 
-from expocli_crypto.config import EncryptionConfig, AttributeRule
-from expocli_crypto.fpe import FPEEncryptor
-from expocli_crypto.pseudonymizer import Pseudonymizer
-from expocli_crypto.mapping_table import MappingTable
-from expocli_crypto.encryptor import XMLEncryptor
+from ariane-xml_crypto.config import EncryptionConfig, AttributeRule
+from ariane-xml_crypto.fpe import FPEEncryptor
+from ariane-xml_crypto.pseudonymizer import Pseudonymizer
+from ariane-xml_crypto.mapping_table import MappingTable
+from ariane-xml_crypto.encryptor import XMLEncryptor
 
 
 class TestAttributeRule(unittest.TestCase):

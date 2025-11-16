@@ -1,5 +1,5 @@
 #!/bin/bash
-# ExpoCLI Comprehensive Test Suite - Working Version
+# Ariane-XML Comprehensive Test Suite - Working Version
 # Tests all features with proper query syntax
 
 set -e

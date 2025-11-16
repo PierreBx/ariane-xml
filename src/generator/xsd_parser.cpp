@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Initialize static member
 std::map<std::string, std::shared_ptr<XsdElement>> XsdParser::named_types_;
@@ -391,4 +391,4 @@ std::shared_ptr<XsdElement> XsdParser::createElementFromType(
     return element;
 }
 
-} // namespace expocli
+} // namespace ariane_xml

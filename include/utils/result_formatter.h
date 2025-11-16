@@ -7,7 +7,7 @@
 #include <ostream>
 #include <iostream>
 
-namespace expocli {
+namespace ariane_xml {
 
 class ResultFormatter {
 public:
@@ -21,6 +21,6 @@ public:
     static std::string formatAsText(const std::vector<ResultRow>& results);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // RESULT_FORMATTER_H

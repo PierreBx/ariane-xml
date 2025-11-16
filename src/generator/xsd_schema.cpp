@@ -1,6 +1,6 @@
 #include "generator/xsd_schema.h"
 
-namespace expocli {
+namespace ariane_xml {
 
 void XsdSchema::setRootElement(std::shared_ptr<XsdElement> root) {
     root_element_ = root;
@@ -18,4 +18,4 @@ std::string XsdSchema::getTargetNamespace() const {
     return target_namespace_;
 }
 
-} // namespace expocli
+} // namespace ariane_xml

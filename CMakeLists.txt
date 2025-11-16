@@ -45,19 +45,19 @@ set(SOURCES
 )
 
 # Create executable
-add_executable(expocli ${SOURCES} ${pugixml_SOURCE_DIR}/src/pugixml.cpp)
+add_executable(ariane-xml ${SOURCES} ${pugixml_SOURCE_DIR}/src/pugixml.cpp)
 
 # Find and link readline library
 find_library(READLINE_LIBRARY NAMES readline)
 if(READLINE_LIBRARY)
-    target_link_libraries(expocli ${READLINE_LIBRARY})
+    target_link_libraries(ariane-xml ${READLINE_LIBRARY})
     message(STATUS "Found readline library: ${READLINE_LIBRARY}")
 else()
     message(WARNING "readline library not found - command history will not work")
 endif()
 
 # Install target
-install(TARGETS expocli DESTINATION bin)
+install(TARGETS ariane-xml DESTINATION bin)
 
 # Print configuration
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")

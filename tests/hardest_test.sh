@@ -1,6 +1,6 @@
 #!/bin/bash
-# ExpoCLI HARDEST Stress Test
-# This test pushes expocli to EXTREME limits with:
+# Ariane-XML HARDEST Stress Test
+# This test pushes ariane-xml to EXTREME limits with:
 # - Ultra-complex nested XSD schema (6+ levels)
 # - 1000 generated XML files (~1 MB each)
 # - Complex SELECT queries with extremely deep nesting
@@ -55,7 +55,7 @@ else
     GENERATION_START=$(date +%s.%N)
 
     # Generate files in the background to show progress
-    echo -e "SET XSD $HARDEST_TEST_SCHEMA;\nSET DEST $HARDEST_TEST_DATA;\nGENERATE XML ${NUM_FILES} PREFIX mega_;\nexit;" | $EXPOCLI_BIN > "$HARDEST_TEST_DIR/generation.log" 2>&1 &
+    echo -e "SET XSD $HARDEST_TEST_SCHEMA;\nSET DEST $HARDEST_TEST_DATA;\nGENERATE XML ${NUM_FILES} PREFIX mega_;\nexit;" | $ARIANE_XML_BIN > "$HARDEST_TEST_DIR/generation.log" 2>&1 &
     GEN_PID=$!
 
     # Show progress while generating
@@ -208,7 +208,7 @@ echo -e "${COLOR_BOLD}${COLOR_YELLOW}Phase 3: Performance validation at extreme 
 echo ""
 
 # Count total results from a deep query
-RESULT_OUTPUT=$(echo "SELECT megaEnterprise.divisions.division.offices.office.departments.department.teams.team.members.member.name FROM \"$HARDEST_TEST_DATA/\";" | $EXPOCLI_BIN 2>&1)
+RESULT_OUTPUT=$(echo "SELECT megaEnterprise.divisions.division.offices.office.departments.department.teams.team.members.member.name FROM \"$HARDEST_TEST_DATA/\";" | $ARIANE_XML_BIN 2>&1)
 EMPLOYEE_COUNT=$(echo "$RESULT_OUTPUT" | grep "rows returned" | grep -o '[0-9]*' | tail -1)
 
 if [ -n "$EMPLOYEE_COUNT" ] && [ "$EMPLOYEE_COUNT" -gt 0 ]; then
@@ -218,7 +218,7 @@ else
 fi
 
 # Test query on product catalog
-PRODUCT_OUTPUT=$(echo "SELECT megaEnterprise.catalog.category.subcategories.subcategory.products.product.name FROM \"$HARDEST_TEST_DATA/\";" | $EXPOCLI_BIN 2>&1)
+PRODUCT_OUTPUT=$(echo "SELECT megaEnterprise.catalog.category.subcategories.subcategory.products.product.name FROM \"$HARDEST_TEST_DATA/\";" | $ARIANE_XML_BIN 2>&1)
 PRODUCT_COUNT=$(echo "$PRODUCT_OUTPUT" | grep "rows returned" | grep -o '[0-9]*' | tail -1)
 
 if [ -n "$PRODUCT_COUNT" ] && [ "$PRODUCT_COUNT" -gt 0 ]; then
@@ -228,7 +228,7 @@ else
 fi
 
 # Test extremely deep query (Level 7)
-CERT_OUTPUT=$(echo "SELECT megaEnterprise.divisions.division.offices.office.departments.department.teams.team.members.member.certifications.certification.title FROM \"$HARDEST_TEST_DATA/\";" | $EXPOCLI_BIN 2>&1)
+CERT_OUTPUT=$(echo "SELECT megaEnterprise.divisions.division.offices.office.departments.department.teams.team.members.member.certifications.certification.title FROM \"$HARDEST_TEST_DATA/\";" | $ARIANE_XML_BIN 2>&1)
 CERT_COUNT=$(echo "$CERT_OUTPUT" | grep "rows returned" | grep -o '[0-9]*' | tail -1)
 
 if [ -n "$CERT_COUNT" ] && [ "$CERT_COUNT" -gt 0 ]; then

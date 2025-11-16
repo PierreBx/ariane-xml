@@ -9,47 +9,47 @@ You can run the test suite from **anywhere** on your system:
 ./tests/run_tests.sh
 
 # From any directory (using absolute or relative path)
-/path/to/ExpoCLI/tests/run_tests.sh
+/path/to/Ariane-XML/tests/run_tests.sh
 
 # Or if you're in a different directory
 cd /tmp
-~/ExpoCLI/tests/run_tests.sh
+~/Ariane-XML/tests/run_tests.sh
 ```
 
 ## Binary Detection
 
-The test script is **smart** about finding the ExpoCLI binary with multiple strategies:
+The test script is **smart** about finding the Ariane-XML binary with multiple strategies:
 
-1. **First**: Checks for `./expocli.sh` wrapper script (Docker-based execution)
-2. **Second**: Checks if `expocli` is in your PATH (system-installed)
-3. **Third**: Falls back to `./build/expocli` (local build)
+1. **First**: Checks for `./ariane-xml.sh` wrapper script (Docker-based execution)
+2. **Second**: Checks if `ariane-xml` is in your PATH (system-installed)
+3. **Third**: Falls back to `./build/ariane-xml` (local build)
 4. **Finally**: Offers to build it for you if not found
 
 You'll see which one it's using:
 ```
-Working directory: /home/user/ExpoCLI
-Using wrapper script: ./expocli.sh
+Working directory: /home/user/Ariane-XML
+Using wrapper script: ./ariane-xml.sh
 ```
 
 or
 
 ```
-Working directory: /home/user/ExpoCLI
-Using expocli from PATH: /usr/local/bin/expocli
+Working directory: /home/user/Ariane-XML
+Using ariane-xml from PATH: /usr/local/bin/ariane-xml
 ```
 
 or
 
 ```
-Working directory: /home/user/ExpoCLI
-Using local build: ./build/expocli
+Working directory: /home/user/Ariane-XML
+Using local build: ./build/ariane-xml
 ```
 
 ### Important: Aliases Don't Work in Scripts
 
 If you have an alias like:
 ```bash
-alias expocli='/path/to/expocli.sh'
+alias ariane-xml='/path/to/ariane-xml.sh'
 ```
 
 This alias **won't work** in the test script because:
@@ -57,7 +57,7 @@ This alias **won't work** in the test script because:
 - Test scripts run in non-interactive mode
 - `.bashrc` aliases aren't available
 
-**Solution**: The test script will automatically find `expocli.sh` in the project root, so you don't need the alias for testing!
+**Solution**: The test script will automatically find `ariane-xml.sh` in the project root, so you don't need the alias for testing!
 
 ## First Time Setup
 
@@ -70,16 +70,16 @@ If the binary hasn't been built and isn't in PATH, the test script will:
 Example:
 ```
 ╔════════════════════════════════════════════════════════════════╗
-║           ExpoCLI Comprehensive Test Suite v1.0               ║
+║           Ariane-XML Comprehensive Test Suite v1.0               ║
 ╚════════════════════════════════════════════════════════════════╝
 
-Working directory: /home/user/ExpoCLI
+Working directory: /home/user/Ariane-XML
 
-ERROR: ExpoCLI binary not found
-The binary is not in PATH and not found at ./build/expocli
+ERROR: Ariane-XML binary not found
+The binary is not in PATH and not found at ./build/ariane-xml
 
 Options:
-  1. Install expocli to your PATH, or
+  1. Install ariane-xml to your PATH, or
   2. Build locally in ./build/
 
 Would you like to build it locally now? (y/n)
@@ -102,7 +102,7 @@ make -j4
 
 1. **Auto-detects project root** - Works from any directory
 2. **Shows working directory** - So you know where it's running
-3. **Checks for binary** - Verifies expocli is built
+3. **Checks for binary** - Verifies ariane-xml is built
 4. **Offers auto-build** - Builds project if needed
 5. **Runs all tests** - 33 comprehensive tests
 6. **Shows results** - Color-coded pass/fail with summary
@@ -126,16 +126,16 @@ Success Rate: 100%
 The script couldn't find CMakeLists.txt. Make sure you're running the correct script:
 ```bash
 # Correct
-/path/to/ExpoCLI/tests/run_tests.sh
+/path/to/Ariane-XML/tests/run_tests.sh
 
 # Not
-/path/to/ExpoCLI/run_tests.sh  # Wrong location
+/path/to/Ariane-XML/run_tests.sh  # Wrong location
 ```
 
-### "ERROR: ExpoCLI binary not found"
+### "ERROR: Ariane-XML binary not found"
 Choose option 'y' to auto-build, or build manually:
 ```bash
-cd /path/to/ExpoCLI
+cd /path/to/Ariane-XML
 mkdir -p build && cd build && cmake .. && make
 ```
 

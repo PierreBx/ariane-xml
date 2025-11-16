@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace expocli {
+namespace ariane_xml {
 
 class Lexer {
 public:
@@ -31,6 +31,6 @@ private:
     TokenType identifyKeyword(const std::string& word) const;
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // LEXER_H

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iomanip>
 
-namespace expocli {
+namespace ariane_xml {
 
 CommandHandler::CommandHandler(AppContext& context)
     : context_(context) {}
@@ -453,4 +453,4 @@ bool CommandHandler::handleCheckCommand(const std::string& input) {
     return true;
 }
 
-} // namespace expocli
+} // namespace ariane_xml

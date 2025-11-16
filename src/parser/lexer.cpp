@@ -2,7 +2,7 @@
 #include <cctype>
 #include <algorithm>
 
-namespace expocli {
+namespace ariane_xml {
 
 Lexer::Lexer(const std::string& input)
     : input_(input), position_(0) {}
@@ -210,4 +210,4 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     return TokenType::IDENTIFIER;
 }
 
-} // namespace expocli
+} // namespace ariane_xml

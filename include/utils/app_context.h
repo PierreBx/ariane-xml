@@ -4,7 +4,7 @@
 #include <string>
 #include <optional>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Stores application context/settings during a session
 class AppContext {
@@ -31,6 +31,6 @@ private:
     bool verbose_ = false;
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // APP_CONTEXT_H

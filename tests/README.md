@@ -1,10 +1,10 @@
-# ExpoCLI Test Suite
+# Ariane-XML Test Suite
 
-Comprehensive test suite for the ExpoCLI XML Query CLI application.
+Comprehensive test suite for the Ariane-XML XML Query CLI application.
 
 ## Overview
 
-This test suite provides systematic testing of all ExpoCLI features, from basic to complex functionality. Tests are organized by feature category and provide clear pass/fail indicators with detailed logging.
+This test suite provides systematic testing of all Ariane-XML features, from basic to complex functionality. Tests are organized by feature category and provide clear pass/fail indicators with detailed logging.
 
 ## Directory Structure
 
@@ -33,7 +33,7 @@ tests/
 
 ### Prerequisites
 
-- ExpoCLI binary must be built: `mkdir -p build && cd build && cmake .. && make`
+- Ariane-XML binary must be built: `mkdir -p build && cd build && cmake .. && make`
 - All test data files must be present in `tests/data/`
 - All schema files must be present in `tests/schemas/`
 
@@ -120,7 +120,7 @@ The test suite covers 13 categories, from simplest to most complex:
 
 ```
 ╔════════════════════════════════════════════════════════════════╗
-║           ExpoCLI Comprehensive Test Suite v1.0               ║
+║           Ariane-XML Comprehensive Test Suite v1.0               ║
 ╚════════════════════════════════════════════════════════════════╝
 
 ▶ 1. Basic SELECT Queries
@@ -178,7 +178,7 @@ Exit code: 0
 ```bash
 run_test "TEST-ID" \
     "Description of test" \
-    "expocli command to run;" \
+    "ariane-xml command to run;" \
     "regex pattern to match in output"
 ```
 
@@ -251,7 +251,7 @@ rm -rf tests/output/* tests/logs/*
 
 ### Tests Not Running
 
-1. Check binary exists: `ls -l build/expocli`
+1. Check binary exists: `ls -l build/ariane-xml`
 2. Verify execute permissions: `ls -l tests/run_tests.sh`
 3. Check test data files: `ls tests/data/`
 
@@ -269,7 +269,7 @@ rm -rf tests/output/* tests/logs/*
 
 ## Contributing
 
-When adding new features to ExpoCLI:
+When adding new features to Ariane-XML:
 
 1. Add corresponding test data files
 2. Create test cases covering the feature
@@ -278,4 +278,4 @@ When adding new features to ExpoCLI:
 
 ## License
 
-Same as ExpoCLI project license.
+Same as Ariane-XML project license.

@@ -1,4 +1,4 @@
-# C++ Development Environment for expocli with Jupyter support
+# C++ Development Environment for ariane-xml with Jupyter support
 FROM ubuntu:22.04
 
 # Avoid prompts from apt
@@ -25,10 +25,10 @@ WORKDIR /app
 # Copy project files
 COPY . /app
 
-# Build the ExpoCLI C++ project
+# Build the Ariane-XML C++ project
 RUN mkdir -p build && cd build && cmake .. && make
 
-# Install Jupyter and the ExpoCLI kernel
+# Install Jupyter and the Ariane-XML kernel
 RUN pip3 install --no-cache-dir \
     jupyterlab \
     notebook \
@@ -43,14 +43,14 @@ RUN pip3 install --no-cache-dir \
     lxml \
     ff3
 
-# Install the ExpoCLI kernel package (setup.py is in expocli_kernel/)
-RUN pip3 install -e ./expocli_kernel
+# Install the Ariane-XML kernel package (setup.py is in ariane-xml-kernel/)
+RUN pip3 install -e ./ariane-xml-kernel
 
 # Install the kernel spec
-RUN python3 -m expocli_kernel.install
+RUN python3 -m ariane-xml-kernel.install
 
-# Install the ExpoCLI encryption module (setup.py is in expocli_crypto/)
-RUN pip3 install -e ./expocli_crypto
+# Install the Ariane-XML encryption module (setup.py is in ariane-xml-crypto/)
+RUN pip3 install -e ./ariane-xml-crypto
 
 # Expose Jupyter port
 EXPOSE 8888

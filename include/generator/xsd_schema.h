@@ -6,7 +6,7 @@
 #include <memory>
 #include <map>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Represents basic XSD data types
 enum class XsdType {
@@ -59,6 +59,6 @@ private:
     std::string target_namespace_;
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XSD_SCHEMA_H

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Represents a single result from XML traversal
 struct XmlResult {
@@ -98,6 +98,6 @@ private:
     );
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XML_NAVIGATOR_H

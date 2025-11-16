@@ -4,7 +4,7 @@
 #include "app_context.h"
 #include <string>
 
-namespace expocli {
+namespace ariane_xml {
 
 class CommandHandler {
 public:
@@ -31,6 +31,6 @@ private:
     bool validateAndCreateDestDirectory(const std::string& path);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // COMMAND_HANDLER_H

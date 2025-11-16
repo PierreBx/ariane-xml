@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <algorithm>
 
-namespace expocli {
+namespace ariane_xml {
 
 void ResultFormatter::print(const std::vector<ResultRow>& results, std::ostream& out) {
     out << formatAsText(results);
@@ -101,4 +101,4 @@ std::string ResultFormatter::formatAsText(const std::vector<ResultRow>& results)
     return oss.str();
 }
 
-} // namespace expocli
+} // namespace ariane_xml

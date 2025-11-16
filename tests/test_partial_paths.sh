@@ -7,8 +7,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Use local binary if available
-if [ -f "$SCRIPT_DIR/bin/expocli" ]; then
-    export EXPOCLI_BIN="$SCRIPT_DIR/bin/expocli"
+if [ -f "$SCRIPT_DIR/bin/ariane-xml" ]; then
+    export ARIANE_XML_BIN="$SCRIPT_DIR/bin/ariane-xml"
 fi
 
 source "$SCRIPT_DIR/test_helpers.sh"

@@ -1,7 +1,7 @@
 #include "parser/parser.h"
 #include <algorithm>
 
-namespace expocli {
+namespace ariane_xml {
 
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens_(tokens), current_(0) {}
@@ -865,4 +865,4 @@ void Parser::markVariableReferencesInWhere(WhereExpr* expr, const Query& query) 
     }
 }
 
-} // namespace expocli
+} // namespace ariane_xml

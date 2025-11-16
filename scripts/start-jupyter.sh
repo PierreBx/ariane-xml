@@ -1,35 +1,35 @@
 #!/bin/bash
 #
-# ExpoCLI Jupyter Lab Startup Script
+# Ariane-XML Jupyter Lab Startup Script
 #
 # This script starts Jupyter Lab in the Docker container with proper configuration
-# for the ExpoCLI kernel integration.
+# for the Ariane-XML kernel integration.
 #
 
 set -e
 
 echo "========================================="
-echo "ExpoCLI Jupyter Lab Environment"
+echo "Ariane-XML Jupyter Lab Environment"
 echo "========================================="
 echo ""
 
-# Verify ExpoCLI binary is available
-if [ ! -f "/app/build/expocli" ]; then
-    echo "ERROR: ExpoCLI binary not found at /app/build/expocli"
+# Verify Ariane-XML binary is available
+if [ ! -f "/app/build/ariane-xml" ]; then
+    echo "ERROR: Ariane-XML binary not found at /app/build/ariane-xml"
     echo "The C++ project may not have been built correctly."
     exit 1
 fi
 
-echo "✓ ExpoCLI binary found at /app/build/expocli"
+echo "✓ Ariane-XML binary found at /app/build/ariane-xml"
 
 # Verify the kernel is installed
-if ! jupyter kernelspec list | grep -q expocli; then
-    echo "ERROR: ExpoCLI kernel not installed"
+if ! jupyter kernelspec list | grep -q ariane-xml; then
+    echo "ERROR: Ariane-XML kernel not installed"
     echo "Installing the kernel now..."
-    python3 -m expocli_kernel.install
+    python3 -m ariane-xml_kernel.install
 fi
 
-echo "✓ ExpoCLI Jupyter kernel is installed"
+echo "✓ Ariane-XML Jupyter kernel is installed"
 echo ""
 
 # Display kernel information
@@ -54,7 +54,7 @@ echo ""
 echo "Access Jupyter Lab at: http://localhost:8888"
 echo ""
 echo "The demo notebook is available at:"
-echo "  examples/ExpoCLI_Demo.ipynb"
+echo "  examples/Ariane-XML_Demo.ipynb"
 echo ""
 echo "Press Ctrl+C to stop Jupyter Lab"
 echo ""

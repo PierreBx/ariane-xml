@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <random>
 
-namespace expocli {
+namespace ariane_xml {
 
 XmlGenerator::XmlGenerator() {
 }
@@ -155,4 +155,4 @@ int XmlGenerator::determineRepeatCount(const std::shared_ptr<XsdElement>& elemen
     return count_dist(gen);
 }
 
-} // namespace expocli
+} // namespace ariane_xml

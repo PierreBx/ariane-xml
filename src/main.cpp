@@ -54,7 +54,7 @@ std::string getHistoryFilePath() {
     if (home.empty()) {
         return "";
     }
-    return home + "/.expocli_history";
+    return home + "/.ariane-xml_history";
 }
 
 // Initialize command history
@@ -90,7 +90,7 @@ void printWelcome() {
 }
 
 void printUsage(const char* programName) {
-    std::cout << "expocli - a FT XML parser for FT/DSI/DIP\n";
+    std::cout << "ariane-xml - a FT XML parser for FT/DSI/DIP\n";
     std::cout << "Usage:\n";
     std::cout << "  " << programName << "              # Start interactive mode\n";
     std::cout << "  " << programName << " [query]      # Execute single query\n\n";
@@ -155,23 +155,23 @@ std::string drawProgressBar(size_t completed, size_t total, size_t barWidth = 30
     return bar;
 }
 
-void executeQuery(const std::string& query, const expocli::AppContext* context = nullptr) {
+void executeQuery(const std::string& query, const ariane_xml::AppContext* context = nullptr) {
     if (query.empty()) {
         return;
     }
 
     try {
         // Lexical analysis
-        expocli::Lexer lexer(query);
+        ariane_xml::Lexer lexer(query);
         auto tokens = lexer.tokenize();
 
         // Syntax analysis
-        expocli::Parser parser(tokens);
+        ariane_xml::Parser parser(tokens);
         auto ast = parser.parse();
 
         // Check for ambiguous attributes if in verbose mode
         if (context && context->isVerbose()) {
-            auto ambiguous = expocli::QueryExecutor::checkForAmbiguousAttributes(*ast);
+            auto ambiguous = ariane_xml::QueryExecutor::checkForAmbiguousAttributes(*ast);
             if (ambiguous.empty()) {
                 std::cout << "\033[32m✓ No ambiguous attributes found\033[0m\n\n";
             } else {
@@ -185,11 +185,11 @@ void executeQuery(const std::string& query, const expocli::AppContext* context =
         }
 
         // Execute query
-        std::vector<expocli::ResultRow> results;
+        std::vector<ariane_xml::ResultRow> results;
 
         if (context && context->isVerbose()) {
             // Use progress tracking in VERBOSE mode
-            expocli::ExecutionStats stats;
+            ariane_xml::ExecutionStats stats;
             std::string lastProgressLine;
 
             auto progressCallback = [&lastProgressLine](size_t completed, size_t total, size_t threadCount) {
@@ -217,7 +217,7 @@ void executeQuery(const std::string& query, const expocli::AppContext* context =
                 std::cout << lastProgressLine << std::flush;
             };
 
-            results = expocli::QueryExecutor::executeWithProgress(*ast, progressCallback, &stats);
+            results = ariane_xml::QueryExecutor::executeWithProgress(*ast, progressCallback, &stats);
 
             // Clear progress line
             if (!lastProgressLine.empty()) {
@@ -237,13 +237,13 @@ void executeQuery(const std::string& query, const expocli::AppContext* context =
 
         } else {
             // Non-verbose mode: use standard execution
-            results = expocli::QueryExecutor::execute(*ast);
+            results = ariane_xml::QueryExecutor::execute(*ast);
         }
 
         // Format and print results
-        expocli::ResultFormatter::print(results);
+        ariane_xml::ResultFormatter::print(results);
 
-    } catch (const expocli::ParseError& e) {
+    } catch (const ariane_xml::ParseError& e) {
         std::cerr << "Parse Error: " << e.what() << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -258,8 +258,8 @@ void interactiveMode() {
     initializeHistory();
 
     // Create application context and command handler
-    expocli::AppContext context;
-    expocli::CommandHandler commandHandler(context);
+    ariane_xml::AppContext context;
+    ariane_xml::CommandHandler commandHandler(context);
 
     printWelcome();
 
@@ -268,7 +268,7 @@ void interactiveMode() {
 
     while (true) {
         // Set prompt based on whether we're continuing a query
-        const char* prompt = query.empty() ? "expocli> " : "      -> ";
+        const char* prompt = query.empty() ? "ariane-xml> " : "      -> ";
 
         // Read line with readline (supports arrow keys, history, etc.)
         lineBuffer = readline(prompt);
@@ -313,7 +313,7 @@ void interactiveMode() {
             }
 
             if (trimmedLine == "help" || trimmedLine == "\\h" || trimmedLine == "\\?") {
-                printUsage("expocli");
+                printUsage("ariane-xml");
                 continue;
             }
 

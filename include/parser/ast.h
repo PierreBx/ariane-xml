@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Token types for the lexer
 enum class TokenType {
@@ -205,6 +205,6 @@ struct Query {
     }
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // AST_H

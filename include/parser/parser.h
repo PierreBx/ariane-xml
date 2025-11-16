@@ -6,7 +6,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace expocli {
+namespace ariane_xml {
 
 class ParseError : public std::runtime_error {
 public:
@@ -54,6 +54,6 @@ private:
     void markVariableReferencesInWhere(WhereExpr* expr, const Query& query);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // PARSER_H

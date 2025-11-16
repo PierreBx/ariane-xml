@@ -5,7 +5,7 @@
 #include <string>
 #include <random>
 
-namespace expocli {
+namespace ariane_xml {
 
 class DataGenerator {
 public:
@@ -31,6 +31,6 @@ private:
     static const std::vector<std::string> sample_names_;
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // DATA_GENERATOR_H

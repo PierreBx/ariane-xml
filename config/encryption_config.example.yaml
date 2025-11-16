@@ -1,4 +1,4 @@
-# ExpoCLI Encryption Configuration Example
+# Ariane-XML Encryption Configuration Example
 #
 # This file configures which XML attributes should be encrypted and how.
 # Attributes follow the pattern: S10.G00.XX.YYY
@@ -83,7 +83,7 @@ attributes:
 # Format-Preserving Encryption settings
 fpe:
   # Tweak value for FF3 algorithm (used as additional entropy)
-  tweak: "expocli"
+  tweak: "ariane-xml"
 
 # Faker settings for pseudonymization
 faker:

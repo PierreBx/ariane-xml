@@ -11,7 +11,7 @@
 #include <limits>
 #include <set>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Helper to extract a FieldPath from any WhereExpr (gets the first condition's field)
 static FieldPath extractFieldPathFromWhere(const WhereExpr* expr) {
@@ -1715,4 +1715,4 @@ std::string QueryExecutor::computeAggregate(const FieldPath& field, const std::v
     }
 }
 
-} // namespace expocli
+} // namespace ariane_xml

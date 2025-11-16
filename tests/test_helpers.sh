@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test Helper Functions for ExpoCLI
+# Test Helper Functions for Ariane-XML
 # Provides utilities for test execution, reporting, and validation
 
 # Color codes for output
@@ -26,26 +26,26 @@ export TEST_SCHEMA_DIR="$TEST_DIR/schemas"
 export TEST_OUTPUT_DIR="$TEST_DIR/output"
 export TEST_LOG_DIR="$TEST_DIR/logs"
 
-# Detect expocli binary location with multiple strategies
+# Detect ariane-xml binary location with multiple strategies
 # Priority order for testing (wrapper doesn't support piped stdin):
-# 1. ./build/expocli local build (best for testing)
-# 2. expocli command in PATH
-# 3. ./expocli.sh wrapper script (fallback, may not work with tests)
-if [ -f "./build/expocli" ]; then
-    export EXPOCLI_BIN="./build/expocli"
-elif command -v expocli &> /dev/null; then
-    export EXPOCLI_BIN="expocli"
-elif [ -f "./expocli.sh" ]; then
-    export EXPOCLI_BIN="./expocli.sh"
+# 1. ./build/ariane-xml local build (best for testing)
+# 2. ariane-xml command in PATH
+# 3. ./ariane-xml.sh wrapper script (fallback, may not work with tests)
+if [ -f "./build/ariane-xml" ]; then
+    export ARIANE_XML_BIN="./build/ariane-xml"
+elif command -v ariane-xml &> /dev/null; then
+    export ARIANE_XML_BIN="ariane-xml"
+elif [ -f "./ariane-xml.sh" ]; then
+    export ARIANE_XML_BIN="./ariane-xml.sh"
     export USING_WRAPPER="true"
 else
-    export EXPOCLI_BIN="./build/expocli"
+    export ARIANE_XML_BIN="./build/ariane-xml"
 fi
 
 # Initialize test environment
 init_tests() {
     echo -e "${COLOR_BOLD}${COLOR_CYAN}╔════════════════════════════════════════════════════════════════╗${COLOR_RESET}"
-    echo -e "${COLOR_BOLD}${COLOR_CYAN}║           ExpoCLI Comprehensive Test Suite v1.0               ║${COLOR_RESET}"
+    echo -e "${COLOR_BOLD}${COLOR_CYAN}║           Ariane-XML Comprehensive Test Suite v1.0               ║${COLOR_RESET}"
     echo -e "${COLOR_BOLD}${COLOR_CYAN}╚════════════════════════════════════════════════════════════════╝${COLOR_RESET}"
     echo ""
 
@@ -53,12 +53,12 @@ init_tests() {
     echo -e "${COLOR_CYAN}Working directory: $(pwd)${COLOR_RESET}"
 
     # Show which binary will be used
-    if [ "$EXPOCLI_BIN" = "./build/expocli" ]; then
-        echo -e "${COLOR_GREEN}Using local build: $EXPOCLI_BIN${COLOR_RESET}"
-    elif command -v expocli &> /dev/null && [ "$EXPOCLI_BIN" = "expocli" ]; then
-        echo -e "${COLOR_GREEN}Using expocli from PATH: $(which expocli)${COLOR_RESET}"
+    if [ "$ARIANE_XML_BIN" = "./build/ariane-xml" ]; then
+        echo -e "${COLOR_GREEN}Using local build: $ARIANE_XML_BIN${COLOR_RESET}"
+    elif command -v ariane-xml &> /dev/null && [ "$ARIANE_XML_BIN" = "ariane-xml" ]; then
+        echo -e "${COLOR_GREEN}Using ariane-xml from PATH: $(which ariane-xml)${COLOR_RESET}"
     elif [ "$USING_WRAPPER" = "true" ]; then
-        echo -e "${COLOR_YELLOW}Using wrapper script: ./expocli.sh${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}Using wrapper script: ./ariane-xml.sh${COLOR_RESET}"
         echo -e "${COLOR_YELLOW}Warning: Docker wrapper may not work with piped test input${COLOR_RESET}"
         echo -e "${COLOR_YELLOW}For reliable testing, build the local binary: mkdir -p build && cd build && cmake .. && make${COLOR_RESET}"
     fi
@@ -69,12 +69,12 @@ init_tests() {
     mkdir -p "$TEST_OUTPUT_DIR" "$TEST_LOG_DIR"
 
     # Check if binary exists or is available
-    if [ ! -f "./build/expocli" ] && ! command -v expocli &> /dev/null && [ ! -f "./expocli.sh" ]; then
-        echo -e "${COLOR_RED}ERROR: ExpoCLI binary not found${COLOR_RESET}"
-        echo -e "${COLOR_YELLOW}No binary found in: ./build/expocli, PATH, or ./expocli.sh${COLOR_RESET}"
+    if [ ! -f "./build/ariane-xml" ] && ! command -v ariane-xml &> /dev/null && [ ! -f "./ariane-xml.sh" ]; then
+        echo -e "${COLOR_RED}ERROR: Ariane-XML binary not found${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}No binary found in: ./build/ariane-xml, PATH, or ./ariane-xml.sh${COLOR_RESET}"
         echo ""
         echo "Options:"
-        echo "  1. Install expocli to your PATH, or"
+        echo "  1. Install ariane-xml to your PATH, or"
         echo "  2. Build locally in ./build/"
         echo ""
         echo "Would you like to build it locally now? (y/n)"
@@ -85,17 +85,17 @@ init_tests() {
             if ! command -v cmake &> /dev/null; then
                 echo ""
                 echo -e "${COLOR_RED}ERROR: cmake is not installed or not in PATH${COLOR_RESET}"
-                echo -e "${COLOR_YELLOW}Please install cmake first, or use the installed expocli command${COLOR_RESET}"
+                echo -e "${COLOR_YELLOW}Please install cmake first, or use the installed ariane-xml command${COLOR_RESET}"
                 exit 1
             fi
 
             echo ""
-            echo -e "${COLOR_CYAN}Building ExpoCLI...${COLOR_RESET}"
+            echo -e "${COLOR_CYAN}Building Ariane-XML...${COLOR_RESET}"
             mkdir -p build
             cd build
             if cmake .. && make -j4; then
                 cd ..
-                export EXPOCLI_BIN="./build/expocli"
+                export ARIANE_XML_BIN="./build/ariane-xml"
                 echo ""
                 echo -e "${COLOR_GREEN}✓ Build successful!${COLOR_RESET}"
                 echo ""
@@ -110,15 +110,15 @@ init_tests() {
             echo -e "${COLOR_YELLOW}To build manually, run:${COLOR_RESET}"
             echo "  mkdir -p build && cd build && cmake .. && make"
             echo ""
-            echo -e "${COLOR_YELLOW}Or ensure 'expocli' is installed and in your PATH${COLOR_RESET}"
+            echo -e "${COLOR_YELLOW}Or ensure 'ariane-xml' is installed and in your PATH${COLOR_RESET}"
             exit 1
         fi
     fi
 
     # Verify binary is executable (only for local build)
-    if [ -f "$EXPOCLI_BIN" ] && [ ! -x "$EXPOCLI_BIN" ]; then
+    if [ -f "$ARIANE_XML_BIN" ] && [ ! -x "$ARIANE_XML_BIN" ]; then
         echo -e "${COLOR_YELLOW}Making binary executable...${COLOR_RESET}"
-        chmod +x "$EXPOCLI_BIN"
+        chmod +x "$ARIANE_XML_BIN"
     fi
 
     # Record start time
@@ -177,7 +177,7 @@ run_test() {
     fi
 
     local exit_code=0
-    echo -e "$full_command" | $EXPOCLI_BIN > "$output_file" 2> "$error_file" || exit_code=$?
+    echo -e "$full_command" | $ARIANE_XML_BIN > "$output_file" 2> "$error_file" || exit_code=$?
 
     # Check for expected pattern (grep in both stdout and stderr combined)
     local result="PASS"
@@ -242,7 +242,7 @@ run_validation_test() {
     local output_file="$TEST_OUTPUT_DIR/${test_id}.out"
 
     # Execute commands
-    echo "$commands" | $EXPOCLI_BIN > "$output_file" 2>&1
+    echo "$commands" | $ARIANE_XML_BIN > "$output_file" 2>&1
 
     # Count results
     local actual_count=$(grep -c "^" "$output_file" 2>/dev/null || echo "0")

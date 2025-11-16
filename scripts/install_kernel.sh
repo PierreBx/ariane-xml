@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ExpoCLI Jupyter Kernel Installation Script
+# Ariane-XML Jupyter Kernel Installation Script
 #
 # Usage:
 #   ./install_kernel.sh          # Install the kernel
@@ -12,7 +12,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-echo "ExpoCLI Jupyter Kernel Installer"
+echo "Ariane-XML Jupyter Kernel Installer"
 echo "=================================="
 echo ""
 
@@ -41,18 +41,18 @@ pip3 install --user ipykernel jupyter-client
 
 # Install the kernel package in development mode
 echo ""
-echo "Installing ExpoCLI kernel package..."
+echo "Installing Ariane-XML kernel package..."
 cd "${PROJECT_ROOT}"
 pip3 install --user -e .
 
 # Run the kernel installation script
 echo ""
-python3 -m expocli_kernel.install "$@"
+python3 -m ariane-xml_kernel.install "$@"
 
 echo ""
 echo "Installation complete!"
 echo ""
 echo "Next steps:"
 echo "  1. Start Jupyter: jupyter notebook  (or jupyter lab)"
-echo "  2. Create a new notebook and select 'ExpoCLI' kernel"
-echo "  3. Try the example notebook: examples/ExpoCLI_Demo.ipynb"
+echo "  2. Create a new notebook and select 'Ariane-XML' kernel"
+echo "  3. Try the example notebook: examples/Ariane-XML_Demo.ipynb"

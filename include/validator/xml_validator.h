@@ -7,7 +7,7 @@
 #include <pugixml.hpp>
 #include "generator/xsd_schema.h"
 
-namespace expocli {
+namespace ariane_xml {
 
 struct ValidationError {
     std::string message;
@@ -79,6 +79,6 @@ private:
     bool matchesType(const std::string& value, XsdType type);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XML_VALIDATOR_H

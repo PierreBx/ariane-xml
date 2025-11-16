@@ -5,7 +5,7 @@
 #include <regex>
 #include <set>
 
-namespace expocli {
+namespace ariane_xml {
 
 std::vector<XmlResult> XmlNavigator::extractValues(
     const pugi::xml_document& doc,
@@ -606,4 +606,4 @@ int XmlNavigator::countMatchingPaths(
     return uniquePaths.size();
 }
 
-} // namespace expocli
+} // namespace ariane_xml

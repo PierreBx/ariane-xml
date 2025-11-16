@@ -1,10 +1,10 @@
 #!/bin/bash
-# Installation script for ExpoCLI Encryption Module
+# Installation script for Ariane-XML Encryption Module
 
 set -e
 
 echo "============================================"
-echo "ExpoCLI Encryption Module - Installation"
+echo "Ariane-XML Encryption Module - Installation"
 echo "============================================"
 echo ""
 
@@ -19,15 +19,15 @@ pip3 install --user cryptography pyyaml faker lxml ff3
 
 # Install the encryption module
 echo ""
-echo "Installing ExpoCLI encryption module..."
-pip3 install --user -e ./expocli_crypto
+echo "Installing Ariane-XML encryption module..."
+pip3 install --user -e ./ariane-xml_crypto
 
 echo ""
 echo "============================================"
 echo "Installation completed successfully!"
 echo "============================================"
 echo ""
-echo "The 'expocli-encrypt' command is now available."
+echo "The 'ariane-xml-encrypt' command is now available."
 echo ""
 echo "Quick start:"
 echo "  1. Copy the example configuration:"
@@ -37,10 +37,10 @@ echo "  2. Edit the configuration to match your needs:"
 echo "     nano my_config.yaml"
 echo ""
 echo "  3. Encrypt a file:"
-echo "     expocli-encrypt encrypt input.xml output.xml -c my_config.yaml"
+echo "     ariane-xml-encrypt encrypt input.xml output.xml -c my_config.yaml"
 echo ""
 echo "  4. View help:"
-echo "     expocli-encrypt --help"
+echo "     ariane-xml-encrypt --help"
 echo ""
 echo "See ENCRYPTION_MODULE.md for full documentation."
 echo ""

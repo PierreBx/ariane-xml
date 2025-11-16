@@ -10,7 +10,7 @@
 #include <functional>
 #include <map>
 
-namespace expocli {
+namespace ariane_xml {
 
 // Result row (multiple fields) - using vector to preserve field order
 using ResultRow = std::vector<std::pair<std::string, std::string>>;
@@ -106,6 +106,6 @@ private:
     static std::string computeAggregate(const FieldPath& field, const std::vector<ResultRow>& allResults);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // QUERY_EXECUTOR_H

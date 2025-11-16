@@ -1,10 +1,10 @@
 services:
-  expocli:
-    image: expocli_image
+  ariane-xml:
+    image: ariane-xml_image
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: expocli_container
+    container_name: ariane-xml_container
     volumes:
       - .:/app
       - build-cache:/app/build
@@ -18,11 +18,11 @@ services:
     restart: unless-stopped
 
   jupyter:
-    image: expocli_image
+    image: ariane-xml_image
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: expocli_jupyter
+    container_name: ariane-xml_jupyter
     volumes:
       - .:/app
       - build-cache:/app/build

@@ -7,7 +7,7 @@
 #include <memory>
 #include <map>
 
-namespace expocli {
+namespace ariane_xml {
 
 class XsdParser {
 public:
@@ -48,6 +48,6 @@ private:
     static std::string stripNamespacePrefix(const std::string& name);
 };
 
-} // namespace expocli
+} // namespace ariane_xml
 
 #endif // XSD_PARSER_H
