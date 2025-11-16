@@ -113,25 +113,25 @@ main() {
 
     # Run ariane-xml inside the persistent container:
     # - Use docker compose exec to reuse running container
-    # - Change to the mapped directory
+    # - Set working directory with -w flag
+    # - Run binary directly (no bash wrapper) to preserve TTY
     # - Pass through all arguments
     # - Preserve exit code
     cd "${PROJECT_ROOT}"
 
-    docker compose exec ${TTY_FLAG} \
-        ariane-xml \
-        bash -c "cd '${CONTAINER_CWD}' 2>/dev/null && exec ${CONTAINER_BINARY} $(printf '%q ' "$@")"
-
-    local EXIT_CODE=$?
-
-    # If directory doesn't exist in container, show helpful error
-    if [ $EXIT_CODE -ne 0 ] && [ -z "$(docker compose exec -T ariane-xml test -d "${CONTAINER_CWD}" 2>/dev/null)" ]; then
+    # Verify container directory exists first
+    if ! docker compose exec -T ariane-xml test -d "${CONTAINER_CWD}" 2>/dev/null; then
         echo "Error: Current directory '${HOST_CWD_REAL}' is not accessible in container." >&2
         echo "       Only directories under ${HOME_REAL} are accessible." >&2
         exit 1
     fi
 
-    exit $EXIT_CODE
+    # Run binary directly with working directory set
+    docker compose exec ${TTY_FLAG} -w "${CONTAINER_CWD}" \
+        ariane-xml \
+        ${CONTAINER_BINARY} "$@"
+
+    exit $?
 }
 
 # Run main function with all arguments
