@@ -1,0 +1,187 @@
+#!/bin/bash
+# Ariane-XML Manager - Unified management interface
+# This script provides an interactive menu for all ariane-xml operations
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANAGER_DIR="${SCRIPT_DIR}/ariane-xml-scripts/manager"
+
+# Color codes for better UX
+COLOR_RESET='\033[0m'
+COLOR_BOLD='\033[1m'
+COLOR_CYAN='\033[0;36m'
+COLOR_GREEN='\033[0;32m'
+COLOR_YELLOW='\033[0;33m'
+
+# Display the main menu
+show_menu() {
+    clear
+    echo -e "${COLOR_BOLD}${COLOR_CYAN}"
+    echo "╔════════════════════════════════════════════╗"
+    echo "║      ARIANE-XML MANAGEMENT CONSOLE         ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo -e "${COLOR_RESET}"
+    echo ""
+
+    echo -e "${COLOR_GREEN}=== Setup ===${COLOR_RESET}"
+    echo "  1. Run full installation"
+    echo "  2. Check environment"
+    echo ""
+
+    echo -e "${COLOR_GREEN}=== Documentation ===${COLOR_RESET}"
+    echo "  3. Quick start guide - CLI"
+    echo "  4. Quick start guide - Jupyter"
+    echo "  5. Quick start guide - Encryption"
+    echo "  6. Full documentation index"
+    echo ""
+
+    echo -e "${COLOR_GREEN}=== Environment ===${COLOR_RESET}"
+    echo "  7. Restart containers"
+    echo "  8. Rebuild containers"
+    echo "  9. Stop containers"
+    echo ""
+
+    echo -e "${COLOR_GREEN}=== Apps ===${COLOR_RESET}"
+    echo " 10. Start ariane-xml CLI"
+    echo " 11. Start ariane-xml in Jupyter"
+    echo " 12. Stop running apps"
+    echo ""
+
+    echo -e "${COLOR_GREEN}=== Tests ===${COLOR_RESET}"
+    echo " 13. Run light test suite"
+    echo " 14. Run hard test suite"
+    echo " 15. Run hardest test suite"
+    echo ""
+
+    echo -e "${COLOR_YELLOW}  0. Exit${COLOR_RESET}"
+    echo ""
+}
+
+# Execute the selected option
+execute_option() {
+    case $1 in
+        1)
+            "${MANAGER_DIR}/setup-install.sh"
+            ;;
+        2)
+            "${MANAGER_DIR}/setup-check-env.sh"
+            ;;
+        3)
+            "${MANAGER_DIR}/doc-quickstart-cli.sh"
+            ;;
+        4)
+            "${MANAGER_DIR}/doc-quickstart-jupyter.sh"
+            ;;
+        5)
+            "${MANAGER_DIR}/doc-encryption.sh"
+            ;;
+        6)
+            "${MANAGER_DIR}/doc-index.sh"
+            ;;
+        7)
+            "${MANAGER_DIR}/env-restart.sh"
+            ;;
+        8)
+            "${MANAGER_DIR}/env-rebuild.sh"
+            ;;
+        9)
+            "${MANAGER_DIR}/env-stop.sh"
+            ;;
+        10)
+            "${MANAGER_DIR}/app-start-cli.sh"
+            ;;
+        11)
+            "${MANAGER_DIR}/app-start-jupyter.sh"
+            ;;
+        12)
+            "${MANAGER_DIR}/app-stop.sh"
+            ;;
+        13)
+            "${MANAGER_DIR}/test-light.sh"
+            ;;
+        14)
+            "${MANAGER_DIR}/test-hard.sh"
+            ;;
+        15)
+            "${MANAGER_DIR}/test-hardest.sh"
+            ;;
+        0)
+            echo ""
+            echo "Goodbye!"
+            exit 0
+            ;;
+        *)
+            echo ""
+            echo -e "${COLOR_YELLOW}Invalid option. Please try again.${COLOR_RESET}"
+            ;;
+    esac
+}
+
+# Main loop
+main() {
+    # Check if running with command-line arguments (non-interactive mode)
+    if [ $# -gt 0 ]; then
+        case "$1" in
+            --install)
+                "${MANAGER_DIR}/setup-install.sh"
+                ;;
+            --check-env)
+                "${MANAGER_DIR}/setup-check-env.sh"
+                ;;
+            --cli)
+                "${MANAGER_DIR}/app-start-cli.sh"
+                ;;
+            --jupyter)
+                "${MANAGER_DIR}/app-start-jupyter.sh"
+                ;;
+            --test-light)
+                "${MANAGER_DIR}/test-light.sh"
+                ;;
+            --test-hard)
+                "${MANAGER_DIR}/test-hard.sh"
+                ;;
+            --test-hardest)
+                "${MANAGER_DIR}/test-hardest.sh"
+                ;;
+            --help)
+                echo "Ariane-XML Manager"
+                echo ""
+                echo "Usage:"
+                echo "  $0              Interactive menu"
+                echo "  $0 --install    Run full installation"
+                echo "  $0 --check-env  Check environment"
+                echo "  $0 --cli        Start CLI"
+                echo "  $0 --jupyter    Start Jupyter"
+                echo "  $0 --test-light Run light tests"
+                echo "  $0 --test-hard  Run hard tests"
+                echo "  $0 --test-hardest Run hardest tests"
+                echo "  $0 --help       Show this help"
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Run '$0 --help' for usage information"
+                exit 1
+                ;;
+        esac
+        exit 0
+    fi
+
+    # Interactive mode
+    while true; do
+        show_menu
+        read -p "Enter your choice [0-15]: " choice
+        echo ""
+
+        execute_option "$choice"
+
+        # Pause after each operation (except for exit)
+        if [ "$choice" != "0" ]; then
+            echo ""
+            read -p "Press Enter to continue..."
+        fi
+    done
+}
+
+# Run main function
+main "$@"
