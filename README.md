@@ -13,7 +13,37 @@ A high-performance SQL-like query tool for XML files with encryption capabilitie
 
 ## Quick Start
 
-### Installation
+### Using the Management Console (Recommended)
+
+The easiest way to get started is using the unified management script:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd ariane-xml
+
+# Launch the interactive manager
+./ariane-xml-manager.sh
+```
+
+The manager provides an interactive menu for:
+- 🛠️ **Setup** - Installation and environment checks
+- 📚 **Documentation** - Quick access to all guides
+- 🐳 **Environment** - Container management
+- 🚀 **Apps** - Start CLI or Jupyter
+- 🧪 **Tests** - Run test suites
+
+**Non-interactive mode:**
+```bash
+./ariane-xml-manager.sh --help        # Show all options
+./ariane-xml-manager.sh --install     # Run installation
+./ariane-xml-manager.sh --check-env   # Check environment
+./ariane-xml-manager.sh --cli         # Start CLI
+./ariane-xml-manager.sh --jupyter     # Start Jupyter
+./ariane-xml-manager.sh --test-light  # Run tests
+```
+
+### Manual Installation
 
 ```bash
 # Clone and install (creates transparent local command)
