@@ -38,6 +38,7 @@ Get up and running in 5 minutes:
 
 - **[08 - Docker Rebuild Guide](08_Docker_Rebuild_Guide.md)** - How to rebuild after changes
 - **[08b - Docker Proxy Fix](08b_Docker_Proxy_Fix.md)** - Fixing Docker proxy issues
+- **[13 - Docker Buildx Setup](13_Docker_Buildx_Setup.md)** - Installing Buildx for faster builds
 
 ## Reference
 
