@@ -44,13 +44,13 @@ RUN pip3 install --no-cache-dir \
     ff3
 
 # Install the ExpoCLI kernel package
-RUN pip3 install -e .
+RUN cd expocli_kernel && pip3 install -e . && cd ..
 
 # Install the kernel spec
 RUN python3 -m expocli_kernel.install
 
 # Install the ExpoCLI encryption module
-RUN pip3 install -e . -f setup_crypto.py
+RUN cd expocli_crypto && pip3 install -e . && cd ..
 
 # Expose Jupyter port
 EXPOSE 8888
