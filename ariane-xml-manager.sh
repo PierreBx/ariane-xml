@@ -49,10 +49,9 @@ show_menu() {
     echo ""
 
     echo -e "${COLOR_GREEN}=== Tests ===${COLOR_RESET}"
-    echo " 13. Run light test suite (Docker mode - recommended)"
-    echo " 14. Run light test suite (local mode)"
-    echo " 15. Run hard test suite"
-    echo " 16. Run hardest test suite"
+    echo " 13. Run light test suite (Docker)"
+    echo " 14. Run hard test suite (Docker)"
+    echo " 15. Run hardest test suite (Docker)"
     echo ""
 
     echo -e "${COLOR_GREEN}=== Version history & files summary ===${COLOR_RESET}"
@@ -108,13 +107,10 @@ execute_option() {
             "${MANAGER_DIR}/test-light-docker.sh"
             ;;
         14)
-            "${MANAGER_DIR}/test-light.sh"
+            "${MANAGER_DIR}/test-hard-docker.sh"
             ;;
         15)
-            "${MANAGER_DIR}/test-hard.sh"
-            ;;
-        16)
-            "${MANAGER_DIR}/test-hardest.sh"
+            "${MANAGER_DIR}/test-hardest-docker.sh"
             ;;
         17)
             "${MANAGER_DIR}/version-show-history.sh"
@@ -198,7 +194,7 @@ main() {
     # Interactive mode
     while true; do
         show_menu
-        read -p "Enter your choice [0-18]: " choice
+        read -p "Enter your choice [0-15, 17-18]: " choice
         echo ""
 
         execute_option "$choice"
