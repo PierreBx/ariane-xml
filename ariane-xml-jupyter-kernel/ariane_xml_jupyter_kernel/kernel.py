@@ -74,6 +74,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # DSN MODE state tracking
         self.dsn_mode = False
         self.dsn_version = None  # None, 'P25', 'P26', or 'AUTO'
+        self.dsn_quickstart = True  # Show quick reference card on DSN mode activation
 
     def _find_ariane_xml(self) -> str:
         """Locate the Ariane-XML executable"""
@@ -141,10 +142,15 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             'SET MODE STANDARD',
             'SHOW MODE',
             'SET DSN_VERSION',
+            'SET DSN_QUICKSTART',
             'SHOW DSN_SCHEMA',
             'DESCRIBE ',
             'TEMPLATE ',
             'COMPARE P',
+            'HELP',
+            '?',
+            'BROWSE ',
+            'SEARCH ',
         ]
         return any(query_upper.startswith(kw) for kw in dsn_keywords)
 
@@ -168,6 +174,13 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             elif 'AUTO' in query_upper:
                 self.dsn_version = 'AUTO'
 
+        # Track quickstart display preference
+        if 'SET DSN_QUICKSTART' in query_upper:
+            if 'OFF' in query_upper:
+                self.dsn_quickstart = False
+            elif 'ON' in query_upper:
+                self.dsn_quickstart = True
+
     def _get_dsn_mode_badge(self) -> str:
         """Get a badge showing current DSN mode status"""
         if not self.dsn_mode:
@@ -175,6 +188,844 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         version_str = f" [{self.dsn_version}]" if self.dsn_version else ""
         return f"🇫🇷 DSN MODE{version_str}"
+
+    def _get_dsn_quickstart_card(self) -> str:
+        """Generate Quick Reference Card HTML for DSN mode"""
+        version_str = f" [Version: {self.dsn_version}]" if self.dsn_version else ""
+
+        html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.15);">
+
+    <h2 style="margin: 0 0 20px 0;
+               color: #667eea;
+               border-bottom: 2px solid #667eea;
+               padding-bottom: 10px;
+               font-size: 24px;">
+        🇫🇷 DSN MODE ACTIVATED{version_str}
+    </h2>
+
+    <div style="display: grid; gap: 15px;">
+        <div>
+            <h3 style="color: #24292e; margin: 0 0 10px 0; font-size: 16px;">📚 Quick Start Commands:</h3>
+            <div style="background: white;
+                       padding: 15px;
+                       border-radius: 6px;
+                       border-left: 4px solid #667eea;
+                       font-family: 'Monaco', 'Menlo', monospace;
+                       font-size: 13px;">
+                <div style="margin: 6px 0;"><code style="color: #0366d6;">HELP</code> - Show detailed help</div>
+                <div style="margin: 6px 0;"><code style="color: #0366d6;">BROWSE SCHEMA</code> - Explore all fields</div>
+                <div style="margin: 6px 0;"><code style="color: #0366d6;">TEMPLATE LIST</code> - View query templates</div>
+                <div style="margin: 6px 0;"><code style="color: #0366d6;">DESCRIBE 01_001</code> - Get field documentation</div>
+                <div style="margin: 6px 0;"><code style="color: #0366d6;">SEARCH "keyword"</code> - Search fields by description</div>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="color: #24292e; margin: 0 0 10px 0; font-size: 16px;">💡 Tips:</h3>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>Press <strong>TAB</strong> for autocomplete</li>
+                <li>Use shortcut notation: <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">SELECT 01_001, 30_001</code></li>
+                <li>Type <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">HELP &lt;command&gt;</code> for specific help</li>
+                <li>Use <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">?</code> followed by field code for quick lookup</li>
+            </ul>
+        </div>
+
+        <div style="background: #fffbeb;
+                   padding: 12px;
+                   border-radius: 6px;
+                   border-left: 4px solid #f59e0b;
+                   font-size: 13px;">
+            <strong style="color: #92400e;">📖 Documentation:</strong>
+            <span style="color: #451a03;">JUPYTER_DSN_INTEGRATION.md</span>
+        </div>
+
+        <div style="font-size: 12px;
+                   color: #6b7280;
+                   font-style: italic;
+                   text-align: center;
+                   margin-top: 5px;">
+            To hide this message: <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">SET DSN_QUICKSTART OFF</code>
+        </div>
+    </div>
+</div>
+'''
+        return html
+
+    def _handle_kernel_command(self, query: str) -> Optional[Dict[str, Any]]:
+        """
+        Handle kernel-level commands that don't need C++ backend.
+        Returns result dict if handled, None if should be passed to C++ backend.
+        """
+        query_upper = query.strip().upper()
+
+        # HELP command
+        if query_upper == 'HELP' or query_upper == 'HELP DSN':
+            return self._get_help_output()
+
+        # HELP <specific command>
+        if query_upper.startswith('HELP '):
+            command = query[5:].strip()
+            return self._get_help_output(command)
+
+        # Quick field lookup: ? 01_001
+        if query_upper.startswith('?'):
+            field_code = query[1:].strip()
+            if field_code:
+                # Convert to DESCRIBE command
+                return None  # Let C++ handle DESCRIBE
+
+        # BROWSE commands
+        if query_upper.startswith('BROWSE'):
+            return self._handle_browse_command(query)
+
+        # SEARCH command
+        if query_upper.startswith('SEARCH'):
+            return self._handle_search_command(query)
+
+        return None  # Not a kernel command, pass to C++ backend
+
+    def _get_help_output(self, command: Optional[str] = None) -> Dict[str, Any]:
+        """Generate help documentation"""
+        if command:
+            # Specific command help
+            help_text = self._get_command_help(command.upper())
+        else:
+            # General help
+            help_text = self._get_general_help()
+
+        return {
+            'success': True,
+            'output': help_text,
+            'error': None,
+            'is_html': True
+        }
+
+    def _get_general_help(self) -> str:
+        """Generate general DSN MODE help"""
+        html = '''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        🇫🇷 DSN MODE - Command Reference
+    </h2>
+
+    <div style="display: grid; gap: 20px; margin-top: 20px;">
+
+        <!-- Mode Control -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea;">
+            <h3 style="color: #24292e; margin-top: 0;">⚙️ Mode Control</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SET MODE DSN</td>
+                    <td style="padding: 8px;">Activate DSN mode</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET MODE STANDARD</td>
+                    <td style="padding: 8px;">Deactivate DSN mode</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET DSN_VERSION P25</td>
+                    <td style="padding: 8px;">Use P25 schema</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET DSN_VERSION P26</td>
+                    <td style="padding: 8px;">Use P26 schema</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SHOW MODE</td>
+                    <td style="padding: 8px;">Display current mode</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Discovery Commands -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745;">
+            <h3 style="color: #24292e; margin-top: 0;">🔍 Discovery & Exploration</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">BROWSE SCHEMA</td>
+                    <td style="padding: 8px;">Explore all available fields</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">BROWSE BLOC 01</td>
+                    <td style="padding: 8px;">Show all fields in specific bloc</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">DESCRIBE 01_001</td>
+                    <td style="padding: 8px;">Show field documentation</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SEARCH "keyword"</td>
+                    <td style="padding: 8px;">Search fields by description</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">? 01_001</td>
+                    <td style="padding: 8px;">Quick field lookup (same as DESCRIBE)</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Query Commands -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+            <h3 style="color: #24292e; margin-top: 0;">📊 Query Operations</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SELECT 01_001, 30_001 FROM file.xml</td>
+                    <td style="padding: 8px;">Query with shortcut notation</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">WHERE, ORDER BY, LIMIT</td>
+                    <td style="padding: 8px;">Standard SQL operations</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE LIST</td>
+                    <td style="padding: 8px;">View available query templates</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE &lt;name&gt;</td>
+                    <td style="padding: 8px;">Use a predefined template</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Schema Tools -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #d73a49;">
+            <h3 style="color: #24292e; margin-top: 0;">🔄 Schema Tools</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SHOW DSN_SCHEMA</td>
+                    <td style="padding: 8px;">Display schema information</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">COMPARE P25 P26</td>
+                    <td style="padding: 8px;">Compare schema versions</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Help -->
+        <div style="background: #f6f8fa; padding: 15px; border-radius: 6px;">
+            <h3 style="color: #24292e; margin-top: 0;">💡 Getting More Help</h3>
+            <p style="margin: 5px 0;">• Type <code style="background: white; padding: 2px 6px; border-radius: 3px;">HELP &lt;command&gt;</code> for detailed help on a specific command</p>
+            <p style="margin: 5px 0;">• Press <strong>TAB</strong> for autocomplete suggestions</p>
+            <p style="margin: 5px 0;">• See <code>JUPYTER_DSN_INTEGRATION.md</code> for full documentation</p>
+        </div>
+    </div>
+</div>
+'''
+        return html
+
+    def _get_command_help(self, command: str) -> str:
+        """Get help for a specific command"""
+        help_db = {
+            'BROWSE': {
+                'title': 'BROWSE - Schema Explorer',
+                'usage': [
+                    'BROWSE SCHEMA',
+                    'BROWSE BLOC 01',
+                    'BROWSE BLOC 30'
+                ],
+                'description': 'Explore DSN schema fields interactively.',
+                'examples': [
+                    ('BROWSE SCHEMA', 'Show all available fields organized by bloc'),
+                    ('BROWSE BLOC 01', 'Show all fields in bloc 01 (Identification)')
+                ]
+            },
+            'DESCRIBE': {
+                'title': 'DESCRIBE - Field Documentation',
+                'usage': [
+                    'DESCRIBE <field_code>',
+                    '? <field_code>'
+                ],
+                'description': 'Display detailed documentation for a specific field.',
+                'examples': [
+                    ('DESCRIBE 01_001', 'Show documentation for field 01_001'),
+                    ('? 30_001', 'Quick lookup for NIR field')
+                ]
+            },
+            'SEARCH': {
+                'title': 'SEARCH - Find Fields',
+                'usage': [
+                    'SEARCH "keyword"',
+                    'SEARCH "text with spaces"'
+                ],
+                'description': 'Search for fields by description or name.',
+                'examples': [
+                    ('SEARCH "numéro"', 'Find all fields containing "numéro"'),
+                    ('SEARCH "naissance"', 'Find birth-related fields')
+                ]
+            },
+            'TEMPLATE': {
+                'title': 'TEMPLATE - Query Templates',
+                'usage': [
+                    'TEMPLATE LIST',
+                    'TEMPLATE <name>'
+                ],
+                'description': 'Use predefined query templates for common operations.',
+                'examples': [
+                    ('TEMPLATE LIST', 'Show all available templates'),
+                    ('TEMPLATE demographics', 'Use the demographics template')
+                ]
+            },
+            'COMPARE': {
+                'title': 'COMPARE - Schema Comparison',
+                'usage': [
+                    'COMPARE P25 P26'
+                ],
+                'description': 'Compare differences between DSN schema versions.',
+                'examples': [
+                    ('COMPARE P25 P26', 'Show differences between P25 and P26')
+                ]
+            }
+        }
+
+        # Find matching command
+        for key in help_db:
+            if command.startswith(key):
+                info = help_db[key]
+                html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; margin-top: 0;">{info['title']}</h2>
+
+    <div style="margin: 15px 0;">
+        <h3 style="color: #24292e;">Usage:</h3>
+        <div style="background: #f6f8fa; padding: 15px; border-radius: 4px; font-family: monospace;">
+'''
+                for usage in info['usage']:
+                    html += f'            <div style="margin: 5px 0; color: #0366d6;">{self._escape_html(usage)}</div>\n'
+
+                html += f'''        </div>
+    </div>
+
+    <div style="margin: 15px 0;">
+        <h3 style="color: #24292e;">Description:</h3>
+        <p>{info['description']}</p>
+    </div>
+
+    <div style="margin: 15px 0;">
+        <h3 style="color: #24292e;">Examples:</h3>
+'''
+                for example, desc in info['examples']:
+                    html += f'''        <div style="margin: 10px 0; padding: 10px; background: #f6f8fa; border-radius: 4px;">
+            <code style="color: #0366d6; display: block; margin-bottom: 5px;">{self._escape_html(example)}</code>
+            <span style="color: #586069; font-size: 13px;">{desc}</span>
+        </div>
+'''
+                html += '''    </div>
+</div>
+'''
+                return html
+
+        # Command not found
+        return f'''
+<div style="padding: 20px; background: #fff3cd; border-left: 4px solid #f59e0b; border-radius: 4px;">
+    <strong>⚠️ Unknown command: {self._escape_html(command)}</strong>
+    <p>Type <code>HELP</code> to see all available commands.</p>
+</div>
+'''
+
+    def _handle_browse_command(self, query: str) -> Dict[str, Any]:
+        """Handle BROWSE commands (implemented in kernel for better UX)"""
+        query_upper = query.strip().upper()
+
+        # Parse BROWSE command
+        if query_upper == 'BROWSE SCHEMA':
+            return self._get_browse_schema_output()
+        elif 'BROWSE BLOC' in query_upper:
+            # Extract bloc number
+            parts = query.strip().split()
+            if len(parts) >= 3:
+                bloc_num = parts[2]
+                return self._get_browse_bloc_output(bloc_num)
+            else:
+                return {
+                    'success': False,
+                    'output': '',
+                    'error': 'Usage: BROWSE BLOC <number>\nExample: BROWSE BLOC 01',
+                    'is_html': False
+                }
+
+        # Unknown BROWSE command
+        return {
+            'success': False,
+            'output': '',
+            'error': 'Usage: BROWSE SCHEMA or BROWSE BLOC <number>',
+            'is_html': False
+        }
+
+    def _get_browse_schema_output(self) -> Dict[str, Any]:
+        """Generate schema browser output"""
+        if not self.dsn_version:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Please set DSN version first: SET DSN_VERSION P26',
+                'is_html': False
+            }
+
+        html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        📚 DSN Schema Browser - {self.dsn_version}
+    </h2>
+
+    <div style="background: #f6f8fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+        <p style="margin: 0; color: #586069;">
+            <strong>Quick Navigation:</strong> Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">BROWSE BLOC &lt;number&gt;</code> to explore a specific bloc
+        </p>
+    </div>
+
+    <div style="display: grid; gap: 15px; margin-top: 20px;">
+
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: #24292e; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">01️⃣</span>
+                Bloc 01 - Identification
+            </h3>
+            <p style="color: #586069; margin: 10px 0;">Main identification fields</p>
+            <div style="font-family: monospace; font-size: 13px; color: #0366d6;">
+                <div>• 01_001 - Numéro d'inscription au RPPS</div>
+                <div>• 01_002 - Clé du numéro</div>
+                <div>• 01_003 - Numéro ADELI</div>
+            </div>
+            <button style="margin-top: 10px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                    onclick="navigator.clipboard.writeText('BROWSE BLOC 01')">
+                📋 Explore Bloc 01
+            </button>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: #24292e; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">02️⃣</span>
+                Bloc 02 - Naissance
+            </h3>
+            <p style="color: #586069; margin: 10px 0;">Birth information fields</p>
+            <div style="font-family: monospace; font-size: 13px; color: #28a745;">
+                <div>• 02_001 - Date de naissance</div>
+                <div>• 02_002 - Lieu de naissance</div>
+                <div>• 02_003 - Code commune</div>
+            </div>
+            <button style="margin-top: 10px; padding: 6px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                    onclick="navigator.clipboard.writeText('BROWSE BLOC 02')">
+                📋 Explore Bloc 02
+            </button>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: #24292e; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">30️⃣</span>
+                Bloc 30 - NIR (Numéro d'Inscription au Répertoire)
+            </h3>
+            <p style="color: #586069; margin: 10px 0;">Social security number fields</p>
+            <div style="font-family: monospace; font-size: 13px; color: #f59e0b;">
+                <div>• 30_001 - NIR</div>
+                <div>• 30_002 - Clé NIR</div>
+            </div>
+            <button style="margin-top: 10px; padding: 6px 12px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                    onclick="navigator.clipboard.writeText('BROWSE BLOC 30')">
+                📋 Explore Bloc 30
+            </button>
+        </div>
+
+        <div style="background: #fffbeb; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+            <strong style="color: #92400e;">💡 Pro Tips:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #92400e;">
+                <li>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">DESCRIBE &lt;field&gt;</code> for detailed field documentation</li>
+                <li>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">SEARCH "keyword"</code> to find fields by description</li>
+                <li>Press <strong>TAB</strong> while typing field codes for autocomplete</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+'''
+        return {
+            'success': True,
+            'output': html,
+            'error': None,
+            'is_html': True
+        }
+
+    def _get_browse_bloc_output(self, bloc_num: str) -> Dict[str, Any]:
+        """Generate bloc-specific browser output"""
+        if not self.dsn_version:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Please set DSN version first: SET DSN_VERSION P26',
+                'is_html': False
+            }
+
+        # Sample data for common blocs (in real implementation, this would come from schema)
+        bloc_data = {
+            '01': {
+                'name': 'Identification',
+                'fields': [
+                    ('01_001', 'Numéro d\'inscription au RPPS', 'VARCHAR(11)'),
+                    ('01_002', 'Clé du numéro RPPS', 'CHAR(1)'),
+                    ('01_003', 'Numéro ADELI', 'VARCHAR(9)'),
+                    ('01_004', 'Civilité', 'CHAR(3)'),
+                    ('01_005', 'Nom de famille', 'VARCHAR(80)'),
+                    ('01_006', 'Prénom', 'VARCHAR(60)'),
+                ]
+            },
+            '02': {
+                'name': 'Naissance',
+                'fields': [
+                    ('02_001', 'Date de naissance', 'DATE'),
+                    ('02_002', 'Lieu de naissance', 'VARCHAR(80)'),
+                    ('02_003', 'Code commune de naissance', 'CHAR(5)'),
+                    ('02_004', 'Code pays de naissance', 'CHAR(5)'),
+                ]
+            },
+            '30': {
+                'name': 'NIR',
+                'fields': [
+                    ('30_001', 'Numéro d\'inscription au répertoire (NIR)', 'CHAR(13)'),
+                    ('30_002', 'Clé NIR', 'CHAR(2)'),
+                ]
+            }
+        }
+
+        if bloc_num not in bloc_data:
+            html = f'''
+<div style="background: #fff3cd; padding: 20px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+    <strong>⚠️ Bloc {self._escape_html(bloc_num)} information not available</strong>
+    <p>Use <code>BROWSE SCHEMA</code> to see all available blocs.</p>
+    <p>Common blocs: 01 (Identification), 02 (Naissance), 30 (NIR)</p>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+
+        bloc_info = bloc_data[bloc_num]
+        html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        📂 Bloc {self._escape_html(bloc_num)} - {self._escape_html(bloc_info['name'])}
+    </h2>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f6f8fa; border-bottom: 2px solid #e1e4e8;">
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Field Code</th>
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Description</th>
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Type</th>
+                </tr>
+            </thead>
+            <tbody>
+'''
+        for code, desc, type_info in bloc_info['fields']:
+            html += f'''
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 12px; font-family: monospace; color: #0366d6; font-weight: 600;">{self._escape_html(code)}</td>
+                    <td style="padding: 12px; color: #24292e;">{self._escape_html(desc)}</td>
+                    <td style="padding: 12px; font-family: monospace; color: #6a737d; font-size: 12px;">{self._escape_html(type_info)}</td>
+                </tr>
+'''
+        html += '''
+            </tbody>
+        </table>
+    </div>
+
+    <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-top: 20px;">
+        <strong style="color: #1e3a8a;">💡 Next Steps:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #1e3a8a;">
+            <li>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">DESCRIBE &lt;field_code&gt;</code> for detailed information</li>
+            <li>Try a query: <code style="background: white; padding: 2px 6px; border-radius: 3px;">SELECT ''' + bloc_num + '''_001 FROM ./file.xml</code></li>
+            <li>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">BROWSE SCHEMA</code> to see all blocs</li>
+        </ul>
+    </div>
+</div>
+'''
+        return {
+            'success': True,
+            'output': html,
+            'error': None,
+            'is_html': True
+        }
+
+    def _handle_search_command(self, query: str) -> Dict[str, Any]:
+        """Handle SEARCH commands"""
+        # Extract search keyword
+        parts = query.strip().split('"')
+        if len(parts) < 2:
+            # Try with single quotes
+            parts = query.strip().split("'")
+
+        if len(parts) < 2:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Usage: SEARCH "keyword"\nExample: SEARCH "numéro"',
+                'is_html': False
+            }
+
+        keyword = parts[1].lower()
+        return self._get_search_output(keyword)
+
+    def _get_search_output(self, keyword: str) -> Dict[str, Any]:
+        """Generate search results output"""
+        if not self.dsn_version:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Please set DSN version first: SET DSN_VERSION P26',
+                'is_html': False
+            }
+
+        # Sample searchable fields (in real implementation, search all schema fields)
+        all_fields = [
+            ('01_001', 'Numéro d\'inscription au RPPS', '01'),
+            ('01_002', 'Clé du numéro RPPS', '01'),
+            ('01_003', 'Numéro ADELI', '01'),
+            ('01_005', 'Nom de famille', '01'),
+            ('01_006', 'Prénom', '01'),
+            ('02_001', 'Date de naissance', '02'),
+            ('02_002', 'Lieu de naissance', '02'),
+            ('02_003', 'Code commune de naissance', '02'),
+            ('30_001', 'Numéro d\'inscription au répertoire (NIR)', '30'),
+            ('30_002', 'Clé NIR', '30'),
+        ]
+
+        # Search for keyword in field codes and descriptions
+        results = [
+            (code, desc, bloc)
+            for code, desc, bloc in all_fields
+            if keyword in code.lower() or keyword in desc.lower()
+        ]
+
+        if not results:
+            html = f'''
+<div style="background: #fff3cd; padding: 20px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+    <strong>🔍 No results found for "{self._escape_html(keyword)}"</strong>
+    <p>Try:</p>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+        <li>Using different keywords</li>
+        <li>Browsing all fields with <code>BROWSE SCHEMA</code></li>
+        <li>Exploring specific blocs with <code>BROWSE BLOC 01</code></li>
+    </ul>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+
+        html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        🔍 Search Results for "{self._escape_html(keyword)}"
+    </h2>
+
+    <div style="background: #f6f8fa; padding: 12px; border-radius: 4px; margin: 15px 0;">
+        <strong>Found {len(results)} field(s)</strong>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f6f8fa; border-bottom: 2px solid #e1e4e8;">
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Field Code</th>
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Description</th>
+                    <th style="padding: 12px; text-align: left; color: #24292e;">Bloc</th>
+                </tr>
+            </thead>
+            <tbody>
+'''
+        for code, desc, bloc in results:
+            # Highlight the keyword in the description
+            highlighted_desc = desc.replace(
+                keyword,
+                f'<mark style="background: #fef3c7; padding: 2px 4px; border-radius: 2px;">{keyword}</mark>'
+            )
+            highlighted_code = code.replace(
+                keyword.upper(),
+                f'<mark style="background: #fef3c7; padding: 2px 4px; border-radius: 2px;">{keyword.upper()}</mark>'
+            )
+            html += f'''
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 12px; font-family: monospace; color: #0366d6; font-weight: 600;">{highlighted_code}</td>
+                    <td style="padding: 12px; color: #24292e;">{highlighted_desc}</td>
+                    <td style="padding: 12px; font-family: monospace; color: #6a737d; font-size: 12px;">Bloc {self._escape_html(bloc)}</td>
+                </tr>
+'''
+        html += '''
+            </tbody>
+        </table>
+    </div>
+
+    <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-top: 20px;">
+        <strong style="color: #1e3a8a;">💡 Next Steps:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #1e3a8a;">
+            <li>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">DESCRIBE &lt;field_code&gt;</code> for detailed field information</li>
+            <li>Refine your search with different keywords</li>
+        </ul>
+    </div>
+</div>
+'''
+        return {
+            'success': True,
+            'output': html,
+            'error': None,
+            'is_html': True
+        }
+
+    def _enhance_error_message(self, error_msg: str, query: str) -> str:
+        """
+        Enhance error messages with helpful suggestions and tips.
+        Analyzes the error and provides context-aware guidance.
+        """
+        if not error_msg:
+            return error_msg
+
+        # Build enhanced HTML error message
+        html = '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif;">'
+
+        # Main error display
+        html += '''
+<div style="background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 24px;">❌</span>
+        <strong style="color: #c53030; font-size: 16px;">Error</strong>
+    </div>
+    <div style="font-family: monospace; color: #742a2a; white-space: pre-wrap;">'''
+        html += self._escape_html(error_msg)
+        html += '</div></div>'
+
+        # Analyze error and provide suggestions
+        suggestions = []
+        tips = []
+
+        error_lower = error_msg.lower()
+
+        # File not found errors
+        if 'no such file' in error_lower or 'cannot open' in error_lower or 'file not found' in error_lower:
+            suggestions.append('Check that the file path is correct')
+            suggestions.append('Use absolute paths or paths relative to the notebook directory')
+            tips.append('List files with a shell command to verify paths')
+            tips.append('Make sure the file has .xml extension')
+
+        # Unknown field errors
+        elif 'unknown field' in error_lower or 'invalid field' in error_lower:
+            suggestions.append('Use <code>BROWSE SCHEMA</code> to see all available fields')
+            suggestions.append('Use <code>SEARCH "keyword"</code> to find fields by description')
+            suggestions.append('Verify you\'re using the correct DSN version (P25 or P26)')
+            tips.append('Field codes are case-sensitive')
+            tips.append('Use TAB for autocomplete when typing field names')
+
+        # Syntax errors
+        elif 'syntax' in error_lower or 'parse' in error_lower:
+            suggestions.append('Check your SQL syntax')
+            suggestions.append('Make sure field names are separated by commas')
+            suggestions.append('Verify you have a FROM clause with a file path')
+            tips.append('Type <code>HELP</code> to see command syntax')
+            tips.append('Use <code>TEMPLATE LIST</code> to see example queries')
+
+        # DSN mode not activated
+        elif 'dsn' in error_lower and 'not' in error_lower:
+            suggestions.append('Activate DSN mode with: <code>SET MODE DSN</code>')
+            suggestions.append('Set DSN version with: <code>SET DSN_VERSION P26</code>')
+
+        # Schema/version errors
+        elif 'schema' in error_lower or 'version' in error_lower:
+            suggestions.append('Set DSN version: <code>SET DSN_VERSION P25</code> or <code>SET DSN_VERSION P26</code>')
+            suggestions.append('Use <code>SHOW DSN_SCHEMA</code> to see current schema info')
+            suggestions.append('Compare versions with: <code>COMPARE P25 P26</code>')
+
+        # Empty result isn't really an error, but let's handle it
+        elif 'no rows' in error_lower or 'empty' in error_lower:
+            suggestions.append('Check your WHERE clause filters')
+            suggestions.append('Verify the XML file contains data')
+            tips.append('Remove the WHERE clause to see all data')
+
+        # Add suggestions section if we have any
+        if suggestions:
+            html += '''
+<div style="background: #fffaf0;
+            border-left: 4px solid #ed8936;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 20px;">💡</span>
+        <strong style="color: #7c2d12; font-size: 15px;">Suggestions</strong>
+    </div>
+    <ul style="margin: 5px 0; padding-left: 25px; color: #7c2d12;">'''
+            for suggestion in suggestions:
+                html += f'<li style="margin: 5px 0;">{suggestion}</li>'
+            html += '</ul></div>'
+
+        # Add tips section if we have any
+        if tips:
+            html += '''
+<div style="background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 20px;">ℹ️</span>
+        <strong style="color: #1e3a8a; font-size: 15px;">Tips</strong>
+    </div>
+    <ul style="margin: 5px 0; padding-left: 25px; color: #1e3a8a;">'''
+            for tip in tips:
+                html += f'<li style="margin: 5px 0;">{tip}</li>'
+            html += '</ul></div>'
+
+        # Always add help reference
+        if self.dsn_mode:
+            html += '''
+<div style="background: #f6f8fa;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+            color: #586069;
+            font-size: 13px;">
+    Type <code style="background: white; padding: 2px 6px; border-radius: 3px; color: #0366d6;">HELP</code>
+    for command reference or
+    <code style="background: white; padding: 2px 6px; border-radius: 3px; color: #0366d6;">BROWSE SCHEMA</code>
+    to explore available fields
+</div>'''
+
+        html += '</div>'
+        return html
 
     def _execute_query(self, query: str) -> Dict[str, Any]:
         """Execute an Ariane-XML query and return the result"""
@@ -525,9 +1376,15 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'user_expressions': {}
             }
 
+        # Track previous DSN mode state to detect activation
+        was_dsn_mode = self.dsn_mode
+
         # Update DSN state if this is a DSN command
         if self._is_dsn_command(code):
             self._update_dsn_state(code)
+
+        # Show DSN quickstart card when DSN mode is first activated
+        show_quickstart = (not was_dsn_mode and self.dsn_mode and self.dsn_quickstart)
 
         # Show execution status with DSN mode badge
         if not silent:
@@ -544,16 +1401,29 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 }
             )
 
-        # Execute the query and track timing
+        # Check if this is a kernel-level command (like HELP)
         start_time = time.time()
-        result = self._execute_query(code)
+        result = self._handle_kernel_command(code)
+
+        # If not handled by kernel, execute via C++ backend
+        if result is None:
+            result = self._execute_query(code)
+
         execution_time_ms = (time.time() - start_time) * 1000
 
         if not silent:
             if result['success']:
                 # Send formatted output
                 if result['output']:
-                    display_data = self._format_output(result['output'], query=code)
+                    # Check if output is already HTML (from kernel commands)
+                    if result.get('is_html', False):
+                        display_data = {
+                            'text/html': result['output'],
+                            'text/plain': result['output']
+                        }
+                    else:
+                        display_data = self._format_output(result['output'], query=code)
+
                     self.send_response(
                         self.iopub_socket,
                         'display_data',
@@ -571,6 +1441,21 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                             'text': f'\n✓ Done in {execution_time_ms:.1f} ms\n'
                         }
                     )
+
+                    # Show quickstart card after DSN mode activation
+                    if show_quickstart:
+                        quickstart_html = self._get_dsn_quickstart_card()
+                        self.send_response(
+                            self.iopub_socket,
+                            'display_data',
+                            {
+                                'data': {
+                                    'text/html': quickstart_html,
+                                    'text/plain': 'DSN MODE ACTIVATED - Type HELP for assistance'
+                                },
+                                'metadata': {}
+                            }
+                        )
                 else:
                     # Query succeeded but produced no output - provide helpful feedback
                     help_msg = f'\n✓ Query executed successfully (no output) - {execution_time_ms:.1f} ms\n\n'
@@ -597,16 +1482,42 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                         }
                     )
             else:
-                # Send formatted error with timing
+                # Send enhanced formatted error
                 error_msg = result['error'] or 'Unknown error'
-                self.send_response(
-                    self.iopub_socket,
-                    'stream',
-                    {
-                        'name': 'stderr',
-                        'text': f'{error_msg}\n\n✗ Failed after {execution_time_ms:.1f} ms\n'
-                    }
-                )
+
+                # Use enhanced HTML error formatting in DSN mode
+                if self.dsn_mode:
+                    enhanced_html = self._enhance_error_message(error_msg, code)
+                    self.send_response(
+                        self.iopub_socket,
+                        'display_data',
+                        {
+                            'data': {
+                                'text/html': enhanced_html,
+                                'text/plain': error_msg
+                            },
+                            'metadata': {}
+                        }
+                    )
+                    # Send timing info separately
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stderr',
+                            'text': f'✗ Failed after {execution_time_ms:.1f} ms\n'
+                        }
+                    )
+                else:
+                    # Standard error output for non-DSN mode
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stderr',
+                            'text': f'{error_msg}\n\n✗ Failed after {execution_time_ms:.1f} ms\n'
+                        }
+                    )
 
         # Return execution result
         if result['success']:
