@@ -37,6 +37,13 @@ jupyter notebook
 
 ### Creating Your First Notebook
 
+**Option A: Use the Getting Started Template (Recommended)**
+1. Open Jupyter Lab (http://localhost:8888)
+2. Navigate to `ariane-xml-examples/00_Getting_Started.ipynb`
+3. The notebook already has example queries ready to run!
+4. Press `Shift+Enter` on any cell
+
+**Option B: Create from Scratch**
 1. Open Jupyter Lab (http://localhost:8888)
 2. Create a new notebook
 3. Select **"Ariane-XML"** as the kernel

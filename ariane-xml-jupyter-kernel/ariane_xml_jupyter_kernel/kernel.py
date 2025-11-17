@@ -27,24 +27,32 @@ class ArianeXMLKernel(Kernel):
         'codemirror_mode': 'sql',
         'pygments_lexer': 'sql'
     }
-    banner = """Ariane-XML Kernel Enhanced - SQL-like XML Querying
+    banner = """Ariane-XML Kernel - SQL-like XML Querying 🚀
 
-Execute SQL-like queries on XML files with rich HTML output.
+Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
-Features:
-  ✨ Styled HTML tables with zebra striping
-  ✨ Hover effects for better readability
-  ✨ Automatic numeric/text alignment
-  ✨ Responsive design
+📘 NEW TO ARIANE-XML?
+   Open: ariane-xml-examples/00_Getting_Started.ipynb
+   This interactive tutorial has pre-written queries to run!
 
-Example queries:
-  SELECT name, price FROM examples/books.xml WHERE price > 30
-  SELECT * FROM examples/test.xml ORDER BY price DESC
+✨ Features:
+   • Styled HTML tables with zebra striping
+   • Hover effects for better readability
+   • Automatic numeric/text alignment
+   • Query multiple files with wildcards (*.xml)
 
-Special commands:
-  help                 - Show Ariane-XML help
-  SET XSD <file>       - Set XSD schema
-  SHOW XSD            - Show current XSD
+📝 Quick Example (try it now!):
+   SELECT name, price FROM ariane-xml-examples/test.xml WHERE price < 6
+
+💡 Tips:
+   • Press Shift+Enter to run a cell
+   • Use -- for comments in your queries
+   • Type 'help' for Ariane-XML documentation
+   • If nothing happens, check file paths are correct
+
+🎓 More Examples:
+   • ExpoCLI_Demo.ipynb - Complete tutorial
+   • Enhanced_Tables_Demo.ipynb - Advanced formatting
 """
 
     def __init__(self, **kwargs):
@@ -369,6 +377,22 @@ Special commands:
                         {
                             'data': display_data,
                             'metadata': {}
+                        }
+                    )
+                else:
+                    # Query succeeded but produced no output - provide helpful feedback
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stdout',
+                            'text': '✓ Query executed successfully (no output)\n\n' +
+                                   '💡 Possible reasons:\n' +
+                                   '   • File path not found\n' +
+                                   '   • Query syntax may be incorrect\n' +
+                                   '   • No data matched your WHERE clause\n' +
+                                   '   • Empty XML file\n\n' +
+                                   'Tip: Check your file path and query syntax.'
                         }
                     )
             else:
