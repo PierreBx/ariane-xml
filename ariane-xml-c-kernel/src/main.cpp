@@ -4,6 +4,7 @@
 #include "utils/result_formatter.h"
 #include "utils/app_context.h"
 #include "utils/command_handler.h"
+#include "dsn/dsn_autocomplete.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -19,6 +20,11 @@
 
 // History file path
 static std::string historyFilePath;
+
+// Global variables for DSN autocompletion
+static std::unique_ptr<ariane_xml::DsnAutoComplete> g_autocomplete;
+static ariane_xml::AppContext* g_context = nullptr;
+static std::vector<std::string> g_completion_matches;
 
 // Signal handler for CTRL-C (SIGINT)
 void signalHandler(int signal) {
@@ -78,6 +84,75 @@ void saveHistory() {
     if (!historyFilePath.empty()) {
         write_history(historyFilePath.c_str());
     }
+}
+
+// Update autocomplete instance when DSN schema is available
+void updateAutoComplete() {
+    if (!g_context) {
+        return;
+    }
+
+    // Initialize autocomplete if in DSN mode and schema is available
+    if (g_context->isDsnMode() && g_context->hasDsnSchema()) {
+        auto schema = g_context->getDsnSchema();
+        if (schema && !g_autocomplete) {
+            g_autocomplete = std::make_unique<ariane_xml::DsnAutoComplete>(schema);
+        }
+    } else if (!g_context->isDsnMode()) {
+        // Clear autocomplete when not in DSN mode
+        g_autocomplete.reset();
+    }
+}
+
+// Readline completion generator function
+// This is called repeatedly by readline to get the next completion match
+char* completion_generator(const char* text, int state) {
+    static size_t match_index = 0;
+
+    // On first call (state == 0), generate all matches
+    if (state == 0) {
+        match_index = 0;
+        g_completion_matches.clear();
+
+        // Only provide completions if in DSN mode and autocomplete is initialized
+        if (g_context && g_context->isDsnMode() && g_autocomplete) {
+            std::string input = rl_line_buffer;
+            size_t cursor_pos = rl_point;
+
+            auto suggestions = g_autocomplete->getSuggestions(input, cursor_pos);
+
+            // Extract just the completion strings
+            for (const auto& suggestion : suggestions) {
+                g_completion_matches.push_back(suggestion.completion);
+            }
+        }
+    }
+
+    // Return next match, or nullptr if no more matches
+    if (match_index < g_completion_matches.size()) {
+        // readline expects a malloc'd string that it will free
+        const std::string& match = g_completion_matches[match_index++];
+        char* result = static_cast<char*>(malloc(match.length() + 1));
+        strcpy(result, match.c_str());
+        return result;
+    }
+
+    return nullptr;
+}
+
+// Readline attempted completion function
+// This is called when user presses TAB
+char** attempted_completion(const char* text, int start, int end) {
+    // Disable default filename completion
+    rl_attempted_completion_over = 1;
+
+    // Only provide completions in DSN mode
+    if (!g_context || !g_context->isDsnMode() || !g_autocomplete) {
+        return nullptr;
+    }
+
+    // Use our custom completion generator
+    return rl_completion_matches(text, completion_generator);
 }
 
 void printWelcome() {
@@ -261,6 +336,12 @@ void interactiveMode() {
     ariane_xml::AppContext context;
     ariane_xml::CommandHandler commandHandler(context);
 
+    // Set global context for autocomplete
+    g_context = &context;
+
+    // Set up readline completion
+    rl_attempted_completion_function = attempted_completion;
+
     printWelcome();
 
     std::string query;
@@ -277,6 +358,8 @@ void interactiveMode() {
         if (lineBuffer == nullptr) {
             std::cout << "\nBye!\n";
             saveHistory();
+            g_context = nullptr;
+            g_autocomplete.reset();
             break;
         }
 
@@ -309,6 +392,8 @@ void interactiveMode() {
             if (trimmedLine == "exit" || trimmedLine == "quit" || trimmedLine == "\\q") {
                 std::cout << "Bye!\n";
                 saveHistory();
+                g_context = nullptr;
+                g_autocomplete.reset();
                 break;
             }
 
@@ -357,6 +442,9 @@ void interactiveMode() {
                 executeQuery(query, &context);
                 std::cout << std::endl;
             }
+
+            // Update autocomplete after command execution (e.g., after SET MODE DSN)
+            updateAutoComplete();
 
             // Reset for next query
             query.clear();
