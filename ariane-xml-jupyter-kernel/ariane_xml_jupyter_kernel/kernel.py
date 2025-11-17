@@ -76,6 +76,12 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         self.dsn_version = None  # None, 'P25', 'P26', or 'AUTO'
         self.dsn_quickstart = True  # Show quick reference card on DSN mode activation
 
+        # Query History tracking (Phase 2 feature)
+        self.query_history = []  # List of {query, timestamp, execution_time, success, row_count}
+        self.workspace_dir = os.path.expanduser('~/.ariane-xml-workspace')
+        self.queries_dir = os.path.join(self.workspace_dir, 'queries')
+        self._ensure_workspace_exists()
+
     def _find_ariane_xml(self) -> str:
         """Locate the Ariane-XML executable"""
         # In Docker, check the build directory first
@@ -134,6 +140,14 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # For Docker or system-installed versions, use current directory
         return os.getcwd()
 
+    def _ensure_workspace_exists(self):
+        """Create workspace directory structure if it doesn't exist"""
+        try:
+            os.makedirs(self.queries_dir, exist_ok=True)
+        except Exception as e:
+            # Non-critical - workspace creation failed
+            pass
+
     def _is_dsn_command(self, query: str) -> bool:
         """Check if the query is a DSN-specific command"""
         query_upper = query.strip().upper()
@@ -151,6 +165,12 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             '?',
             'BROWSE ',
             'SEARCH ',
+            'HISTORY',
+            'RERUN ',
+            'SAVE QUERY ',
+            'LOAD QUERY ',
+            'LIST QUERIES',
+            'DELETE QUERY ',
         ]
         return any(query_upper.startswith(kw) for kw in dsn_keywords)
 
@@ -289,6 +309,59 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         if query_upper.startswith('SEARCH'):
             return self._handle_search_command(query)
 
+        # HISTORY commands
+        if query_upper == 'HISTORY':
+            return self._handle_history_command()
+
+        if query_upper.startswith('HISTORY '):
+            # Extract number
+            parts = query.strip().split()
+            if len(parts) >= 2:
+                try:
+                    limit = int(parts[1])
+                    return self._handle_history_command(limit)
+                except ValueError:
+                    return {
+                        'success': False,
+                        'output': '',
+                        'error': 'Usage: HISTORY or HISTORY <number>\nExample: HISTORY 5',
+                        'is_html': False
+                    }
+
+        # RERUN command
+        if query_upper.startswith('RERUN '):
+            parts = query.strip().split()
+            if len(parts) >= 2:
+                try:
+                    index = int(parts[1])
+                    return self._handle_rerun_command(index)
+                except ValueError:
+                    return {
+                        'success': False,
+                        'output': '',
+                        'error': 'Usage: RERUN <number>\nExample: RERUN 3',
+                        'is_html': False
+                    }
+
+        # SAVE QUERY command
+        if query_upper.startswith('SAVE QUERY '):
+            query_name = query[11:].strip()
+            return self._handle_save_query_command(query_name)
+
+        # LOAD QUERY command
+        if query_upper.startswith('LOAD QUERY '):
+            query_name = query[11:].strip()
+            return self._handle_load_query_command(query_name)
+
+        # LIST QUERIES command
+        if query_upper == 'LIST QUERIES':
+            return self._handle_list_queries_command()
+
+        # DELETE QUERY command
+        if query_upper.startswith('DELETE QUERY '):
+            query_name = query[13:].strip()
+            return self._handle_delete_query_command(query_name)
+
         return None  # Not a kernel command, pass to C++ backend
 
     def _get_help_output(self, command: Optional[str] = None) -> Dict[str, Any]:
@@ -412,6 +485,41 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             </table>
         </div>
 
+        <!-- Query History (Phase 2) -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #8b5cf6;">
+            <h3 style="color: #24292e; margin-top: 0;">📜 Query History</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">HISTORY</td>
+                    <td style="padding: 8px;">Show last 10 queries</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">HISTORY 5</td>
+                    <td style="padding: 8px;">Show last 5 queries</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">RERUN 3</td>
+                    <td style="padding: 8px;">Re-execute query #3</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SAVE QUERY name</td>
+                    <td style="padding: 8px;">Save last query with a name</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">LOAD QUERY name</td>
+                    <td style="padding: 8px;">Load and execute saved query</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">LIST QUERIES</td>
+                    <td style="padding: 8px;">Show all saved queries</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">DELETE QUERY name</td>
+                    <td style="padding: 8px;">Remove saved query</td>
+                </tr>
+            </table>
+        </div>
+
         <!-- Help -->
         <div style="background: #f6f8fa; padding: 15px; border-radius: 6px;">
             <h3 style="color: #24292e; margin-top: 0;">💡 Getting More Help</h3>
@@ -484,6 +592,28 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'description': 'Compare differences between DSN schema versions.',
                 'examples': [
                     ('COMPARE P25 P26', 'Show differences between P25 and P26')
+                ]
+            },
+            'HISTORY': {
+                'title': 'HISTORY - Query History',
+                'usage': [
+                    'HISTORY',
+                    'HISTORY <number>',
+                    'RERUN <number>',
+                    'SAVE QUERY <name>',
+                    'LOAD QUERY <name>',
+                    'LIST QUERIES',
+                    'DELETE QUERY <name>'
+                ],
+                'description': 'Manage query history and saved queries. Track, reuse, and organize your queries.',
+                'examples': [
+                    ('HISTORY', 'Show last 10 queries'),
+                    ('HISTORY 5', 'Show last 5 queries'),
+                    ('RERUN 3', 'Re-execute query #3 from history'),
+                    ('SAVE QUERY my_query', 'Save last successful query'),
+                    ('LOAD QUERY my_query', 'Load and execute saved query'),
+                    ('LIST QUERIES', 'Show all saved queries'),
+                    ('DELETE QUERY my_query', 'Remove a saved query')
                 ]
             }
         }
@@ -902,6 +1032,423 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             'is_html': True
         }
 
+    def _add_to_history(self, query: str, execution_time: float, success: bool, row_count: int = 0):
+        """Add a query to the history"""
+        import datetime
+
+        # Don't add history commands to history
+        query_upper = query.strip().upper()
+        if any(query_upper.startswith(kw) for kw in ['HISTORY', 'RERUN', 'SAVE QUERY', 'LOAD QUERY', 'LIST QUERIES', 'DELETE QUERY']):
+            return
+
+        history_entry = {
+            'query': query,
+            'timestamp': datetime.datetime.now().isoformat(),
+            'execution_time': execution_time,
+            'success': success,
+            'row_count': row_count,
+            'dsn_version': self.dsn_version
+        }
+        self.query_history.append(history_entry)
+
+    def _handle_history_command(self, limit: int = 10) -> Dict[str, Any]:
+        """Show query history"""
+        import datetime
+
+        if not self.query_history:
+            html = '''
+<div style="background: #fffbeb; padding: 20px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+    <strong>📜 Query History is empty</strong>
+    <p>Your query history will appear here as you execute queries.</p>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+
+        # Get last N queries
+        recent_queries = self.query_history[-limit:] if len(self.query_history) > limit else self.query_history
+        recent_queries = list(reversed(recent_queries))  # Show newest first
+
+        html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        📜 Query History (Last {len(recent_queries)} of {len(self.query_history)})
+    </h2>
+
+    <div style="background: #f6f8fa; padding: 12px; border-radius: 4px; margin: 15px 0;">
+        <p style="margin: 0; color: #586069;">
+            <strong>Tip:</strong> Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">RERUN &lt;number&gt;</code> to re-execute a query
+        </p>
+    </div>
+
+    <div style="display: grid; gap: 10px; margin-top: 20px;">
+'''
+
+        for i, entry in enumerate(recent_queries):
+            # Calculate entry index (from end of full history)
+            actual_index = len(self.query_history) - i
+
+            # Parse timestamp
+            try:
+                dt = datetime.datetime.fromisoformat(entry['timestamp'])
+                time_str = dt.strftime('%H:%M:%S')
+                date_str = dt.strftime('%Y-%m-%d')
+            except:
+                time_str = 'unknown'
+                date_str = ''
+
+            # Truncate long queries for display
+            query_display = entry['query']
+            if len(query_display) > 100:
+                query_display = query_display[:100] + '...'
+
+            # Status indicator
+            status_icon = '✅' if entry['success'] else '❌'
+            status_color = '#28a745' if entry['success'] else '#d73a49'
+
+            # Execution time
+            exec_time = f"{entry['execution_time']:.1f} ms"
+
+            html += f'''
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid {status_color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <strong style="color: #24292e; font-family: monospace; background: #f6f8fa; padding: 4px 8px; border-radius: 3px;">#{actual_index}</strong>
+                        <span style="font-size: 18px;">{status_icon}</span>
+                        <span style="color: #586069; font-size: 12px;">{time_str}</span>
+                    </div>
+                    <div style="font-family: monospace; color: #0366d6; background: #f6f8fa; padding: 8px; border-radius: 4px; margin-top: 8px;">
+                        {self._escape_html(query_display)}
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px; color: #586069; font-size: 12px; margin-top: 10px;">
+                <span>⏱️  {exec_time}</span>
+                {f'<span>📊 {entry["row_count"]} rows</span>' if entry.get('row_count', 0) > 0 else ''}
+                {f'<span>🇫🇷 {entry["dsn_version"]}</span>' if entry.get('dsn_version') else ''}
+            </div>
+            <div style="margin-top: 10px;">
+                <button style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                        onclick="navigator.clipboard.writeText('RERUN {actual_index}')">
+                    🔄 Rerun
+                </button>
+            </div>
+        </div>
+'''
+
+        html += '''
+    </div>
+</div>
+'''
+        return {
+            'success': True,
+            'output': html,
+            'error': None,
+            'is_html': True
+        }
+
+    def _handle_rerun_command(self, index: int) -> Dict[str, Any]:
+        """Re-execute a query from history"""
+        if index < 1 or index > len(self.query_history):
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Invalid history index: {index}\nValid range: 1-{len(self.query_history)}\nUse HISTORY to see available queries.',
+                'is_html': False
+            }
+
+        # Get the query from history
+        query_to_rerun = self.query_history[index - 1]['query']
+
+        # Display what we're running
+        html = f'''
+<div style="background: #f0f9ff; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 4px; margin: 15px 0;">
+    <strong style="color: #1e3a8a;">🔄 Re-running query #{index}:</strong>
+    <div style="font-family: monospace; color: #0366d6; background: white; padding: 8px; border-radius: 4px; margin-top: 8px;">
+        {self._escape_html(query_to_rerun)}
+    </div>
+</div>
+'''
+
+        # Return special marker to execute the query
+        return {
+            'success': True,
+            'output': html,
+            'error': None,
+            'is_html': True,
+            'rerun_query': query_to_rerun  # Special marker for do_execute to handle
+        }
+
+    def _handle_save_query_command(self, query_name: str) -> Dict[str, Any]:
+        """Save the last successful query with a name"""
+        if not query_name:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Usage: SAVE QUERY <name>\nExample: SAVE QUERY my_demographics',
+                'is_html': False
+            }
+
+        # Find the last successful query
+        last_query = None
+        for entry in reversed(self.query_history):
+            if entry['success']:
+                last_query = entry
+                break
+
+        if not last_query:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'No successful query to save.\nExecute a query first, then use SAVE QUERY to save it.',
+                'is_html': False
+            }
+
+        # Save to file
+        query_file = os.path.join(self.queries_dir, f"{query_name}.json")
+        try:
+            with open(query_file, 'w') as f:
+                json.dump({
+                    'name': query_name,
+                    'query': last_query['query'],
+                    'dsn_version': last_query.get('dsn_version'),
+                    'created_at': last_query['timestamp']
+                }, f, indent=2)
+
+            html = f'''
+<div style="background: #f0fdf4; padding: 20px; border-left: 4px solid #28a745; border-radius: 4px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 24px;">💾</span>
+        <strong style="color: #166534; font-size: 16px;">Query Saved Successfully</strong>
+    </div>
+    <div style="margin: 10px 0;">
+        <strong style="color: #166534;">Name:</strong> {self._escape_html(query_name)}
+    </div>
+    <div style="font-family: monospace; color: #0366d6; background: white; padding: 8px; border-radius: 4px; margin: 10px 0;">
+        {self._escape_html(last_query['query'])}
+    </div>
+    <div style="color: #166534; font-size: 13px; margin-top: 10px;">
+        Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">LOAD QUERY {self._escape_html(query_name)}</code> to load it later
+    </div>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Failed to save query: {str(e)}',
+                'is_html': False
+            }
+
+    def _handle_load_query_command(self, query_name: str) -> Dict[str, Any]:
+        """Load a saved query"""
+        if not query_name:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Usage: LOAD QUERY <name>\nExample: LOAD QUERY my_demographics',
+                'is_html': False
+            }
+
+        query_file = os.path.join(self.queries_dir, f"{query_name}.json")
+
+        if not os.path.exists(query_file):
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Query "{query_name}" not found.\nUse LIST QUERIES to see available queries.',
+                'is_html': False
+            }
+
+        try:
+            with open(query_file, 'r') as f:
+                saved_query = json.load(f)
+
+            query_to_load = saved_query['query']
+
+            html = f'''
+<div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #3b82f6; border-radius: 4px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 24px;">📂</span>
+        <strong style="color: #1e3a8a; font-size: 16px;">Loading Query: {self._escape_html(query_name)}</strong>
+    </div>
+    <div style="font-family: monospace; color: #0366d6; background: white; padding: 8px; border-radius: 4px; margin: 10px 0;">
+        {self._escape_html(query_to_load)}
+    </div>
+    {f'<div style="color: #1e3a8a; font-size: 13px;">DSN Version: {saved_query["dsn_version"]}</div>' if saved_query.get('dsn_version') else ''}
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True,
+                'rerun_query': query_to_load  # Execute the loaded query
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Failed to load query: {str(e)}',
+                'is_html': False
+            }
+
+    def _handle_list_queries_command(self) -> Dict[str, Any]:
+        """List all saved queries"""
+        try:
+            # Get all .json files in queries directory
+            query_files = [f for f in os.listdir(self.queries_dir) if f.endswith('.json')]
+
+            if not query_files:
+                html = '''
+<div style="background: #fffbeb; padding: 20px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+    <strong>📁 No saved queries found</strong>
+    <p>Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">SAVE QUERY &lt;name&gt;</code> to save a query for later use.</p>
+</div>
+'''
+                return {
+                    'success': True,
+                    'output': html,
+                    'error': None,
+                    'is_html': True
+                }
+
+            html = f'''
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px 0;">
+
+    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+        📁 Saved Queries ({len(query_files)})
+    </h2>
+
+    <div style="background: #f6f8fa; padding: 12px; border-radius: 4px; margin: 15px 0;">
+        <p style="margin: 0; color: #586069;">
+            <strong>Tip:</strong> Use <code style="background: white; padding: 2px 6px; border-radius: 3px;">LOAD QUERY &lt;name&gt;</code> to load and execute a query
+        </p>
+    </div>
+
+    <div style="display: grid; gap: 10px; margin-top: 20px;">
+'''
+
+            for query_file in sorted(query_files):
+                query_path = os.path.join(self.queries_dir, query_file)
+                try:
+                    with open(query_path, 'r') as f:
+                        saved_query = json.load(f)
+
+                    query_name = saved_query.get('name', query_file.replace('.json', ''))
+                    query_text = saved_query.get('query', 'N/A')
+                    dsn_version = saved_query.get('dsn_version', '')
+
+                    # Truncate long queries
+                    query_display = query_text
+                    if len(query_display) > 100:
+                        query_display = query_display[:100] + '...'
+
+                    html += f'''
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <strong style="color: #24292e; font-size: 16px;">{self._escape_html(query_name)}</strong>
+                    {f'<span style="margin-left: 10px; color: #586069; font-size: 12px;">🇫🇷 {dsn_version}</span>' if dsn_version else ''}
+                    <div style="font-family: monospace; color: #586069; background: #f6f8fa; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 13px;">
+                        {self._escape_html(query_display)}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                        onclick="navigator.clipboard.writeText('LOAD QUERY {self._escape_html(query_name)}')">
+                    📂 Load
+                </button>
+                <button style="padding: 6px 12px; background: #d73a49; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                        onclick="navigator.clipboard.writeText('DELETE QUERY {self._escape_html(query_name)}')">
+                    🗑️  Delete
+                </button>
+            </div>
+        </div>
+'''
+                except Exception as e:
+                    continue
+
+            html += '''
+    </div>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Failed to list queries: {str(e)}',
+                'is_html': False
+            }
+
+    def _handle_delete_query_command(self, query_name: str) -> Dict[str, Any]:
+        """Delete a saved query"""
+        if not query_name:
+            return {
+                'success': False,
+                'output': '',
+                'error': 'Usage: DELETE QUERY <name>\nExample: DELETE QUERY my_demographics',
+                'is_html': False
+            }
+
+        query_file = os.path.join(self.queries_dir, f"{query_name}.json")
+
+        if not os.path.exists(query_file):
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Query "{query_name}" not found.\nUse LIST QUERIES to see available queries.',
+                'is_html': False
+            }
+
+        try:
+            os.remove(query_file)
+
+            html = f'''
+<div style="background: #fff5f5; padding: 20px; border-left: 4px solid #d73a49; border-radius: 4px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 24px;">🗑️</span>
+        <strong style="color: #c53030; font-size: 16px;">Query Deleted: {self._escape_html(query_name)}</strong>
+    </div>
+</div>
+'''
+            return {
+                'success': True,
+                'output': html,
+                'error': None,
+                'is_html': True
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'Failed to delete query: {str(e)}',
+                'is_html': False
+            }
+
     def _enhance_error_message(self, error_msg: str, query: str) -> str:
         """
         Enhance error messages with helpful suggestions and tips.
@@ -1211,6 +1758,15 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # Not a table, return plain text
         return {'text/plain': plain_output}
 
+    def _count_result_rows(self, lines: List[str]) -> int:
+        """Count the number of data rows in a table result"""
+        count = 0
+        for line in lines:
+            if line.strip() and '|' in line and 'row(s) returned' not in line and 'rows returned' not in line:
+                count += 1
+        # Subtract 1 for header
+        return max(0, count - 1)
+
     def _create_html_table(self, lines: List[str]) -> str:
         """
         Convert pipe-separated output to beautiful HTML table
@@ -1220,8 +1776,12 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         - Data rows
         - Result count footer
         - Numeric vs text alignment
+        - Phase 2: Enhanced display with statistics
         """
         html = []
+
+        # Count rows for statistics
+        total_rows = self._count_result_rows(lines)
 
         # Add CSS styling
         html.append('''
@@ -1332,9 +1892,24 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         html.append('</table>')
 
-        # Add result count
+        # Add enhanced result summary (Phase 2 feature)
         if result_count:
             html.append(f'<div class="ariane-xml-result-count">{self._escape_html(result_count)}</div>')
+        elif total_rows > 0:
+            # If no explicit result count, show our calculated count
+            html.append(f'<div class="ariane-xml-result-count">{total_rows} row(s) returned</div>')
+
+        # Show large result warning
+        if total_rows > 100:
+            html.append(f'''
+<div style="background: #fffbeb; padding: 12px; border-radius: 4px; margin-top: 10px; border-left: 4px solid #f59e0b;">
+    <strong style="color: #92400e;">⚠️  Large Result Set ({total_rows} rows)</strong>
+    <p style="margin: 5px 0; color: #92400e; font-size: 13px;">
+        Consider using <code style="background: white; padding: 2px 6px; border-radius: 3px;">WHERE</code> or
+        <code style="background: white; padding: 2px 6px; border-radius: 3px;">LIMIT</code> to reduce result size for better performance.
+    </p>
+</div>
+''')
 
         html.append('</div>')
 
@@ -1405,11 +1980,40 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         start_time = time.time()
         result = self._handle_kernel_command(code)
 
+        # Check if we need to rerun a query (from RERUN or LOAD QUERY)
+        rerun_query = None
+        if result and result.get('rerun_query'):
+            rerun_query = result['rerun_query']
+
         # If not handled by kernel, execute via C++ backend
         if result is None:
             result = self._execute_query(code)
 
         execution_time_ms = (time.time() - start_time) * 1000
+
+        # If we have a rerun query, execute it now
+        if rerun_query:
+            # First send the display output showing what we're running
+            if not silent and result['output']:
+                if result.get('is_html', False):
+                    display_data = {
+                        'text/html': result['output'],
+                        'text/plain': result['output']
+                    }
+                    self.send_response(
+                        self.iopub_socket,
+                        'display_data',
+                        {
+                            'data': display_data,
+                            'metadata': {}
+                        }
+                    )
+
+            # Now execute the rerun query
+            start_time = time.time()
+            result = self._execute_query(rerun_query)
+            execution_time_ms = (time.time() - start_time) * 1000
+            code = rerun_query  # Update code for history tracking
 
         if not silent:
             if result['success']:
@@ -1518,6 +2122,19 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                             'text': f'{error_msg}\n\n✗ Failed after {execution_time_ms:.1f} ms\n'
                         }
                     )
+
+        # Add to history (Phase 2 feature)
+        row_count = 0
+        if result['success'] and result.get('output'):
+            # Try to extract row count from output
+            output_text = result['output']
+            if 'row(s) returned' in output_text or 'rows returned' in output_text:
+                import re
+                match = re.search(r'(\d+)\s+rows?\s+returned', output_text)
+                if match:
+                    row_count = int(match.group(1))
+
+        self._add_to_history(code, execution_time_ms, result['success'], row_count)
 
         # Return execution result
         if result['success']:

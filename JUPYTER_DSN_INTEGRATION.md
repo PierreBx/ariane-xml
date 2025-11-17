@@ -264,3 +264,340 @@ The Jupyter kernel now fully supports DSN MODE with:
 - ✅ Backward compatibility
 
 This integration provides a seamless DSN querying experience in Jupyter notebooks while maintaining full compatibility with existing functionality.
+
+---
+
+## Phase 2 UX Enhancements (2025-11-17)
+
+The following Phase 2 features have been implemented as part of the DSN MODE UX enhancement roadmap.
+
+### 1. Query History System
+
+**Status**: ✅ Implemented
+
+Added comprehensive query history tracking with the following commands:
+
+#### Commands
+
+| Command | Description |
+|---------|-------------|
+| `HISTORY` | Show last 10 queries with metadata |
+| `HISTORY N` | Show last N queries |
+| `RERUN N` | Re-execute query #N from history |
+| `SAVE QUERY name` | Save last successful query with a name |
+| `LOAD QUERY name` | Load and execute a saved query |
+| `LIST QUERIES` | Show all saved queries |
+| `DELETE QUERY name` | Delete a saved query |
+
+#### Implementation Details
+
+**State Tracking**:
+```python
+# Added to __init__
+self.query_history = []  # In-memory session history
+self.workspace_dir = os.path.expanduser('~/.ariane-xml-workspace')
+self.queries_dir = os.path.join(self.workspace_dir, 'queries')
+```
+
+**History Entry Structure**:
+```python
+{
+    'query': str,           # The actual query
+    'timestamp': str,       # ISO format timestamp
+    'execution_time': float,# Execution time in ms
+    'success': bool,        # Whether query succeeded
+    'row_count': int,       # Number of rows returned
+    'dsn_version': str      # DSN version used (if applicable)
+}
+```
+
+**Persistence**:
+- **Session History**: Stored in memory during kernel lifetime
+- **Saved Queries**: Persisted to `~/.ariane-xml-workspace/queries/` as JSON files
+- Workspace directory created automatically on kernel initialization
+
+#### Features
+
+1. **Visual History Display**
+   - Shows queries in reverse chronological order (newest first)
+   - Color-coded success/failure indicators (green/red border)
+   - Displays execution time, row count, and DSN version
+   - Click-to-copy buttons for easy rerun
+   - Truncates long queries for readability
+
+2. **Query Rerun**
+   - Execute any historical query by number
+   - Shows what query is being rerun before execution
+   - Maintains all original query parameters
+
+3. **Saved Queries**
+   - Save frequently-used queries with meaningful names
+   - Queries saved as JSON with metadata
+   - Load queries directly from saved files
+   - Manage saved queries with LIST and DELETE commands
+
+#### Usage Examples
+
+```python
+# Execute some queries
+SELECT 01_001, 01_003 FROM ./dsn.xml
+DESCRIBE 30_001
+TEMPLATE LIST
+
+# View history
+HISTORY          # Shows last 10 queries
+HISTORY 5        # Shows last 5 queries
+
+# Rerun a query
+RERUN 2         # Re-executes query #2
+
+# Save a query
+SAVE QUERY my_demographics
+
+# List saved queries
+LIST QUERIES
+
+# Load and execute saved query
+LOAD QUERY my_demographics
+
+# Delete saved query
+DELETE QUERY my_demographics
+```
+
+### 2. Field Search Enhancement
+
+**Status**: ✅ Implemented (from Phase 1)
+
+Enhanced search functionality for discovering fields:
+
+#### Command
+
+```sql
+SEARCH "keyword"
+SEARCH "text with spaces"
+```
+
+#### Features
+
+- Search field codes and descriptions
+- Case-insensitive matching
+- Highlights matching keywords in results
+- Shows bloc information
+- Interactive table display
+- Suggestions when no results found
+
+#### Usage Example
+
+```python
+# Search for NIR-related fields
+SEARCH "nir"
+
+# Search for birth-related fields
+SEARCH "naissance"
+
+# Search in field codes
+SEARCH "01_"
+```
+
+### 3. Result Display Enhancements
+
+**Status**: ✅ Implemented (Python-side improvements)
+
+Enhanced result display with:
+
+#### Features
+
+1. **Result Statistics**
+   - Automatic row counting
+   - Display total rows returned
+   - Enhanced result count formatting
+
+2. **Large Result Warnings**
+   - Warns when result set exceeds 100 rows
+   - Suggests using WHERE or LIMIT clauses
+   - Helps prevent performance issues
+
+3. **Smart Row Counting**
+   - Extracts row count from query output
+   - Displays in history for reference
+   - Used for result set statistics
+
+#### Implementation
+
+```python
+def _count_result_rows(self, lines: List[str]) -> int:
+    """Count the number of data rows in a table result"""
+    # Counts actual data rows excluding header and footer
+
+# Enhanced table display
+if total_rows > 100:
+    # Show large result set warning
+    # Suggest optimization techniques
+```
+
+### 4. Enhanced Help System
+
+**Status**: ✅ Updated
+
+Updated help system to include Phase 2 commands:
+
+#### New Help Sections
+
+1. **Query History Section**: Added to general HELP output
+2. **HELP HISTORY**: Detailed help for history commands
+3. **HELP SEARCH**: Detailed help for search functionality
+
+#### Command-Specific Help
+
+```python
+HELP              # Shows all commands including Phase 2 features
+HELP HISTORY      # Shows detailed history command help
+HELP SEARCH       # Shows search command help
+```
+
+### Files Modified (Phase 2)
+
+- `ariane-xml-jupyter-kernel/ariane_xml_jupyter_kernel/kernel.py`
+  - Added history tracking infrastructure (~450 lines)
+  - Enhanced result display (~50 lines)
+  - Updated help documentation (~80 lines)
+  - Command handlers for all history operations
+
+### Code Statistics (Phase 2)
+
+**Total Lines Added**: ~580 lines
+- History system: ~450 lines
+  - History tracking: ~20 lines
+  - HISTORY command: ~100 lines
+  - RERUN command: ~40 lines
+  - SAVE/LOAD/LIST/DELETE: ~200 lines
+  - Helper methods: ~90 lines
+- Result enhancements: ~50 lines
+- Help updates: ~80 lines
+
+### Testing
+
+#### Phase 2 Features Test Plan
+
+1. **History Tracking**
+   ```python
+   # Execute queries
+   SELECT 01_001 FROM ./dsn.xml
+   DESCRIBE 30_001
+
+   # Verify history
+   HISTORY  # Should show both queries
+   ```
+
+2. **Rerun Functionality**
+   ```python
+   HISTORY
+   RERUN 1  # Should re-execute first query
+   ```
+
+3. **Saved Queries**
+   ```python
+   # Execute and save
+   SELECT 01_001, 01_003 FROM ./dsn.xml
+   SAVE QUERY test_query
+
+   # Verify saved
+   LIST QUERIES  # Should show test_query
+
+   # Load and execute
+   LOAD QUERY test_query
+
+   # Clean up
+   DELETE QUERY test_query
+   LIST QUERIES  # Should no longer show test_query
+   ```
+
+4. **Search Functionality**
+   ```python
+   SET MODE DSN
+   SET DSN_VERSION P26
+   SEARCH "numéro"  # Should find relevant fields
+   SEARCH "xyz123"  # Should show no results message
+   ```
+
+### Integration Notes
+
+**Workspace Management**:
+- Workspace directory (`~/.ariane-xml-workspace/`) created automatically
+- Queries stored in `~/.ariane-xml-workspace/queries/`
+- Graceful handling if workspace creation fails
+- JSON format for easy portability
+
+**History Behavior**:
+- History commands themselves are NOT added to history
+- Failed queries are tracked (for debugging)
+- Row count extracted from query output automatically
+- DSN version tracked with each query
+
+**Backward Compatibility**:
+- ✅ All Phase 2 features are additive
+- ✅ Existing functionality unchanged
+- ✅ No breaking changes
+- ✅ Optional features (DSN mode not required)
+
+### Future Phase 2 Enhancements
+
+**Remaining from Roadmap**:
+1. **Enhanced Autocomplete** (requires C++ backend changes)
+   - Fuzzy search for field names
+   - Context-aware suggestions
+   - Show descriptions in autocomplete popup
+
+2. **Full Result Pagination** (requires C++ backend changes)
+   - Paginated results for large datasets
+   - Export to CSV/JSON/Excel
+   - Interactive column filtering
+
+**Note**: These features require modifications to the C++ backend (`ariane-xml-c-kernel`) and will be implemented in a future phase.
+
+### Benefits of Phase 2
+
+1. **Improved Workflow Efficiency**
+   - Reuse queries without retyping
+   - Build library of common queries
+   - Quick access to query history
+
+2. **Better Learning Experience**
+   - Review past queries to learn patterns
+   - Save examples for reference
+   - Search fields easily
+
+3. **Enhanced Productivity**
+   - Save time with query rerun
+   - Organize queries by name
+   - Manage query library
+
+4. **Better Result Management**
+   - Understand result set sizes
+   - Warnings for performance issues
+   - Helpful optimization suggestions
+
+### Migration from Phase 1
+
+No migration needed - Phase 2 is fully additive. Users will automatically have access to:
+- Query history in their current session
+- Ability to save/load queries
+- Enhanced search and result display
+
+### Documentation Updates
+
+- ✅ Updated HELP command with Phase 2 features
+- ✅ Added HELP HISTORY command
+- ✅ Updated general DSN MODE help
+- ✅ Added this Phase 2 section to JUPYTER_DSN_INTEGRATION.md
+
+### Conclusion
+
+Phase 2 UX enhancements successfully add:
+- ✅ Complete query history system (7 new commands)
+- ✅ Enhanced field search (already implemented)
+- ✅ Improved result display
+- ✅ Updated help system
+- ✅ Workspace management
+
+These features provide a significantly enhanced user experience for DSN MODE in Jupyter, making query management more efficient and user-friendly.
