@@ -52,6 +52,7 @@ show_menu() {
     echo " 13. Run light test suite (Docker)"
     echo " 14. Run hard test suite (Docker)"
     echo " 15. Run hardest test suite (Docker)"
+    echo " 16. Run DSN mode test suite (Docker)"
     echo ""
 
     echo -e "${COLOR_GREEN}=== Version history & files summary ===${COLOR_RESET}"
@@ -112,6 +113,9 @@ execute_option() {
         15)
             "${MANAGER_DIR}/test-hardest-docker.sh"
             ;;
+        16)
+            "${MANAGER_DIR}/test-dsn-docker.sh"
+            ;;
         17)
             "${MANAGER_DIR}/version-show-history.sh"
             ;;
@@ -159,6 +163,12 @@ main() {
             --test-hardest)
                 "${MANAGER_DIR}/test-hardest.sh"
                 ;;
+            --test-dsn)
+                "${MANAGER_DIR}/test-dsn-docker.sh"
+                ;;
+            --test-dsn-local)
+                "${MANAGER_DIR}/test-dsn.sh"
+                ;;
             --version-history)
                 "${MANAGER_DIR}/version-show-history.sh"
                 ;;
@@ -178,6 +188,8 @@ main() {
                 echo "  $0 --test-light-local Run light tests (local mode)"
                 echo "  $0 --test-hard       Run hard tests"
                 echo "  $0 --test-hardest    Run hardest tests"
+                echo "  $0 --test-dsn        Run DSN mode tests (Docker mode - recommended)"
+                echo "  $0 --test-dsn-local  Run DSN mode tests (local mode)"
                 echo "  $0 --version-history Show version history"
                 echo "  $0 --files-summary   Show files summary (cloc)"
                 echo "  $0 --help            Show this help"
@@ -194,7 +206,7 @@ main() {
     # Interactive mode
     while true; do
         show_menu
-        read -p "Enter your choice [0-15, 17-18]: " choice
+        read -p "Enter your choice [0-18]: " choice
         echo ""
 
         execute_option "$choice"
