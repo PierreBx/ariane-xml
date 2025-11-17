@@ -5,6 +5,7 @@
 #include "utils/app_context.h"
 #include "utils/command_handler.h"
 #include "dsn/dsn_autocomplete.h"
+#include "dsn/dsn_parser.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -325,6 +326,127 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
     }
 }
 
+// Helper function to escape JSON strings
+std::string escapeJson(const std::string& str) {
+    std::string result;
+    result.reserve(str.length());
+
+    for (char c : str) {
+        switch (c) {
+            case '"':  result += "\\\""; break;
+            case '\\': result += "\\\\"; break;
+            case '\b': result += "\\b";  break;
+            case '\f': result += "\\f";  break;
+            case '\n': result += "\\n";  break;
+            case '\r': result += "\\r";  break;
+            case '\t': result += "\\t";  break;
+            default:
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    // Control characters
+                    char buf[7];
+                    snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned char>(c));
+                    result += buf;
+                } else {
+                    result += c;
+                }
+                break;
+        }
+    }
+
+    return result;
+}
+
+// Convert AutoCompleteSuggestion type to string
+std::string typeToString(ariane_xml::AutoCompleteSuggestion::Type type) {
+    switch (type) {
+        case ariane_xml::AutoCompleteSuggestion::Type::FIELD:
+            return "field";
+        case ariane_xml::AutoCompleteSuggestion::Type::BLOC:
+            return "bloc";
+        case ariane_xml::AutoCompleteSuggestion::Type::KEYWORD:
+            return "keyword";
+        default:
+            return "unknown";
+    }
+}
+
+// Handle autocomplete request (for Jupyter kernel integration)
+int handleAutocomplete(int argc, char* argv[]) {
+    // Usage: ariane-xml --autocomplete <query> <cursor_pos> [--version <P25|P26|AUTO>]
+    if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " --autocomplete <query> <cursor_pos> [--version <P25|P26|AUTO>]" << std::endl;
+        return 1;
+    }
+
+    std::string query = argv[2];
+    int cursor_pos = std::atoi(argv[3]);
+    std::string version = "AUTO";  // Default version
+
+    // Parse optional version parameter
+    if (argc >= 6 && std::string(argv[4]) == "--version") {
+        version = argv[5];
+    }
+
+    try {
+        // Initialize context with DSN mode
+        ariane_xml::AppContext context;
+        context.setMode(ariane_xml::QueryMode::DSN);
+        context.setDsnVersion(version);
+
+        // Load DSN schema directly
+        std::string schemaDir;
+        if (version == "P25") {
+            schemaDir = "ariane-xml-schemas/xsd_P25/mensuelle P25";
+        } else if (version == "P26") {
+            schemaDir = "ariane-xml-schemas/xsd_P26/mensuelle P26";
+        } else {
+            // AUTO: try P26 first, fallback to P25
+            schemaDir = "ariane-xml-schemas/xsd_P26/mensuelle P26";
+        }
+
+        // Parse schema from directory
+        auto schema = ariane_xml::DsnParser::parseDirectory(schemaDir, version);
+
+        // Check if schema loaded successfully
+        if (!schema || schema->getAttributes().empty()) {
+            // Return empty suggestions if schema not available
+            std::cout << "[]" << std::endl;
+            return 0;
+        }
+
+        context.setDsnSchema(schema);
+
+        // Create autocomplete instance
+        ariane_xml::DsnAutoComplete autocomplete(schema);
+
+        // Get suggestions
+        auto suggestions = autocomplete.getSuggestions(query, cursor_pos);
+
+        // Output as JSON array
+        std::cout << "[";
+        for (size_t i = 0; i < suggestions.size(); ++i) {
+            if (i > 0) {
+                std::cout << ",";
+            }
+            std::cout << "{";
+            std::cout << "\"completion\":\"" << escapeJson(suggestions[i].completion) << "\",";
+            std::cout << "\"display\":\"" << escapeJson(suggestions[i].display) << "\",";
+            std::cout << "\"description\":\"" << escapeJson(suggestions[i].description) << "\",";
+            std::cout << "\"type\":\"" << typeToString(suggestions[i].type) << "\"";
+            std::cout << "}";
+        }
+        std::cout << "]" << std::endl;
+
+        return 0;
+
+    } catch (const std::exception& e) {
+        // On error, return empty array (fail gracefully for autocomplete)
+        std::cerr << "Autocomplete error: " << e.what() << std::endl;
+        std::cout << "[]" << std::endl;
+        return 1;
+    }
+}
+
 void interactiveMode() {
     // Register signal handler for CTRL-C
     std::signal(SIGINT, signalHandler);
@@ -466,8 +588,13 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
-        // Handle help flag
+        // Handle autocomplete mode (for Jupyter kernel integration)
         std::string arg = argv[1];
+        if (arg == "--autocomplete") {
+            return handleAutocomplete(argc, argv);
+        }
+
+        // Handle help flag
         if (arg == "-h" || arg == "--help") {
             printUsage(argv[0]);
             return 0;

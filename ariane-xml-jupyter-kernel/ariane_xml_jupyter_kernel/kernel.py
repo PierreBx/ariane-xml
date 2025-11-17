@@ -11,6 +11,7 @@ import subprocess
 import re
 import os
 import time
+import json
 from typing import Dict, Any, List, Optional
 
 
@@ -622,6 +623,158 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'ename': 'Ariane-XMLError',
                 'evalue': result['error'] or 'Query execution failed',
                 'traceback': [result['error'] or 'Query execution failed']
+            }
+
+    def _get_partial_word(self, code: str, cursor_pos: int) -> str:
+        """
+        Extract the partial word being completed at cursor position.
+
+        For DSN mode, we want to capture field names/shortcuts being typed,
+        which can contain uppercase letters, numbers, and underscores.
+
+        Args:
+            code: The current cell content
+            cursor_pos: Character position of cursor
+
+        Returns:
+            The partial word at cursor position
+        """
+        if cursor_pos <= 0 or cursor_pos > len(code):
+            return ''
+
+        # Characters that are part of DSN field names: A-Z, 0-9, _
+        # Also include lowercase for case-insensitive matching
+        word_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_'
+
+        start = cursor_pos
+        while start > 0 and code[start - 1] in word_chars:
+            start -= 1
+
+        return code[start:cursor_pos]
+
+    def do_complete(self, code: str, cursor_pos: int) -> Dict[str, Any]:
+        """
+        Handle code completion requests from Jupyter.
+
+        This implements the Jupyter kernel complete_request protocol,
+        providing autocomplete suggestions for DSN fields, blocs, and keywords.
+
+        Args:
+            code: The current cell content
+            cursor_pos: Character position of cursor in the code
+
+        Returns:
+            Dictionary with completion matches and metadata
+
+        Jupyter Protocol Reference:
+            https://jupyter-client.readthedocs.io/en/stable/messaging.html#completion
+        """
+        # Only provide completions in DSN mode
+        if not self.dsn_mode:
+            return {
+                'matches': [],
+                'cursor_start': cursor_pos,
+                'cursor_end': cursor_pos,
+                'metadata': {},
+                'status': 'ok'
+            }
+
+        try:
+            # Build command for C++ autocomplete
+            cmd = [
+                self.ariane_xml_path,
+                '--autocomplete',
+                code,
+                str(cursor_pos)
+            ]
+
+            # Add version parameter if DSN version is set
+            if self.dsn_version:
+                cmd.extend(['--version', self.dsn_version])
+
+            # Call C++ autocomplete via subprocess
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=2,  # Quick timeout for responsiveness
+                cwd=self.working_directory
+            )
+
+            if result.returncode != 0:
+                # Autocomplete failed, return empty
+                # Log error for debugging (visible in Jupyter logs)
+                if result.stderr:
+                    print(f"Autocomplete error: {result.stderr}", file=__import__('sys').stderr)
+                return {
+                    'matches': [],
+                    'cursor_start': cursor_pos,
+                    'cursor_end': cursor_pos,
+                    'metadata': {},
+                    'status': 'ok'
+                }
+
+            # Parse JSON response from C++
+            suggestions = json.loads(result.stdout)
+
+            # Extract completion strings
+            matches = [s['completion'] for s in suggestions]
+
+            # Build metadata for rich completion UI (experimental Jupyter feature)
+            # This provides type information for better UI rendering
+            metadata = {
+                '_jupyter_types_experimental': [
+                    {
+                        'text': s['completion'],
+                        'type': s['type'],  # 'field', 'bloc', or 'keyword'
+                        'start': cursor_pos - len(self._get_partial_word(code, cursor_pos)),
+                        'end': cursor_pos
+                    }
+                    for s in suggestions
+                ]
+            }
+
+            # Calculate completion region (the word being completed)
+            partial = self._get_partial_word(code, cursor_pos)
+            cursor_start = cursor_pos - len(partial)
+            cursor_end = cursor_pos
+
+            return {
+                'matches': matches,
+                'cursor_start': cursor_start,
+                'cursor_end': cursor_end,
+                'metadata': metadata,
+                'status': 'ok'
+            }
+
+        except subprocess.TimeoutExpired:
+            # Timeout - return empty completions
+            return {
+                'matches': [],
+                'cursor_start': cursor_pos,
+                'cursor_end': cursor_pos,
+                'metadata': {},
+                'status': 'ok'
+            }
+        except json.JSONDecodeError as e:
+            # JSON parsing error - log and return empty
+            print(f"Autocomplete JSON error: {e}\nOutput: {result.stdout}", file=__import__('sys').stderr)
+            return {
+                'matches': [],
+                'cursor_start': cursor_pos,
+                'cursor_end': cursor_pos,
+                'metadata': {},
+                'status': 'ok'
+            }
+        except Exception as e:
+            # Unexpected error - log and return empty
+            print(f"Autocomplete unexpected error: {e}", file=__import__('sys').stderr)
+            return {
+                'matches': [],
+                'cursor_start': cursor_pos,
+                'cursor_end': cursor_pos,
+                'metadata': {},
+                'status': 'ok'
             }
 
 

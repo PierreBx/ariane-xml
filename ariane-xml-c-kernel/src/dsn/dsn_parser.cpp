@@ -58,7 +58,7 @@ std::shared_ptr<DsnSchema> DsnParser::parseDirectory(const std::string& schemaDi
     for (const auto& entry : std::filesystem::directory_iterator(schemaDir)) {
         if (entry.path().extension() == ".xsd") {
             std::string xsdPath = entry.path().string();
-            std::cout << "Parsing DSN schema: " << xsdPath << std::endl;
+            std::cerr << "Parsing DSN schema: " << xsdPath << std::endl;
 
             // Load and parse this XSD file
             pugi::xml_document doc;
