@@ -6,6 +6,10 @@
 
 namespace ariane_xml {
 
+// Forward declarations
+struct DsnAttribute;
+struct DsnBloc;
+
 class CommandHandler {
 public:
     explicit CommandHandler(AppContext& context);
@@ -20,6 +24,7 @@ private:
     bool handleShowCommand(const std::string& input);
     bool handleGenerateCommand(const std::string& input);
     bool handleCheckCommand(const std::string& input);
+    bool handleDescribeCommand(const std::string& input);
 
     void setXsdPath(const std::string& path);
     void setDestPath(const std::string& path);
@@ -27,6 +32,9 @@ private:
     void showXsdPath();
     void showDestPath();
     void showMode();
+
+    void displayAttribute(const DsnAttribute& attr);
+    void displayBloc(const DsnBloc& bloc);
 
     bool validateXsdFile(const std::string& path);
     bool validateAndCreateDestDirectory(const std::string& path);

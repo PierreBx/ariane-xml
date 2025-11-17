@@ -3,10 +3,14 @@
 #include "generator/xsd_parser.h"
 #include "generator/xml_generator.h"
 #include "validator/xml_validator.h"
+#include "dsn/dsn_schema.h"
+#include "dsn/dsn_parser.h"
+#include "dsn/dsn_validator.h"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <regex>
 
 namespace ariane_xml {
 
@@ -40,6 +44,11 @@ bool CommandHandler::handleCommand(const std::string& input) {
     // Check if it's a CHECK command
     if (tokens[0].type == TokenType::CHECK) {
         return handleCheckCommand(input);
+    }
+
+    // Check if it's a DESCRIBE command
+    if (tokens[0].type == TokenType::DESCRIBE) {
+        return handleDescribeCommand(input);
     }
 
     // Not a recognized command, treat as query
@@ -172,9 +181,81 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
 }
 
 void CommandHandler::setXsdPath(const std::string& path) {
+    // Check if path exists
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "Error: Path does not exist: " << path << "\n";
+        return;
+    }
+
+    // Handle directories (for DSN schemas with multiple XSD files)
+    if (std::filesystem::is_directory(path)) {
+        if (context_.isDsnMode()) {
+            // Try to parse as DSN schema directory
+            std::cout << "Parsing DSN schema directory: " << path << "\n";
+
+            // Auto-detect version from path (P25, P26, etc.)
+            std::string version = context_.getDsnVersion();
+            if (version == "AUTO") {
+                if (path.find("P26") != std::string::npos) {
+                    version = "P26";
+                } else if (path.find("P25") != std::string::npos) {
+                    version = "P25";
+                } else {
+                    version = "P26"; // Default to latest
+                }
+                context_.setDsnVersion(version);
+                std::cout << "Auto-detected DSN version: " << version << "\n";
+            }
+
+            // Parse the DSN schema
+            try {
+                auto schema = DsnParser::parseDirectory(path, version);
+                context_.setDsnSchema(schema);
+                context_.setXsdPath(path);
+                std::cout << "DSN schema loaded successfully\n";
+                std::cout << "  Attributes: " << schema->getAttributes().size() << "\n";
+                std::cout << "  Blocs: " << schema->getBlocs().size() << "\n";
+            } catch (const std::exception& e) {
+                std::cerr << "Error loading DSN schema: " << e.what() << "\n";
+            }
+        } else {
+            std::cerr << "Error: Directory paths are only supported in DSN mode\n";
+            std::cerr << "Use: SET MODE DSN\n";
+        }
+        return;
+    }
+
+    // Handle single XSD files
     if (validateXsdFile(path)) {
         context_.setXsdPath(path);
         std::cout << "XSD path set to: " << path << "\n";
+
+        // If in DSN mode, try to parse as DSN schema
+        if (context_.isDsnMode()) {
+            std::cout << "Parsing DSN schema file...\n";
+
+            std::string version = context_.getDsnVersion();
+            if (version == "AUTO") {
+                if (path.find("P26") != std::string::npos) {
+                    version = "P26";
+                } else if (path.find("P25") != std::string::npos) {
+                    version = "P25";
+                } else {
+                    version = "P26";
+                }
+                context_.setDsnVersion(version);
+                std::cout << "Auto-detected DSN version: " << version << "\n";
+            }
+
+            try {
+                auto schema = DsnParser::parse(path, version);
+                context_.setDsnSchema(schema);
+                std::cout << "DSN schema loaded successfully\n";
+                std::cout << "  Attributes: " << schema->getAttributes().size() << "\n";
+            } catch (const std::exception& e) {
+                std::cerr << "Warning: Could not parse as DSN schema: " << e.what() << "\n";
+            }
+        }
     }
 }
 
@@ -435,9 +516,35 @@ bool CommandHandler::handleCheckCommand(const std::string& input) {
     std::cout << "\nValidating " << files.size() << " file(s) against XSD: "
               << xsdPath << "\n\n";
 
-    // Validate all files
+    // Validate all files with XSD
     XmlValidator validator;
     auto results = validator.validateFiles(files, xsdPath);
+
+    // If in DSN mode and schema is loaded, perform DSN-specific validation
+    if (context_.isDsnMode() && context_.hasDsnSchema()) {
+        std::cout << "Performing DSN-specific validation...\n\n";
+
+        DsnValidator dsnValidator(context_.getDsnSchema());
+
+        // Perform DSN validation on each file
+        for (auto& [filename, xsdResult] : results) {
+            auto dsnResult = dsnValidator.validate(filename);
+
+            // Add DSN errors
+            for (const auto& dsnError : dsnResult.errors) {
+                ValidationError error;
+                error.message = "[DSN] " + dsnError.message;
+                error.path = dsnError.field;
+                xsdResult.errors.push_back(error);
+                xsdResult.isValid = false;
+            }
+
+            // Add DSN warnings
+            for (const auto& warning : dsnResult.warnings) {
+                xsdResult.warnings.push_back("[DSN] " + warning);
+            }
+        }
+    }
 
     // Display results
     int validCount = 0;
@@ -495,6 +602,180 @@ bool CommandHandler::handleCheckCommand(const std::string& input) {
     std::cout << "\n";
 
     return true;
+}
+
+bool CommandHandler::handleDescribeCommand(const std::string& input) {
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    // Expect: DESCRIBE <field_name>
+    if (tokens.size() < 2) {
+        std::cerr << "Error: DESCRIBE command requires a field name\n";
+        std::cerr << "Usage: DESCRIBE <field_name>\n";
+        std::cerr << "Examples:\n";
+        std::cerr << "  DESCRIBE 30_001          -- Show info for shortcut\n";
+        std::cerr << "  DESCRIBE S21_G00_30_001  -- Show info for full name\n";
+        std::cerr << "  DESCRIBE S21_G00_30      -- Show all fields in bloc\n";
+        return true;
+    }
+
+    // Check if we're in DSN mode
+    if (!context_.isDsnMode()) {
+        std::cerr << "Error: DESCRIBE command is only available in DSN mode\n";
+        std::cerr << "Use: SET MODE DSN\n";
+        return true;
+    }
+
+    // Check if DSN schema is loaded
+    if (!context_.hasDsnSchema()) {
+        std::cerr << "Error: DSN schema not loaded\n";
+        std::cerr << "Please set XSD path to a DSN schema file first\n";
+        std::cerr << "Example: SET XSD ./ariane-xml-schemas/xsd_P26/mensuelle\\ P26/\n";
+        return true;
+    }
+
+    // Get the field name from tokens
+    std::string fieldName;
+    for (size_t i = 1; i < tokens.size(); ++i) {
+        if (tokens[i].type == TokenType::END_OF_INPUT) {
+            break;
+        }
+        if (!fieldName.empty() && tokens[i].type != TokenType::DOT &&
+            tokens[i-1].type != TokenType::DOT) {
+            fieldName += "_";
+        }
+        fieldName += tokens[i].value;
+    }
+
+    if (fieldName.empty()) {
+        std::cerr << "Error: Field name cannot be empty\n";
+        return true;
+    }
+
+    auto schema = context_.getDsnSchema();
+
+    // Check if it's a shortcut pattern (YY_ZZZ)
+    std::regex shortcutPattern(R"(^\d{2,}_\d{3,}$)");
+    bool isShortcut = std::regex_match(fieldName, shortcutPattern);
+
+    // Check if it's a bloc pattern (SXX_GXX_YY or SXX.GXX.YY)
+    std::regex blocPattern(R"(^S\d+[._]G\d+[._]\d+$)");
+    bool isBloc = std::regex_match(fieldName, blocPattern);
+
+    if (isShortcut) {
+        // Look up by shortcut
+        auto attributes = schema->findByShortId(fieldName);
+
+        if (attributes.empty()) {
+            std::cerr << "No DSN field found with shortcut: " << fieldName << "\n";
+            return true;
+        }
+
+        if (attributes.size() == 1) {
+            // Display single attribute
+            const auto& attr = attributes[0];
+            displayAttribute(attr);
+        } else {
+            // Multiple matches - show all
+            std::cout << "Multiple fields found with shortcut '" << fieldName << "':\n\n";
+            for (size_t i = 0; i < attributes.size(); ++i) {
+                std::cout << "[" << (i+1) << "] ";
+                displayAttribute(attributes[i]);
+                if (i < attributes.size() - 1) {
+                    std::cout << "\n";
+                }
+            }
+        }
+    } else if (isBloc) {
+        // Convert dot notation to underscore if needed
+        std::string blocName = fieldName;
+        std::replace(blocName.begin(), blocName.end(), '_', '.');
+
+        const DsnBloc* bloc = schema->findBloc(blocName);
+
+        if (!bloc) {
+            std::cerr << "No DSN bloc found: " << fieldName << "\n";
+            return true;
+        }
+
+        displayBloc(*bloc);
+    } else {
+        // Try to find by full name
+        const DsnAttribute* attr = schema->findByFullName(fieldName);
+
+        if (!attr) {
+            std::cerr << "No DSN field found: " << fieldName << "\n";
+            std::cerr << "Use shortcut notation (e.g., 30_001) or full name (e.g., S21_G00_30_001)\n";
+            return true;
+        }
+
+        displayAttribute(*attr);
+    }
+
+    return true;
+}
+
+void CommandHandler::displayAttribute(const DsnAttribute& attr) {
+    std::cout << "╔═══════════════════════════════════════════════════════════════════\n";
+    std::cout << "║ DSN Field Information\n";
+    std::cout << "╠═══════════════════════════════════════════════════════════════════\n";
+    std::cout << "║ Full Name:    " << attr.full_name << "\n";
+    std::cout << "║ Shortcut:     " << attr.short_id << "\n";
+    std::cout << "║ Bloc:         " << attr.bloc_name;
+    if (!attr.bloc_label.empty()) {
+        std::cout << " (" << attr.bloc_label << ")";
+    }
+    std::cout << "\n";
+
+    if (!attr.description.empty()) {
+        std::cout << "║ Description:  " << attr.description << "\n";
+    }
+
+    std::cout << "║ Type:         " << attr.type << "\n";
+    std::cout << "║ Mandatory:    " << (attr.mandatory ? "Yes" : "No") << "\n";
+    std::cout << "║ Occurrences:  " << attr.min_occurs << ".."
+              << (attr.max_occurs == -1 ? "*" : std::to_string(attr.max_occurs)) << "\n";
+
+    if (!attr.versions.empty()) {
+        std::cout << "║ Versions:     ";
+        for (size_t i = 0; i < attr.versions.size(); ++i) {
+            std::cout << attr.versions[i];
+            if (i < attr.versions.size() - 1) std::cout << ", ";
+        }
+        std::cout << "\n";
+    }
+
+    std::cout << "╚═══════════════════════════════════════════════════════════════════\n";
+}
+
+void CommandHandler::displayBloc(const DsnBloc& bloc) {
+    std::cout << "╔═══════════════════════════════════════════════════════════════════\n";
+    std::cout << "║ DSN Bloc Information\n";
+    std::cout << "╠═══════════════════════════════════════════════════════════════════\n";
+    std::cout << "║ Bloc Name:    " << bloc.name << "\n";
+    std::cout << "║ Label:        " << bloc.label << "\n";
+
+    if (!bloc.description.empty()) {
+        std::cout << "║ Description:  " << bloc.description << "\n";
+    }
+
+    std::cout << "║ Mandatory:    " << (bloc.mandatory ? "Yes" : "No") << "\n";
+    std::cout << "║ Occurrences:  " << bloc.min_occurs << ".."
+              << (bloc.max_occurs == -1 ? "*" : std::to_string(bloc.max_occurs)) << "\n";
+    std::cout << "║\n";
+    std::cout << "║ Fields in this bloc:\n";
+    std::cout << "╠═══════════════════════════════════════════════════════════════════\n";
+
+    for (const auto& attr : bloc.attributes) {
+        std::cout << "║ • " << attr.short_id << " (" << attr.full_name << ")\n";
+        if (!attr.description.empty()) {
+            std::cout << "║   " << attr.description << "\n";
+        }
+        std::cout << "║   Type: " << attr.type
+                  << ", Mandatory: " << (attr.mandatory ? "Yes" : "No") << "\n";
+    }
+
+    std::cout << "╚═══════════════════════════════════════════════════════════════════\n";
 }
 
 } // namespace ariane_xml

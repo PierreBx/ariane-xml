@@ -45,6 +45,7 @@ set(SOURCES
     src/dsn/dsn_schema.cpp
     src/dsn/dsn_parser.cpp
     src/dsn/dsn_query_rewriter.cpp
+    src/dsn/dsn_validator.cpp
 )
 
 # Create executable
