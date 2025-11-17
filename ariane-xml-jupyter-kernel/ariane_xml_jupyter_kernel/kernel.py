@@ -41,9 +41,18 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
    • Hover effects for better readability
    • Automatic numeric/text alignment
    • Query multiple files with wildcards (*.xml)
+   • DSN MODE for French DSN files (P25/P26)
 
 📝 Quick Example (try it now!):
    SELECT name, price FROM ariane-xml-examples/test.xml WHERE price < 6
+
+🇫🇷 DSN MODE (for French DSN files):
+   SET MODE DSN              -- Enable DSN mode
+   SET DSN_VERSION P26       -- Use P26 schema
+   SELECT 01_001, 01_003 FROM ./dsn.xml  -- Query with shortcuts
+   DESCRIBE 01_001           -- Show field documentation
+   TEMPLATE LIST             -- List query templates
+   COMPARE P25 P26           -- Compare schema versions
 
 💡 Tips:
    • Press Shift+Enter to run a cell
@@ -60,6 +69,10 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         super().__init__(**kwargs)
         self.ariane_xml_path = self._find_ariane_xml()
         self.working_directory = self._find_working_directory()
+
+        # DSN MODE state tracking
+        self.dsn_mode = False
+        self.dsn_version = None  # None, 'P25', 'P26', or 'AUTO'
 
     def _find_ariane_xml(self) -> str:
         """Locate the Ariane-XML executable"""
@@ -119,6 +132,49 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # For Docker or system-installed versions, use current directory
         return os.getcwd()
 
+    def _is_dsn_command(self, query: str) -> bool:
+        """Check if the query is a DSN-specific command"""
+        query_upper = query.strip().upper()
+        dsn_keywords = [
+            'SET MODE DSN',
+            'SET MODE STANDARD',
+            'SHOW MODE',
+            'SET DSN_VERSION',
+            'SHOW DSN_SCHEMA',
+            'DESCRIBE ',
+            'TEMPLATE ',
+            'COMPARE P',
+        ]
+        return any(query_upper.startswith(kw) for kw in dsn_keywords)
+
+    def _update_dsn_state(self, query: str):
+        """Update internal DSN state based on the command"""
+        query_upper = query.strip().upper()
+
+        # Track DSN mode activation
+        if 'SET MODE DSN' in query_upper:
+            self.dsn_mode = True
+        elif 'SET MODE STANDARD' in query_upper:
+            self.dsn_mode = False
+            self.dsn_version = None
+
+        # Track DSN version
+        if 'SET DSN_VERSION' in query_upper:
+            if 'P25' in query_upper:
+                self.dsn_version = 'P25'
+            elif 'P26' in query_upper:
+                self.dsn_version = 'P26'
+            elif 'AUTO' in query_upper:
+                self.dsn_version = 'AUTO'
+
+    def _get_dsn_mode_badge(self) -> str:
+        """Get a badge showing current DSN mode status"""
+        if not self.dsn_mode:
+            return ""
+
+        version_str = f" [{self.dsn_version}]" if self.dsn_version else ""
+        return f"🇫🇷 DSN MODE{version_str}"
+
     def _execute_query(self, query: str) -> Dict[str, Any]:
         """Execute an Ariane-XML query and return the result"""
         try:
@@ -172,7 +228,87 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'error': f'💥 Unexpected error: {str(e)}'
             }
 
-    def _format_output(self, output: str, is_error: bool = False) -> Dict[str, Any]:
+    def _format_dsn_describe_output(self, output: str) -> str:
+        """Format DESCRIBE command output with enhanced styling"""
+        lines = output.strip().split('\n')
+        html = ['<div style="font-family: monospace; background: #f6f8fa; padding: 15px; border-radius: 6px; border-left: 4px solid #0366d6;">']
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Highlight field labels
+            if ':' in line:
+                parts = line.split(':', 1)
+                label = parts[0].strip()
+                value = parts[1].strip() if len(parts) > 1 else ''
+                html.append(f'<div style="margin: 4px 0;"><strong style="color: #0366d6;">{self._escape_html(label)}:</strong> {self._escape_html(value)}</div>')
+            else:
+                html.append(f'<div style="margin: 4px 0;">{self._escape_html(line)}</div>')
+
+        html.append('</div>')
+        return ''.join(html)
+
+    def _format_dsn_template_list(self, output: str) -> str:
+        """Format TEMPLATE LIST output with enhanced styling"""
+        lines = output.strip().split('\n')
+        html = ['<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif;">']
+        html.append('<h3 style="color: #24292e; margin-top: 0;">📋 Available DSN Templates</h3>')
+        html.append('<div style="display: grid; gap: 10px;">')
+
+        current_category = None
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Detect category headers
+            if line.endswith(':') or 'Category' in line or 'Templates' in line:
+                if current_category:
+                    html.append('</div>')  # Close previous category
+                current_category = line
+                html.append(f'<div style="margin-top: 10px;"><h4 style="color: #0366d6; margin: 5px 0;">{self._escape_html(line)}</h4>')
+            elif line.startswith('-') or line.startswith('•'):
+                # Template item
+                template_name = line.lstrip('-•').strip()
+                html.append(f'<div style="padding: 8px; background: #f6f8fa; border-radius: 4px; margin: 4px 0;">{self._escape_html(template_name)}</div>')
+            else:
+                html.append(f'<div style="margin: 4px 0;">{self._escape_html(line)}</div>')
+
+        if current_category:
+            html.append('</div>')  # Close last category
+        html.append('</div></div>')
+        return ''.join(html)
+
+    def _format_dsn_compare_output(self, output: str) -> str:
+        """Format COMPARE command output with enhanced styling"""
+        lines = output.strip().split('\n')
+        html = ['<div style="font-family: monospace; padding: 15px; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px;">']
+        html.append('<h3 style="color: #24292e; margin-top: 0;">📊 DSN Schema Comparison</h3>')
+
+        for line in lines:
+            line_stripped = line.strip()
+            if not line_stripped:
+                html.append('<br/>')
+                continue
+
+            # Color-code different types of changes
+            if line_stripped.startswith('+'):
+                html.append(f'<div style="color: #28a745; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+            elif line_stripped.startswith('-'):
+                html.append(f'<div style="color: #d73a49; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+            elif line_stripped.startswith('≠') or 'Modified' in line_stripped:
+                html.append(f'<div style="color: #f9826c; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+            elif line_stripped.startswith('Summary') or line_stripped.startswith('Total'):
+                html.append(f'<div style="font-weight: bold; color: #0366d6; margin: 8px 0;">{self._escape_html(line_stripped)}</div>')
+            else:
+                html.append(f'<div style="margin: 2px 0;">{self._escape_html(line_stripped)}</div>')
+
+        html.append('</div>')
+        return ''.join(html)
+
+    def _format_output(self, output: str, is_error: bool = False, query: str = '') -> Dict[str, Any]:
         """
         Format output with rich HTML tables
 
@@ -184,6 +320,30 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         # Preserve the plain text version
         plain_output = output
+
+        # Enhanced formatting for DSN-specific commands
+        query_upper = query.strip().upper()
+
+        if 'DESCRIBE' in query_upper and self.dsn_mode:
+            html = self._format_dsn_describe_output(output)
+            return {
+                'text/html': html,
+                'text/plain': plain_output
+            }
+
+        if 'TEMPLATE LIST' in query_upper:
+            html = self._format_dsn_template_list(output)
+            return {
+                'text/html': html,
+                'text/plain': plain_output
+            }
+
+        if 'COMPARE' in query_upper and ('P25' in query_upper or 'P26' in query_upper):
+            html = self._format_dsn_compare_output(output)
+            return {
+                'text/html': html,
+                'text/plain': plain_output
+            }
 
         # Try to parse as table
         lines = output.strip().split('\n')
@@ -364,14 +524,22 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'user_expressions': {}
             }
 
-        # Show execution status
+        # Update DSN state if this is a DSN command
+        if self._is_dsn_command(code):
+            self._update_dsn_state(code)
+
+        # Show execution status with DSN mode badge
         if not silent:
+            mode_badge = self._get_dsn_mode_badge()
+            status_msg = '⚡ Executing query...'
+            if mode_badge:
+                status_msg = f'{mode_badge} ⚡ Executing query...'
             self.send_response(
                 self.iopub_socket,
                 'stream',
                 {
                     'name': 'stdout',
-                    'text': '⚡ Executing query...\n'
+                    'text': f'{status_msg}\n'
                 }
             )
 
@@ -384,7 +552,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             if result['success']:
                 # Send formatted output
                 if result['output']:
-                    display_data = self._format_output(result['output'])
+                    display_data = self._format_output(result['output'], query=code)
                     self.send_response(
                         self.iopub_socket,
                         'display_data',
@@ -404,18 +572,27 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                     )
                 else:
                     # Query succeeded but produced no output - provide helpful feedback
+                    help_msg = f'\n✓ Query executed successfully (no output) - {execution_time_ms:.1f} ms\n\n'
+                    help_msg += '💡 Possible reasons:\n'
+                    help_msg += '   • File path not found\n'
+                    help_msg += '   • Query syntax may be incorrect\n'
+                    help_msg += '   • No data matched your WHERE clause\n'
+                    help_msg += '   • Empty XML file\n\n'
+                    help_msg += 'Tip: Check your file path and query syntax.'
+
+                    # Add DSN-specific help if in DSN mode
+                    if self.dsn_mode:
+                        help_msg += '\n\n🇫🇷 DSN MODE Tips:\n'
+                        help_msg += '   • Use "DESCRIBE <field>" to see field documentation\n'
+                        help_msg += '   • Use "TEMPLATE LIST" to see available query templates\n'
+                        help_msg += '   • Check DSN version with "SHOW DSN_SCHEMA"\n'
+
                     self.send_response(
                         self.iopub_socket,
                         'stream',
                         {
                             'name': 'stdout',
-                            'text': f'\n✓ Query executed successfully (no output) - {execution_time_ms:.1f} ms\n\n' +
-                                   '💡 Possible reasons:\n' +
-                                   '   • File path not found\n' +
-                                   '   • Query syntax may be incorrect\n' +
-                                   '   • No data matched your WHERE clause\n' +
-                                   '   • Empty XML file\n\n' +
-                                   'Tip: Check your file path and query syntax.'
+                            'text': help_msg
                         }
                     )
             else:
