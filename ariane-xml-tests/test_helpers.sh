@@ -129,8 +129,8 @@ init_tests() {
         chmod +x "$ARIANE_XML_BIN"
     fi
 
-    # Record start time
-    TEST_START_TIME=$(date +%s)
+    # Record start time (with milliseconds)
+    TEST_START_TIME=$(date +%s.%N)
 }
 
 # Print test category header
@@ -267,8 +267,8 @@ run_validation_test() {
 
 # Print test summary
 print_summary() {
-    local end_time=$(date +%s)
-    local duration=$((end_time - TEST_START_TIME))
+    local end_time=$(date +%s.%N)
+    local duration=$(awk "BEGIN {print $end_time - $TEST_START_TIME}")
 
     echo ""
     echo -e "${COLOR_BOLD}${COLOR_CYAN}╔════════════════════════════════════════════════════════════════╗${COLOR_RESET}"
@@ -279,7 +279,7 @@ print_summary() {
     printf "  %-20s %d\n" "Total Tests:" "$TESTS_TOTAL"
     printf "  %-20s ${COLOR_GREEN}%d${COLOR_RESET}\n" "Passed:" "$TESTS_PASSED"
     printf "  %-20s ${COLOR_RED}%d${COLOR_RESET}\n" "Failed:" "$TESTS_FAILED"
-    printf "  %-20s %d seconds\n" "Duration:" "$duration"
+    printf "  %-20s %.3f seconds\n" "Duration:" "$duration"
     echo ""
 
     # Calculate success rate
