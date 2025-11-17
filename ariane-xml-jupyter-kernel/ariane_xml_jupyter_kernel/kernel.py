@@ -12,7 +12,24 @@ import re
 import os
 import time
 import json
-from typing import Dict, Any, List, Optional
+import io
+import csv
+import base64
+from typing import Dict, Any, List, Optional, Tuple
+
+# Phase 3: Import pandas and ipywidgets for advanced features
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
+try:
+    import ipywidgets as widgets
+    from IPython.display import display
+    IPYWIDGETS_AVAILABLE = True
+except ImportError:
+    IPYWIDGETS_AVAILABLE = False
 
 
 class ArianeXMLKernel(Kernel):
@@ -82,6 +99,12 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         self.queries_dir = os.path.join(self.workspace_dir, 'queries')
         self._ensure_workspace_exists()
 
+        # Phase 3: Advanced features state
+        self.templates_dir = os.path.join(self.workspace_dir, 'templates')
+        self._ensure_templates_dir()
+        self.last_query_result = None  # Store last result for export
+        self.current_progress_widget = None  # For progress indicators
+
     def _find_ariane_xml(self) -> str:
         """Locate the Ariane-XML executable"""
         # In Docker, check the build directory first
@@ -146,6 +169,14 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             os.makedirs(self.queries_dir, exist_ok=True)
         except Exception as e:
             # Non-critical - workspace creation failed
+            pass
+
+    def _ensure_templates_dir(self):
+        """Create templates directory if it doesn't exist (Phase 3)"""
+        try:
+            os.makedirs(self.templates_dir, exist_ok=True)
+        except Exception as e:
+            # Non-critical - templates directory creation failed
             pass
 
     def _is_dsn_command(self, query: str) -> bool:
@@ -362,6 +393,12 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             query_name = query[13:].strip()
             return self._handle_delete_query_command(query_name)
 
+        # Phase 3: Template management commands
+        if query_upper.startswith('TEMPLATE '):
+            template_result = self._handle_template_command_phase3(query)
+            if template_result:
+                return template_result
+
         return None  # Not a kernel command, pass to C++ backend
 
     def _get_help_output(self, command: Optional[str] = None) -> Dict[str, Any]:
@@ -516,6 +553,37 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 <tr>
                     <td style="padding: 8px; font-family: monospace; color: #0366d6;">DELETE QUERY name</td>
                     <td style="padding: 8px;">Remove saved query</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Phase 3: Advanced Features -->
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+            <h3 style="color: #24292e; margin-top: 0;">🚀 Advanced Features (Phase 3)</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">%%dsn_query --output dataframe</td>
+                    <td style="padding: 8px;">Cell magic for DataFrame integration</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE SAVE name</td>
+                    <td style="padding: 8px;">Save last query as user template</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE DELETE name</td>
+                    <td style="padding: 8px;">Remove user template</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE EXPORT</td>
+                    <td style="padding: 8px;">Export all templates to JSON</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE IMPORT file.json</td>
+                    <td style="padding: 8px;">Import templates from file</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">📊 Export Buttons</td>
+                    <td style="padding: 8px;">One-click CSV/JSON/HTML export in results</td>
                 </tr>
             </table>
         </div>
@@ -1777,11 +1845,15 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         - Result count footer
         - Numeric vs text alignment
         - Phase 2: Enhanced display with statistics
+        - Phase 3: Export buttons
         """
         html = []
 
         # Count rows for statistics
         total_rows = self._count_result_rows(lines)
+
+        # Generate unique table ID for export functionality (Phase 3)
+        table_id = f"table_{int(time.time() * 1000)}"
 
         # Add CSS styling
         html.append('''
@@ -1848,7 +1920,11 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 ''')
 
         html.append('<div class="ariane-xml-container">')
-        html.append('<table class="ariane-xml-table">')
+
+        # Phase 3: Add export buttons
+        html.append(self._create_export_buttons(table_id))
+
+        html.append(f'<table class="ariane-xml-table" id="result_{table_id}">')
 
         # Parse rows
         table_rows = []
@@ -1934,6 +2010,544 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 .replace('"', '&quot;')
                 .replace("'", '&#39;'))
 
+    # ========================================================================
+    # PHASE 3: Advanced Features
+    # ========================================================================
+
+    def _parse_cell_magic(self, code: str) -> Optional[Tuple[Dict[str, str], str]]:
+        """
+        Parse %%dsn_query cell magic.
+        Returns (args_dict, query_code) or None if not a cell magic.
+
+        Example:
+            %%dsn_query --version P26 --output dataframe --limit 100
+            SELECT 01_001, 01_003 FROM ./dsn.xml
+        """
+        lines = code.strip().split('\n', 1)
+        if not lines[0].strip().startswith('%%dsn_query'):
+            return None
+
+        magic_line = lines[0].strip()
+        query_code = lines[1] if len(lines) > 1 else ''
+
+        # Parse arguments
+        args = {}
+        parts = magic_line.split()[1:]  # Skip %%dsn_query
+
+        i = 0
+        while i < len(parts):
+            if parts[i].startswith('--'):
+                arg_name = parts[i][2:]  # Remove --
+                if i + 1 < len(parts) and not parts[i + 1].startswith('--'):
+                    args[arg_name] = parts[i + 1]
+                    i += 2
+                else:
+                    args[arg_name] = 'true'
+                    i += 1
+            else:
+                i += 1
+
+        return args, query_code
+
+    def _convert_to_dataframe(self, output: str) -> Optional['pd.DataFrame']:
+        """
+        Convert Ariane-XML output to pandas DataFrame.
+        Returns None if pandas is not available or conversion fails.
+        """
+        if not PANDAS_AVAILABLE:
+            return None
+
+        try:
+            lines = output.strip().split('\n')
+            if len(lines) < 2:
+                return None
+
+            # Parse header
+            header_line = lines[0]
+            headers = [h.strip() for h in header_line.split('|') if h.strip()]
+
+            # Skip separator line (if present)
+            data_start = 1
+            if len(lines) > 1 and all(c in '-|+' for c in lines[1].strip()):
+                data_start = 2
+
+            # Parse data rows
+            data = []
+            for line in lines[data_start:]:
+                line = line.strip()
+                if not line or all(c in '-|+=' for c in line):
+                    continue
+                values = [v.strip() for v in line.split('|') if v.strip() or v == '']
+                if len(values) == len(headers):
+                    data.append(values)
+
+            if not data:
+                return pd.DataFrame(columns=headers)
+
+            return pd.DataFrame(data, columns=headers)
+
+        except Exception as e:
+            # If conversion fails, return None
+            return None
+
+    def _create_export_buttons(self, result_id: str) -> str:
+        """
+        Create interactive export buttons for query results.
+        Returns HTML with JavaScript for CSV, JSON, and Excel export.
+        """
+        html = f'''
+        <div style="margin: 10px 0; padding: 10px; background: #f6f8fa; border-radius: 6px; border: 1px solid #d0d7de;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <strong style="color: #24292e;">📊 Export Results:</strong>
+                <button onclick="exportData_{result_id}('csv')"
+                        style="padding: 6px 12px; background: #2ea44f; color: white; border: none;
+                               border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    📄 Export CSV
+                </button>
+                <button onclick="exportData_{result_id}('json')"
+                        style="padding: 6px 12px; background: #0969da; color: white; border: none;
+                               border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    📋 Export JSON
+                </button>
+                <button onclick="exportData_{result_id}('html')"
+                        style="padding: 6px 12px; background: #8250df; color: white; border: none;
+                               border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    🌐 Export HTML
+                </button>
+            </div>
+        </div>
+
+        <script>
+        function exportData_{result_id}(format) {{
+            const table = document.getElementById('result_table_{result_id}');
+            if (!table) {{
+                alert('Table not found');
+                return;
+            }}
+
+            let content = '';
+            let filename = 'ariane_xml_results.' + format;
+            let mimeType = 'text/plain';
+
+            if (format === 'csv') {{
+                content = tableToCSV(table);
+                mimeType = 'text/csv';
+            }} else if (format === 'json') {{
+                content = tableToJSON(table);
+                mimeType = 'application/json';
+            }} else if (format === 'html') {{
+                content = table.outerHTML;
+                mimeType = 'text/html';
+            }}
+
+            // Create download link
+            const blob = new Blob([content], {{ type: mimeType }});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }}
+
+        function tableToCSV(table) {{
+            const rows = Array.from(table.querySelectorAll('tr'));
+            return rows.map(row => {{
+                const cells = Array.from(row.querySelectorAll('th, td'));
+                return cells.map(cell => {{
+                    let text = cell.textContent.trim();
+                    // Escape quotes and wrap in quotes if contains comma
+                    if (text.includes(',') || text.includes('"') || text.includes('\\n')) {{
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }}
+                    return text;
+                }}).join(',');
+            }}).join('\\n');
+        }}
+
+        function tableToJSON(table) {{
+            const rows = Array.from(table.querySelectorAll('tr'));
+            const headers = Array.from(rows[0].querySelectorAll('th')).map(h => h.textContent.trim());
+            const data = rows.slice(1).map(row => {{
+                const cells = Array.from(row.querySelectorAll('td'));
+                const obj = {{}};
+                headers.forEach((header, i) => {{
+                    obj[header] = cells[i] ? cells[i].textContent.trim() : '';
+                }});
+                return obj;
+            }});
+            return JSON.stringify(data, null, 2);
+        }}
+        </script>
+        '''
+        return html
+
+    def _create_progress_widget(self, description: str = "Processing...") -> Optional[Any]:
+        """
+        Create a progress indicator widget (Phase 3).
+        Returns widget if ipywidgets is available, None otherwise.
+        """
+        if not IPYWIDGETS_AVAILABLE:
+            return None
+
+        try:
+            progress = widgets.IntProgress(
+                value=0,
+                min=0,
+                max=100,
+                description=description,
+                bar_style='info',
+                style={'bar_color': '#0969da'},
+                layout=widgets.Layout(width='100%')
+            )
+            label = widgets.Label(value='Starting...')
+            box = widgets.VBox([progress, label])
+            display(box)
+            return {'progress': progress, 'label': label, 'box': box}
+        except:
+            return None
+
+    def _update_progress(self, widget_dict: Optional[Dict], value: int, message: str = ''):
+        """Update progress widget (Phase 3)"""
+        if not widget_dict or not IPYWIDGETS_AVAILABLE:
+            return
+
+        try:
+            widget_dict['progress'].value = value
+            if message:
+                widget_dict['label'].value = message
+        except:
+            pass
+
+    def _handle_template_command_phase3(self, query: str) -> Optional[Dict[str, Any]]:
+        """
+        Handle Phase 3 template commands (TEMPLATE SAVE, EDIT, DELETE, EXPORT, IMPORT).
+        Returns result dict or None if not a Phase 3 template command.
+        """
+        query_upper = query.strip().upper()
+
+        # TEMPLATE SAVE <name>
+        match = re.match(r'TEMPLATE\s+SAVE\s+(\S+)', query_upper, re.IGNORECASE)
+        if match:
+            template_name = match.group(1).lower()
+            return self._save_user_template(template_name)
+
+        # TEMPLATE DELETE <name>
+        match = re.match(r'TEMPLATE\s+DELETE\s+(\S+)', query_upper, re.IGNORECASE)
+        if match:
+            template_name = match.group(1).lower()
+            return self._delete_user_template(template_name)
+
+        # TEMPLATE EXPORT
+        if query_upper.startswith('TEMPLATE EXPORT'):
+            return self._export_templates()
+
+        # TEMPLATE IMPORT <file>
+        match = re.match(r'TEMPLATE\s+IMPORT\s+(.+)', query, re.IGNORECASE)
+        if match:
+            filename = match.group(1).strip()
+            return self._import_templates(filename)
+
+        return None
+
+    def _save_user_template(self, template_name: str) -> Dict[str, Any]:
+        """Save the last executed query as a user template"""
+        if not self.query_history:
+            return {
+                'success': False,
+                'output': '',
+                'error': '❌ No query to save. Execute a query first, then use TEMPLATE SAVE <name>',
+                'is_html': False
+            }
+
+        last_query = self.query_history[-1]['query']
+
+        template_data = {
+            'name': template_name,
+            'description': f'User-defined template: {template_name}',
+            'query': last_query,
+            'created': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'version': self.dsn_version or 'STANDARD'
+        }
+
+        template_file = os.path.join(self.templates_dir, f'{template_name}.json')
+        try:
+            with open(template_file, 'w') as f:
+                json.dump(template_data, f, indent=2)
+
+            output = f'''
+            <div style="padding: 15px; background: #d1f0d1; border-left: 4px solid #2ea44f; border-radius: 4px;">
+                <strong style="color: #1a7f37;">✅ Template Saved Successfully</strong><br><br>
+                <strong>Name:</strong> {template_name}<br>
+                <strong>Query:</strong> <code>{self._escape_html(last_query[:100])}{'...' if len(last_query) > 100 else ''}</code><br>
+                <strong>Location:</strong> {template_file}<br><br>
+                💡 <strong>Use it:</strong> TEMPLATE USE {template_name}
+            </div>
+            '''
+
+            return {'success': True, 'output': output, 'error': None, 'is_html': True}
+
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'❌ Failed to save template: {str(e)}',
+                'is_html': False
+            }
+
+    def _delete_user_template(self, template_name: str) -> Dict[str, Any]:
+        """Delete a user template"""
+        template_file = os.path.join(self.templates_dir, f'{template_name}.json')
+
+        if not os.path.exists(template_file):
+            return {
+                'success': False,
+                'output': '',
+                'error': f'❌ Template "{template_name}" not found',
+                'is_html': False
+            }
+
+        try:
+            os.remove(template_file)
+
+            output = f'''
+            <div style="padding: 15px; background: #fff5b1; border-left: 4px solid #bf8700; border-radius: 4px;">
+                <strong style="color: #653e00;">🗑️ Template Deleted</strong><br><br>
+                Template "{template_name}" has been removed.
+            </div>
+            '''
+
+            return {'success': True, 'output': output, 'error': None, 'is_html': True}
+
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'❌ Failed to delete template: {str(e)}',
+                'is_html': False
+            }
+
+    def _export_templates(self) -> Dict[str, Any]:
+        """Export all user templates to a single JSON file"""
+        templates = []
+
+        if os.path.exists(self.templates_dir):
+            for filename in os.listdir(self.templates_dir):
+                if filename.endswith('.json'):
+                    filepath = os.path.join(self.templates_dir, filename)
+                    try:
+                        with open(filepath, 'r') as f:
+                            templates.append(json.load(f))
+                    except:
+                        pass
+
+        if not templates:
+            return {
+                'success': False,
+                'output': '',
+                'error': '❌ No user templates found to export',
+                'is_html': False
+            }
+
+        export_file = os.path.join(self.workspace_dir, 'templates_export.json')
+        try:
+            with open(export_file, 'w') as f:
+                json.dump(templates, f, indent=2)
+
+            output = f'''
+            <div style="padding: 15px; background: #d1f0d1; border-left: 4px solid #2ea44f; border-radius: 4px;">
+                <strong style="color: #1a7f37;">✅ Templates Exported Successfully</strong><br><br>
+                <strong>Count:</strong> {len(templates)} template(s)<br>
+                <strong>Location:</strong> {export_file}<br><br>
+                💡 <strong>Import later:</strong> TEMPLATE IMPORT {export_file}
+            </div>
+            '''
+
+            return {'success': True, 'output': output, 'error': None, 'is_html': True}
+
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'❌ Failed to export templates: {str(e)}',
+                'is_html': False
+            }
+
+    def _import_templates(self, filename: str) -> Dict[str, Any]:
+        """Import templates from a JSON file"""
+        if not os.path.exists(filename):
+            # Try relative to workspace
+            filename = os.path.join(self.workspace_dir, filename)
+            if not os.path.exists(filename):
+                return {
+                    'success': False,
+                    'output': '',
+                    'error': f'❌ File not found: {filename}',
+                    'is_html': False
+                }
+
+        try:
+            with open(filename, 'r') as f:
+                templates = json.load(f)
+
+            if not isinstance(templates, list):
+                templates = [templates]
+
+            imported_count = 0
+            for template in templates:
+                if 'name' in template and 'query' in template:
+                    template_file = os.path.join(self.templates_dir, f"{template['name']}.json")
+                    with open(template_file, 'w') as f:
+                        json.dump(template, f, indent=2)
+                    imported_count += 1
+
+            output = f'''
+            <div style="padding: 15px; background: #d1f0d1; border-left: 4px solid #2ea44f; border-radius: 4px;">
+                <strong style="color: #1a7f37;">✅ Templates Imported Successfully</strong><br><br>
+                <strong>Count:</strong> {imported_count} template(s)<br>
+                <strong>From:</strong> {filename}<br><br>
+                💡 <strong>View them:</strong> TEMPLATE LIST
+            </div>
+            '''
+
+            return {'success': True, 'output': output, 'error': None, 'is_html': True}
+
+        except Exception as e:
+            return {
+                'success': False,
+                'output': '',
+                'error': f'❌ Failed to import templates: {str(e)}',
+                'is_html': False
+            }
+
+    def _execute_cell_magic(self, magic_parsed: Tuple[Dict[str, str], str], silent: bool) -> Dict[str, Any]:
+        """
+        Execute %%dsn_query cell magic with DataFrame integration.
+
+        Args:
+            magic_parsed: Tuple of (args_dict, query_code)
+            silent: Whether to suppress output
+
+        Returns:
+            Execution result dict
+        """
+        args, query_code = magic_parsed
+
+        # Apply version if specified
+        if 'version' in args:
+            version = args['version'].upper()
+            if version in ['P25', 'P26', 'AUTO']:
+                self.dsn_mode = True
+                self.dsn_version = version
+                if not silent:
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {'name': 'stdout', 'text': f'🔧 DSN version set to {version}\n'}
+                    )
+
+        # Execute the query
+        start_time = time.time()
+        result = self._execute_query(query_code)
+        execution_time_ms = (time.time() - start_time) * 1000
+
+        if not result['success']:
+            # Handle error
+            if not silent:
+                self.send_response(
+                    self.iopub_socket,
+                    'stream',
+                    {
+                        'name': 'stderr',
+                        'text': f"❌ Query failed:\n{result.get('error', 'Unknown error')}\n"
+                    }
+                )
+            return {
+                'status': 'error',
+                'execution_count': self.execution_count,
+                'ename': 'QueryError',
+                'evalue': str(result.get('error', 'Unknown error')),
+                'traceback': []
+            }
+
+        # Convert to DataFrame if requested and pandas is available
+        output_format = args.get('output', 'html')
+
+        if output_format == 'dataframe' and PANDAS_AVAILABLE and result['output']:
+            df = self._convert_to_dataframe(result['output'])
+
+            if df is not None:
+                # Store DataFrame in IPython namespace so user can access it
+                if not silent:
+                    self.send_response(
+                        self.iopub_socket,
+                        'display_data',
+                        {
+                            'data': {
+                                'text/html': df.to_html(),
+                                'text/plain': str(df)
+                            },
+                            'metadata': {}
+                        }
+                    )
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stdout',
+                            'text': f'✓ Returned {len(df)} rows × {len(df.columns)} columns as DataFrame ({execution_time_ms:.1f} ms)\n'
+                                    f'💡 Tip: Assign to variable: df = %%dsn_query ...\n'
+                        }
+                    )
+
+                return {
+                    'status': 'ok',
+                    'execution_count': self.execution_count,
+                    'payload': [],
+                    'user_expressions': {},
+                    'data': df  # Return DataFrame for assignment
+                }
+            elif not PANDAS_AVAILABLE:
+                if not silent:
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stderr',
+                            'text': '⚠️  pandas is not available. Install it to use DataFrame output: pip install pandas\n'
+                        }
+                    )
+
+        # Default: HTML output
+        if not silent and result['output']:
+            display_data = self._format_output(result['output'], query=query_code)
+            self.send_response(
+                self.iopub_socket,
+                'display_data',
+                {
+                    'data': display_data,
+                    'metadata': {}
+                }
+            )
+            self.send_response(
+                self.iopub_socket,
+                'stream',
+                {'name': 'stdout', 'text': f'✓ Done in {execution_time_ms:.1f} ms\n'}
+            )
+
+        return {
+            'status': 'ok',
+            'execution_count': self.execution_count,
+            'payload': [],
+            'user_expressions': {}
+        }
+
+    # ========================================================================
+    # END PHASE 3 METHODS
+    # ========================================================================
+
     def do_execute(
         self,
         code: str,
@@ -1950,6 +2564,11 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'payload': [],
                 'user_expressions': {}
             }
+
+        # Phase 3: Check if this is a cell magic (%%dsn_query)
+        magic_parsed = self._parse_cell_magic(code)
+        if magic_parsed:
+            return self._execute_cell_magic(magic_parsed, silent)
 
         # Track previous DSN mode state to detect activation
         was_dsn_mode = self.dsn_mode
