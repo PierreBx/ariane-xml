@@ -4,12 +4,15 @@
 #include "generator/xml_generator.h"
 #include "validator/xml_validator.h"
 #include "dsn/dsn_schema.h"
+#include "dsn/dsn_parser.h"
+#include "dsn/dsn_validator.h"
 #include "dsn/dsn_templates.h"
 #include "dsn/dsn_migration.h"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <regex>
 
 namespace ariane_xml {
 
@@ -190,9 +193,81 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
 }
 
 void CommandHandler::setXsdPath(const std::string& path) {
+    // Check if path exists
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "Error: Path does not exist: " << path << "\n";
+        return;
+    }
+
+    // Handle directories (for DSN schemas with multiple XSD files)
+    if (std::filesystem::is_directory(path)) {
+        if (context_.isDsnMode()) {
+            // Try to parse as DSN schema directory
+            std::cout << "Parsing DSN schema directory: " << path << "\n";
+
+            // Auto-detect version from path (P25, P26, etc.)
+            std::string version = context_.getDsnVersion();
+            if (version == "AUTO") {
+                if (path.find("P26") != std::string::npos) {
+                    version = "P26";
+                } else if (path.find("P25") != std::string::npos) {
+                    version = "P25";
+                } else {
+                    version = "P26"; // Default to latest
+                }
+                context_.setDsnVersion(version);
+                std::cout << "Auto-detected DSN version: " << version << "\n";
+            }
+
+            // Parse the DSN schema
+            try {
+                auto schema = DsnParser::parseDirectory(path, version);
+                context_.setDsnSchema(schema);
+                context_.setXsdPath(path);
+                std::cout << "DSN schema loaded successfully\n";
+                std::cout << "  Attributes: " << schema->getAttributes().size() << "\n";
+                std::cout << "  Blocs: " << schema->getBlocs().size() << "\n";
+            } catch (const std::exception& e) {
+                std::cerr << "Error loading DSN schema: " << e.what() << "\n";
+            }
+        } else {
+            std::cerr << "Error: Directory paths are only supported in DSN mode\n";
+            std::cerr << "Use: SET MODE DSN\n";
+        }
+        return;
+    }
+
+    // Handle single XSD files
     if (validateXsdFile(path)) {
         context_.setXsdPath(path);
         std::cout << "XSD path set to: " << path << "\n";
+
+        // If in DSN mode, try to parse as DSN schema
+        if (context_.isDsnMode()) {
+            std::cout << "Parsing DSN schema file...\n";
+
+            std::string version = context_.getDsnVersion();
+            if (version == "AUTO") {
+                if (path.find("P26") != std::string::npos) {
+                    version = "P26";
+                } else if (path.find("P25") != std::string::npos) {
+                    version = "P25";
+                } else {
+                    version = "P26";
+                }
+                context_.setDsnVersion(version);
+                std::cout << "Auto-detected DSN version: " << version << "\n";
+            }
+
+            try {
+                auto schema = DsnParser::parse(path, version);
+                context_.setDsnSchema(schema);
+                std::cout << "DSN schema loaded successfully\n";
+                std::cout << "  Attributes: " << schema->getAttributes().size() << "\n";
+            } catch (const std::exception& e) {
+                std::cerr << "Warning: Could not parse as DSN schema: " << e.what() << "\n";
+            }
+        }
     }
 }
 
@@ -453,9 +528,35 @@ bool CommandHandler::handleCheckCommand(const std::string& input) {
     std::cout << "\nValidating " << files.size() << " file(s) against XSD: "
               << xsdPath << "\n\n";
 
-    // Validate all files
+    // Validate all files with XSD
     XmlValidator validator;
     auto results = validator.validateFiles(files, xsdPath);
+
+    // If in DSN mode and schema is loaded, perform DSN-specific validation
+    if (context_.isDsnMode() && context_.hasDsnSchema()) {
+        std::cout << "Performing DSN-specific validation...\n\n";
+
+        DsnValidator dsnValidator(context_.getDsnSchema());
+
+        // Perform DSN validation on each file
+        for (auto& [filename, xsdResult] : results) {
+            auto dsnResult = dsnValidator.validate(filename);
+
+            // Add DSN errors
+            for (const auto& dsnError : dsnResult.errors) {
+                ValidationError error;
+                error.message = "[DSN] " + dsnError.message;
+                error.path = dsnError.field;
+                xsdResult.errors.push_back(error);
+                xsdResult.isValid = false;
+            }
+
+            // Add DSN warnings
+            for (const auto& warning : dsnResult.warnings) {
+                xsdResult.warnings.push_back("[DSN] " + warning);
+            }
+        }
+    }
 
     // Display results
     int validCount = 0;
