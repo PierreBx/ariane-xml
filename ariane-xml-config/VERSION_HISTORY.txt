@@ -2,6 +2,69 @@
                         ARIANE-XML VERSION HISTORY
 ================================================================================
 
+v0.9.68 | 2025-11-17 | 36fe5c7 | Merge pull request #80 from PierreBx/claude/organize-and-test-ui-017X7QRCoU33Vq3cVZaYW4Zk
+v0.9.67 | 2025-11-17 | f07f5a1 | Reorganize project structure and improve test UI consistency
+v0.9.66 | 2025-11-17 | cdd3545 | Merge pull request #79 from PierreBx/claude/jupyter-ux-phase-3-01KoX3jBTg4G2qG4Ps99UWit
+v0.9.65 | 2025-11-17 | 1c5de74 | Implement Phase 3 UX Enhancements for DSN MODE in Jupyter
+v0.9.64 | 2025-11-17 | 136c8a7 | Merge pull request #78 from PierreBx/claude/add-xml-manager-tests-0128Xoge4AmfUK3UK9RSwbX8
+v0.9.63 | 2025-11-17 | bd88f76 | Add comprehensive tests for DSN MODE UX Enhancements (Phase 1 & 2)
+v0.9.62 | 2025-11-17 | 9d804fd | Merge pull request #77 from PierreBx/claude/jupyter-ux-phase-2-01DcKVjnsu3Rp6RtwukGgrcR
+v0.9.61 | 2025-11-17 | dba4a34 | Implement Phase 2 UX enhancements for DSN MODE in Jupyter
+v0.9.60 | 2025-11-17 | aefc138 | Merge pull request #76 from PierreBx/claude/jupyter-ux-phase-1-01QgSsytoWyY21qumnusBbgs
+v0.9.59 | 2025-11-17 | ea63adf | Implement Phase 1 UX enhancements for DSN MODE in Jupyter
+v0.9.58 | 2025-11-17 | c4af37e | Merge pull request #75 from PierreBx/claude/merge-p0-enhancements-01AqrmGFitowZMAa81MMNcN8
+v0.9.57 | 2025-11-17 | 5a6586c | Implement P1 DSN mode features
+v0.9.56 | 2025-11-17 | 4a739bc | Merge pull request #74 from PierreBx/claude/enhance-ariane-xml-dsn-jupyter-01TXeyLeR6jTe4vSoDDZKV3X
+v0.9.55 | 2025-11-17 | 1bb9828 | Add comprehensive UX enhancement analysis for DSN MODE in Jupyter
+v0.9.54 | 2025-11-17 | e39ea63 | Merge pull request #73 from PierreBx/claude/autocompletion-bridge-01PHA2C33RjEXgEPXqhYvGwv
+v0.9.53 | 2025-11-17 | 9fb46ec | Implement autocompletion bridge between C++ and Jupyter kernel
+v0.9.52 | 2025-11-17 | fcddef8 | Merge pull request #72 from PierreBx/claude/add-dsn-mode-jupyter-01PymKPiQhZUCUzUMaMydWri
+v0.9.51 | 2025-11-17 | 59437fc | Add test script for Jupyter kernel DSN MODE detection
+v0.9.50 | 2025-11-17 | dea3526 | Add DSN MODE support to Jupyter kernel
+v0.9.49 | 2025-11-17 | cb3d809 | Merge pull request #71 from PierreBx/claude/test-dsn-autocompletion-01SEsDAuAwekiaM9RLh8eZbH
+v0.9.48 | 2025-11-17 | c3d9e94 | Integrate DSN autocomplete with readline in CLI interactive mode
+v0.9.47 | 2025-11-17 | c842c2e | Merge pull request #70 from PierreBx/claude/add-dsn-mode-tests-018q42rP1aFWHfjLHMw6Giyj
+v0.9.46 | 2025-11-17 | 21f6c72 | Add comprehensive DSN MODE test suite
+v0.9.45 | 2025-11-17 | 51c1860 | Merge pull request #69 from PierreBx/claude/dsn-mode-design-p2-01TYrxUqqAj48NqWn7h71mpt
+v0.9.44 | 2025-11-17 | 5e73f3f | Implement P2 DSN mode features
+v0.9.43 | 2025-11-17 | 6cdaafa | Merge pull request #68 from PierreBx/claude/dsn-mode-design-p0-01JJdoFjuGAHSbLoPWYSULuW
+v0.9.42 | 2025-11-17 | 7d5abdd | Implement P0 DSN mode features
+v0.9.41 | 2025-11-17 | 8c71c2d | Merge pull request #67 from PierreBx/claude/dsn-compatibility-analysis-01WGpCe8X6GRMq7Y5ZKJ543Q
+v0.9.40 | 2025-11-17 | ab25c8f | Add comprehensive DSN compatibility analysis and design
+v0.9.39 | 2025-11-17 | 87ec547 | Bring some example files
+v0.9.38 | 2025-11-17 | 828b521 | Merge pull request #66 from PierreBx/claude/ariane-xml-jupyter-kernel-01Sc974qSdvXfyPA1kwJsJhb
+v0.9.37 | 2025-11-17 | 7e29189 | Add live execution feedback to Jupyter cells
+v0.9.36 | 2025-11-17 | 05af682 | Add Getting Started notebook and improve Jupyter kernel UX
+v0.9.35 | 2025-11-17 | 5422d17 | Merge pull request #65 from PierreBx/claude/docker-light-tests-01UzqDnq73jT3svcXXrXqCHN
+v0.9.34 | 2025-11-16 | 83f2523 | Remove hard/hardest stress tests from light test suite (run_tests.sh)
+v0.9.33 | 2025-11-16 | 1dc1a14 | Merge pull request #64 from PierreBx/claude/docker-light-tests-01UzqDnq73jT3svcXXrXqCHN
+v0.9.32 | 2025-11-16 | a7bc058 | Fix test directory and schema paths for hard/hardest tests
+v0.9.31 | 2025-11-16 | 2c2f590 | Merge pull request #63 from PierreBx/claude/docker-light-tests-01UzqDnq73jT3svcXXrXqCHN
+v0.9.30 | 2025-11-16 | 90539ea | Add Docker-only test modes and remove local test options
+v0.9.29 | 2025-11-16 | dfd85cd | Merge pull request #62 from PierreBx/claude/docker-light-tests-01UzqDnq73jT3svcXXrXqCHN
+v0.9.28 | 2025-11-16 | 0f085cb | Fix Docker light test suite to properly run and capture output
+v0.9.27 | 2025-11-16 | 9620eac | Merge pull request #61 from PierreBx/claude/fix-option-13-tests-01RkMA6FgQSffv1md5NbmmLC
+v0.9.26 | 2025-11-16 | 3346734 | Add Docker-based test mode to solve stdin piping issues
+v0.9.25 | 2025-11-16 | 862d37d | Merge pull request #60 from PierreBx/claude/fix-xml-tests-019YwCyHYYHTWiAAT32jqnE2
+v0.9.24 | 2025-11-16 | 6de5c66 | Update all tests to follow non-ambiguous path rule
+v0.9.23 | 2025-11-16 | bfc779a | Merge pull request #59 from PierreBx/claude/fix-xml-tests-019YwCyHYYHTWiAAT32jqnE2
+v0.9.22 | 2025-11-16 | 8738b7e | Fix failing XML query tests
+v0.9.21 | 2025-11-16 | 1402ff2 | Merge pull request #58 from PierreBx/claude/fix-ariane-xml-error-01SggnQXMNGxdnrWfxYaAxR7
+v0.9.20 | 2025-11-16 | ab3d0e4 | Fix ariane-xml wrapper path in test suite
+v0.9.19 | 2025-11-16 | cb0faed | Merge pull request #57 from PierreBx/claude/fix-test-root-detection-01Ww5boFPfv8edYtYheh9a3Z
+v0.9.18 | 2025-11-16 | 82ec633 | Fix test root detection logic
+v0.9.17 | 2025-11-16 | b4f3295 | Merge pull request #56 from PierreBx/claude/rewrite-environment-options-016XwCTEVfmPpD2h9eC9apTh
+v0.9.16 | 2025-11-16 | 5b95024 | Rewrite ariane-xml-manager Docker management section
+v0.9.15 | 2025-11-16 | b7cf7ef | Merge pull request #55 from PierreBx/claude/fix-xml-query-results-01W3DRE3GNFCVsWAF2indd5J
+v0.9.14 | 2025-11-16 | 70ed2a0 | Fix Jupyter kernel: resolve 'No results found' issue
+v0.9.13 | 2025-11-16 | aa56593 | Merge pull request #54 from PierreBx/claude/fix-jupyter-kernel-module-01RP6PwNSMDHnhL6GVQZcUr3
+v0.9.12 | 2025-11-16 | 56922df | Fix Jupyter kernel module structure for proper Python package installation
+v0.9.11 | 2025-11-16 | 3e89090 | Merge pull request #53 from PierreBx/claude/fix-ariane-xml-kernel-01Smwq1PmKuEKzNJRjtKstQn
+v0.9.10 | 2025-11-16 | 197904c | Fix Jupyter kernel to work on both Docker and host environments
+v0.9.9  | 2025-11-16 | 6760927 | Merge pull request #52 from PierreBx/detached2
+v0.9.8  | 2025-11-16 | 17aeeec | Merge remote-tracking branch 'origin/claude/fix-jupyter-kernel-connection-01UKqYctidN4ux3xCphxpFrg' into HEAD
+v0.9.7  | 2025-11-16 | 19ba218 | Update version history
+v0.9.6  | 2025-11-16 | 0674da9 | Fix Jupyter kernel configuration: rename from ExpoCLI to Ariane-XML
 v0.9.5  | 2025-11-16 | d69757f | Fix Jupyter kernel installation using direct script execution
 v0.9.4  | 2025-11-16 | e8f26d2 | Fix Jupyter kernel installation using console script entry point
 v0.9.3  | 2025-11-16 | f5a0e08 | Fix Docker build: clean stale CMake cache before building
@@ -73,6 +136,6 @@ v0.1.0  | 2025-11-10 | 60bddcb | Implement Phase 1 MVP of XML Query CLI
 v0.0.1  | 2025-11-10 | 4f4ab1e | Initial commit
 
 ================================================================================
-Total versions: 69
-Current version: v0.9.5
+Total versions: 132
+Current version: v0.9.68
 ================================================================================
