@@ -3,6 +3,9 @@
 #include "generator/xsd_parser.h"
 #include "generator/xml_generator.h"
 #include "validator/xml_validator.h"
+#include "dsn/dsn_schema.h"
+#include "dsn/dsn_templates.h"
+#include "dsn/dsn_migration.h"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -40,6 +43,21 @@ bool CommandHandler::handleCommand(const std::string& input) {
     // Check if it's a CHECK command
     if (tokens[0].type == TokenType::CHECK) {
         return handleCheckCommand(input);
+    }
+
+    // Check if it's a DESCRIBE command
+    if (tokens[0].type == TokenType::DESCRIBE) {
+        return handleDescribeCommand(input);
+    }
+
+    // Check if it's a DSN_TEMPLATE command
+    if (tokens[0].type == TokenType::TEMPLATE) {
+        return handleDsnTemplateCommand(input);
+    }
+
+    // Check if it's a DSN_COMPARE command
+    if (tokens[0].type == TokenType::COMPARE) {
+        return handleDsnCompareCommand(input);
     }
 
     // Not a recognized command, treat as query
@@ -493,6 +511,239 @@ bool CommandHandler::handleCheckCommand(const std::string& input) {
         std::cout << ", " << errorCount << " error(s)";
     }
     std::cout << "\n";
+
+    return true;
+}
+
+bool CommandHandler::handleDescribeCommand(const std::string& input) {
+    // DESCRIBE <field_name>
+    // Shows information about a DSN field
+
+    if (!context_.isDsnMode()) {
+        std::cerr << "Error: DESCRIBE command only available in DSN mode\n";
+        std::cerr << "Use: SET MODE DSN\n";
+        return true;
+    }
+
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    if (tokens.size() < 2) {
+        std::cerr << "Error: DESCRIBE requires a field name or bloc\n";
+        std::cerr << "Usage: DESCRIBE <field_name>\n";
+        std::cerr << "       DESCRIBE S21_G00_30_001\n";
+        std::cerr << "       DESCRIBE 30_001\n";
+        std::cerr << "       DESCRIBE S21_G00_30\n";
+        return true;
+    }
+
+    if (!context_.hasDsnSchema()) {
+        std::cerr << "Error: No DSN schema loaded\n";
+        std::cerr << "Please load a DSN schema first\n";
+        return true;
+    }
+
+    std::string field_name = tokens[1].value;
+    auto schema = context_.getDsnSchema();
+
+    // Try to find by full name
+    const DsnAttribute* attr = schema->findByFullName(field_name);
+    if (attr) {
+        std::cout << "\n";
+        std::cout << "══════════════════════════════════════════════════════════════\n";
+        std::cout << " Field: " << attr->full_name << "\n";
+        std::cout << "══════════════════════════════════════════════════════════════\n\n";
+        std::cout << "Shortcut:     " << attr->short_id << "\n";
+        std::cout << "Bloc:         " << attr->bloc_name;
+        if (!attr->bloc_label.empty()) {
+            std::cout << " (" << attr->bloc_label << ")";
+        }
+        std::cout << "\n";
+        std::cout << "Description:  " << attr->description << "\n";
+        std::cout << "Type:         " << attr->type << "\n";
+        std::cout << "Mandatory:    " << (attr->mandatory ? "Yes" : "No") << "\n";
+        std::cout << "Cardinality:  " << attr->min_occurs << "..";
+        if (attr->max_occurs < 0) {
+            std::cout << "unbounded";
+        } else {
+            std::cout << attr->max_occurs;
+        }
+        std::cout << "\n\n";
+        return true;
+    }
+
+    // Try to find by shortcut
+    auto matches = schema->findByShortId(field_name);
+    if (!matches.empty()) {
+        if (matches.size() == 1) {
+            const auto& match = matches[0];
+            std::cout << "\n";
+            std::cout << "══════════════════════════════════════════════════════════════\n";
+            std::cout << " Field: " << match.full_name << "\n";
+            std::cout << "══════════════════════════════════════════════════════════════\n\n";
+            std::cout << "Shortcut:     " << match.short_id << "\n";
+            std::cout << "Bloc:         " << match.bloc_name;
+            if (!match.bloc_label.empty()) {
+                std::cout << " (" << match.bloc_label << ")";
+            }
+            std::cout << "\n";
+            std::cout << "Description:  " << match.description << "\n";
+            std::cout << "Type:         " << match.type << "\n";
+            std::cout << "Mandatory:    " << (match.mandatory ? "Yes" : "No") << "\n\n";
+        } else {
+            std::cout << "\n⚠ Ambiguous shortcut '" << field_name << "' matches multiple fields:\n\n";
+            for (const auto& match : matches) {
+                std::cout << "  • " << match.full_name << " in " << match.bloc_label << "\n";
+                std::cout << "    " << match.description << "\n\n";
+            }
+            std::cout << "Use the full field name to specify which one you mean.\n\n";
+        }
+        return true;
+    }
+
+    // Try as bloc
+    const DsnBloc* bloc = schema->findBloc(field_name);
+    if (bloc) {
+        std::cout << "\n";
+        std::cout << "══════════════════════════════════════════════════════════════\n";
+        std::cout << " Bloc: " << bloc->name;
+        if (!bloc->label.empty()) {
+            std::cout << " (" << bloc->label << ")";
+        }
+        std::cout << "\n";
+        std::cout << "══════════════════════════════════════════════════════════════\n\n";
+        if (!bloc->description.empty()) {
+            std::cout << "Description:  " << bloc->description << "\n\n";
+        }
+        std::cout << "Fields:\n";
+        for (const auto& attr : bloc->attributes) {
+            std::cout << "  • " << std::left << std::setw(25) << attr.full_name
+                     << " - " << attr.description << "\n";
+        }
+        std::cout << "\n";
+        return true;
+    }
+
+    std::cerr << "Field or bloc not found: " << field_name << "\n";
+    return true;
+}
+
+bool CommandHandler::handleDsnTemplateCommand(const std::string& input) {
+    // TEMPLATE <template_name> [SET param=value ...]
+    // Or: TEMPLATE LIST
+
+    if (!context_.isDsnMode()) {
+        std::cerr << "Error: TEMPLATE command only available in DSN mode\n";
+        std::cerr << "Use: SET MODE DSN\n";
+        return true;
+    }
+
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    if (tokens.size() < 2) {
+        std::cerr << "Error: TEMPLATE requires a template name or LIST\n";
+        std::cerr << "Usage: TEMPLATE LIST\n";
+        std::cerr << "       TEMPLATE <name>\n";
+        std::cerr << "       TEMPLATE <name> SET param1=value1 param2=value2\n";
+        return true;
+    }
+
+    // Create template manager
+    DsnTemplateManager tmplMgr;
+
+    // Check for LIST command
+    if (tokens[1].type == TokenType::LIST) {
+        auto templates = tmplMgr.listTemplates();
+        std::cout << DsnTemplateManager::formatTemplateList(templates);
+        return true;
+    }
+
+    // Get template name
+    std::string template_name = tokens[1].value;
+    const DsnTemplate* tmpl = tmplMgr.getTemplate(template_name);
+
+    if (!tmpl) {
+        std::cerr << "Template not found: " << template_name << "\n";
+        std::cerr << "Use: TEMPLATE LIST to see available templates\n";
+        return true;
+    }
+
+    // Parse parameters if SET keyword is present
+    std::map<std::string, std::string> params;
+    if (tokens.size() > 2 && tokens[2].type == TokenType::SET) {
+        // Parse param=value pairs
+        for (size_t i = 3; i < tokens.size(); ++i) {
+            if (tokens[i].type == TokenType::END_OF_INPUT) break;
+
+            // Expect: param=value
+            std::string param_expr = tokens[i].value;
+            size_t eq_pos = param_expr.find('=');
+            if (eq_pos != std::string::npos) {
+                std::string key = param_expr.substr(0, eq_pos);
+                std::string value = param_expr.substr(eq_pos + 1);
+                params[key] = value;
+            } else if (tokens[i].type == TokenType::IDENTIFIER && i+1 < tokens.size() &&
+                      tokens[i+1].type == TokenType::EQUALS && i+2 < tokens.size()) {
+                params[tokens[i].value] = tokens[i+2].value;
+                i += 2;
+            }
+        }
+    }
+
+    // Expand template
+    std::string query = tmplMgr.expandTemplate(template_name, params);
+
+    std::cout << "\nTemplate: " << tmpl->name << "\n";
+    std::cout << "Description: " << tmpl->description << "\n\n";
+    std::cout << "Expanded query:\n";
+    std::cout << "───────────────────────────────────────────────────────────────\n";
+    std::cout << query << "\n";
+    std::cout << "───────────────────────────────────────────────────────────────\n\n";
+
+    // Note: The actual query execution would be handled by the query executor
+    std::cout << "To execute this query, run it directly or integrate with query executor.\n";
+
+    return true;
+}
+
+bool CommandHandler::handleDsnCompareCommand(const std::string& input) {
+    // COMPARE <version1> <version2>
+    // Or: COMPARE <version1> <version2> CHECK <file>
+
+    if (!context_.isDsnMode()) {
+        std::cerr << "Error: COMPARE command only available in DSN mode\n";
+        std::cerr << "Use: SET MODE DSN\n";
+        return true;
+    }
+
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    if (tokens.size() < 3) {
+        std::cerr << "Error: COMPARE requires two version identifiers\n";
+        std::cerr << "Usage: COMPARE P25 P26\n";
+        std::cerr << "       COMPARE P25 P26 CHECK /path/to/file.xml\n";
+        return true;
+    }
+
+    std::string version1 = tokens[1].value;
+    std::string version2 = tokens[2].value;
+
+    std::cout << "\nComparing DSN schemas: " << version1 << " → " << version2 << "\n";
+    std::cout << "\nNote: This feature requires loading both P25 and P26 schemas.\n";
+    std::cout << "Schema comparison functionality will display:\n";
+    std::cout << "  • New fields added in " << version2 << "\n";
+    std::cout << "  • Fields removed from " << version1 << "\n";
+    std::cout << "  • Fields with modified properties\n";
+    std::cout << "  • Migration compatibility advice\n\n";
+
+    // TODO: Implement actual schema loading and comparison
+    // For now, show a placeholder message
+    std::cout << "Implementation note: Full schema comparison requires:\n";
+    std::cout << "  1. Loading DSN schema for " << version1 << "\n";
+    std::cout << "  2. Loading DSN schema for " << version2 << "\n";
+    std::cout << "  3. Using DsnMigrationHelper to compare schemas\n\n";
 
     return true;
 }

@@ -20,6 +20,9 @@ private:
     bool handleShowCommand(const std::string& input);
     bool handleGenerateCommand(const std::string& input);
     bool handleCheckCommand(const std::string& input);
+    bool handleDescribeCommand(const std::string& input);
+    bool handleDsnTemplateCommand(const std::string& input);
+    bool handleDsnCompareCommand(const std::string& input);
 
     void setXsdPath(const std::string& path);
     void setDestPath(const std::string& path);

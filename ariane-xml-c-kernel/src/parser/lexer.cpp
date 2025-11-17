@@ -199,6 +199,11 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     if (upper == "STANDARD") return TokenType::STANDARD;
     if (upper == "DSN") return TokenType::DSN;
     if (upper == "DESCRIBE") return TokenType::DESCRIBE;
+    if (upper == "TEMPLATE") return TokenType::TEMPLATE;
+    if (upper == "COMPARE") return TokenType::COMPARE;
+    if (upper == "FORMAT") return TokenType::FORMAT;
+    if (upper == "LIST") return TokenType::LIST;
+    if (upper == "UPGRADE_TO") return TokenType::UPGRADE_TO;
     if (upper == "FOR") return TokenType::FOR;
     if (upper == "IN") return TokenType::IN;
     if (upper == "AT") return TokenType::AT;
