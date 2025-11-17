@@ -10,6 +10,7 @@ from ipykernel.kernelbase import Kernel
 import subprocess
 import re
 import os
+import time
 from typing import Dict, Any, List, Optional
 
 
@@ -363,8 +364,21 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 'user_expressions': {}
             }
 
-        # Execute the query
+        # Show execution status
+        if not silent:
+            self.send_response(
+                self.iopub_socket,
+                'stream',
+                {
+                    'name': 'stdout',
+                    'text': '⚡ Executing query...\n'
+                }
+            )
+
+        # Execute the query and track timing
+        start_time = time.time()
         result = self._execute_query(code)
+        execution_time_ms = (time.time() - start_time) * 1000
 
         if not silent:
             if result['success']:
@@ -379,6 +393,15 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                             'metadata': {}
                         }
                     )
+                    # Send completion message with timing
+                    self.send_response(
+                        self.iopub_socket,
+                        'stream',
+                        {
+                            'name': 'stdout',
+                            'text': f'\n✓ Done in {execution_time_ms:.1f} ms\n'
+                        }
+                    )
                 else:
                     # Query succeeded but produced no output - provide helpful feedback
                     self.send_response(
@@ -386,7 +409,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                         'stream',
                         {
                             'name': 'stdout',
-                            'text': '✓ Query executed successfully (no output)\n\n' +
+                            'text': f'\n✓ Query executed successfully (no output) - {execution_time_ms:.1f} ms\n\n' +
                                    '💡 Possible reasons:\n' +
                                    '   • File path not found\n' +
                                    '   • Query syntax may be incorrect\n' +
@@ -396,14 +419,14 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                         }
                     )
             else:
-                # Send formatted error
+                # Send formatted error with timing
                 error_msg = result['error'] or 'Unknown error'
                 self.send_response(
                     self.iopub_socket,
                     'stream',
                     {
                         'name': 'stderr',
-                        'text': error_msg
+                        'text': f'{error_msg}\n\n✗ Failed after {execution_time_ms:.1f} ms\n'
                     }
                 )
 
