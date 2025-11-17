@@ -42,6 +42,9 @@ set(SOURCES
     src/generator/data_generator.cpp
     src/generator/xml_generator.cpp
     src/validator/xml_validator.cpp
+    src/dsn/dsn_schema.cpp
+    src/dsn/dsn_parser.cpp
+    src/dsn/dsn_query_rewriter.cpp
 )
 
 # Create executable

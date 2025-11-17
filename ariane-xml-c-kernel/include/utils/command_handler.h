@@ -26,6 +26,7 @@ private:
 
     void showXsdPath();
     void showDestPath();
+    void showMode();
 
     bool validateXsdFile(const std::string& path);
     bool validateAndCreateDestDirectory(const std::string& path);

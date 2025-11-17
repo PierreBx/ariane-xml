@@ -50,12 +50,13 @@ bool CommandHandler::handleSetCommand(const std::string& input) {
     Lexer lexer(input);
     auto tokens = lexer.tokenize();
 
-    // Expect: SET <XSD|DEST|VERBOSE> <path>
+    // Expect: SET <XSD|DEST|VERBOSE|MODE> <path|value>
     if (tokens.size() < 2) {
         std::cerr << "Error: SET command requires a parameter\n";
         std::cerr << "Usage: SET XSD /path/to/file.xsd\n";
         std::cerr << "       SET DEST /path/to/directory\n";
         std::cerr << "       SET VERBOSE\n";
+        std::cerr << "       SET MODE <STANDARD|DSN>\n";
         return true;
     }
 
@@ -65,6 +66,31 @@ bool CommandHandler::handleSetCommand(const std::string& input) {
     if (paramType == TokenType::VERBOSE) {
         context_.setVerbose(true);
         std::cout << "Verbose mode enabled. Queries will be checked for ambiguous attributes.\n";
+        return true;
+    }
+
+    // Handle MODE command: SET MODE <STANDARD|DSN>
+    if (paramType == TokenType::MODE) {
+        if (tokens.size() < 3) {
+            std::cerr << "Error: SET MODE requires a mode value (STANDARD or DSN)\n";
+            std::cerr << "Usage: SET MODE STANDARD\n";
+            std::cerr << "       SET MODE DSN\n";
+            return true;
+        }
+
+        if (tokens[2].type == TokenType::STANDARD) {
+            context_.setMode(QueryMode::STANDARD);
+            std::cout << "Query mode set to STANDARD\n";
+        } else if (tokens[2].type == TokenType::DSN) {
+            context_.setMode(QueryMode::DSN);
+            std::cout << "Query mode set to DSN\n";
+            std::cout << "DSN mode features:\n";
+            std::cout << "  - YY_ZZZ shortcut notation for attributes\n";
+            std::cout << "  - Schema version auto-detection\n";
+            std::cout << "  - Use DESCRIBE <field> to explore DSN schema\n";
+        } else {
+            std::cerr << "Error: Invalid mode. Use STANDARD or DSN\n";
+        }
         return true;
     }
 
@@ -120,11 +146,12 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
     Lexer lexer(input);
     auto tokens = lexer.tokenize();
 
-    // Expect: SHOW <XSD|DEST>
+    // Expect: SHOW <XSD|DEST|MODE>
     if (tokens.size() < 2) {
-        std::cerr << "Error: SHOW command requires a parameter (XSD or DEST)\n";
+        std::cerr << "Error: SHOW command requires a parameter (XSD, DEST, or MODE)\n";
         std::cerr << "Usage: SHOW XSD\n";
         std::cerr << "       SHOW DEST\n";
+        std::cerr << "       SHOW MODE\n";
         return true;
     }
 
@@ -135,8 +162,10 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
         showXsdPath();
     } else if (paramType == TokenType::DEST) {
         showDestPath();
+    } else if (paramType == TokenType::MODE) {
+        showMode();
     } else {
-        std::cerr << "Error: Unknown SHOW parameter. Use XSD or DEST\n";
+        std::cerr << "Error: Unknown SHOW parameter. Use XSD, DEST, or MODE\n";
     }
 
     return true;
@@ -169,6 +198,21 @@ void CommandHandler::showDestPath() {
         std::cout << "DEST: " << context_.getDestPath().value() << "\n";
     } else {
         std::cout << "DEST: (not set)\n";
+    }
+}
+
+void CommandHandler::showMode() {
+    QueryMode mode = context_.getMode();
+    if (mode == QueryMode::DSN) {
+        std::cout << "MODE: DSN\n";
+        std::cout << "DSN Version: " << context_.getDsnVersion() << "\n";
+        if (context_.hasDsnSchema()) {
+            std::cout << "DSN Schema: Loaded\n";
+        } else {
+            std::cout << "DSN Schema: Not loaded\n";
+        }
+    } else {
+        std::cout << "MODE: STANDARD\n";
     }
 }
 
