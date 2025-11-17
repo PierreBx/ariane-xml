@@ -45,6 +45,10 @@ set(SOURCES
     src/dsn/dsn_schema.cpp
     src/dsn/dsn_parser.cpp
     src/dsn/dsn_query_rewriter.cpp
+    src/dsn/dsn_autocomplete.cpp
+    src/dsn/dsn_templates.cpp
+    src/dsn/dsn_formatter.cpp
+    src/dsn/dsn_migration.cpp
 )
 
 # Create executable
