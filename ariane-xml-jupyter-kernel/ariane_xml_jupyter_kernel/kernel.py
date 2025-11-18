@@ -245,64 +245,113 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         version_str = f" [Version: {self.dsn_version}]" if self.dsn_version else ""
 
         html = f'''
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-            border: 2px solid #667eea;
+<style>
+    .ariane-quickstart {{
+        --qs-bg: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
+        --qs-border: #6b7280;
+        --qs-title: #4b5563;
+        --qs-text: #24292e;
+        --qs-code-bg: #f6f8fa;
+        --qs-code-text: #374151;
+        --qs-card-bg: white;
+        --qs-hint: #6b7280;
+        --qs-doc-bg: #f3f4f6;
+        --qs-doc-border: #9ca3af;
+        --qs-doc-text: #4b5563;
+        --qs-shadow: rgba(107, 114, 128, 0.15);
+    }}
+    @media (prefers-color-scheme: dark) {{
+        .ariane-quickstart {{
+            --qs-bg: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+            --qs-border: #6b7280;
+            --qs-title: #9ca3af;
+            --qs-text: #c9d1d9;
+            --qs-code-bg: #30363d;
+            --qs-code-text: #a5b4c4;
+            --qs-card-bg: #21262d;
+            --qs-hint: #8b949e;
+            --qs-doc-bg: #30363d;
+            --qs-doc-border: #6b7280;
+            --qs-doc-text: #c9d1d9;
+            --qs-shadow: rgba(0, 0, 0, 0.3);
+        }}
+    }}
+    [data-jp-theme-light="false"] .ariane-quickstart,
+    .jp-Notebook.jp-mod-dark .ariane-quickstart,
+    body.theme-dark .ariane-quickstart {{
+        --qs-bg: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+        --qs-border: #6b7280;
+        --qs-title: #9ca3af;
+        --qs-text: #c9d1d9;
+        --qs-code-bg: #30363d;
+        --qs-code-text: #a5b4c4;
+        --qs-card-bg: #21262d;
+        --qs-hint: #8b949e;
+        --qs-doc-bg: #30363d;
+        --qs-doc-border: #6b7280;
+        --qs-doc-text: #c9d1d9;
+        --qs-shadow: rgba(0, 0, 0, 0.3);
+    }}
+</style>
+<div class="ariane-quickstart" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            border: 2px solid var(--qs-border);
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
-            background: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
-            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.15);">
+            background: var(--qs-bg);
+            box-shadow: 0 4px 6px var(--qs-shadow);
+            color: var(--qs-text);">
 
     <h2 style="margin: 0 0 20px 0;
-               color: #667eea;
-               border-bottom: 2px solid #667eea;
+               color: var(--qs-title);
+               border-bottom: 2px solid var(--qs-border);
                padding-bottom: 10px;
                font-size: 24px;">
-        🇫🇷 DSN MODE ACTIVATED{version_str}
+        DSN MODE ACTIVATED{version_str}
     </h2>
 
     <div style="display: grid; gap: 15px;">
         <div>
-            <h3 style="color: #24292e; margin: 0 0 10px 0; font-size: 16px;">📚 Quick Start Commands:</h3>
-            <div style="background: white;
+            <h3 style="color: var(--qs-text); margin: 0 0 10px 0; font-size: 16px;">Quick Start Commands:</h3>
+            <div style="background: var(--qs-card-bg);
                        padding: 15px;
                        border-radius: 6px;
-                       border-left: 4px solid #667eea;
+                       border-left: 4px solid var(--qs-border);
                        font-family: 'Monaco', 'Menlo', monospace;
                        font-size: 13px;">
-                <div style="margin: 6px 0;"><code style="color: #0366d6;">HELP</code> - Show detailed help</div>
-                <div style="margin: 6px 0;"><code style="color: #0366d6;">BROWSE SCHEMA</code> - Explore all fields</div>
-                <div style="margin: 6px 0;"><code style="color: #0366d6;">TEMPLATE LIST</code> - View query templates</div>
-                <div style="margin: 6px 0;"><code style="color: #0366d6;">DESCRIBE 01_001</code> - Get field documentation</div>
-                <div style="margin: 6px 0;"><code style="color: #0366d6;">SEARCH "keyword"</code> - Search fields by description</div>
+                <div style="margin: 6px 0;"><code style="color: var(--qs-code-text);">HELP</code> - Show detailed help</div>
+                <div style="margin: 6px 0;"><code style="color: var(--qs-code-text);">BROWSE SCHEMA</code> - Explore all fields</div>
+                <div style="margin: 6px 0;"><code style="color: var(--qs-code-text);">TEMPLATE LIST</code> - View query templates</div>
+                <div style="margin: 6px 0;"><code style="color: var(--qs-code-text);">DESCRIBE 01_001</code> - Get field documentation</div>
+                <div style="margin: 6px 0;"><code style="color: var(--qs-code-text);">SEARCH "keyword"</code> - Search fields by description</div>
             </div>
         </div>
 
         <div>
-            <h3 style="color: #24292e; margin: 0 0 10px 0; font-size: 16px;">💡 Tips:</h3>
+            <h3 style="color: var(--qs-text); margin: 0 0 10px 0; font-size: 16px;">Tips:</h3>
             <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
                 <li>Press <strong>TAB</strong> for autocomplete</li>
-                <li>Use shortcut notation: <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">SELECT 01_001, 30_001</code></li>
-                <li>Type <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">HELP &lt;command&gt;</code> for specific help</li>
-                <li>Use <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">?</code> followed by field code for quick lookup</li>
+                <li>Use shortcut notation: <code style="background: var(--qs-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--qs-code-text);">SELECT 01_001, 30_001</code></li>
+                <li>Type <code style="background: var(--qs-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--qs-code-text);">HELP &lt;command&gt;</code> for specific help</li>
+                <li>Use <code style="background: var(--qs-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--qs-code-text);">?</code> followed by field code for quick lookup</li>
             </ul>
         </div>
 
-        <div style="background: #fffbeb;
+        <div style="background: var(--qs-doc-bg);
                    padding: 12px;
                    border-radius: 6px;
-                   border-left: 4px solid #f59e0b;
+                   border-left: 4px solid var(--qs-doc-border);
                    font-size: 13px;">
-            <strong style="color: #92400e;">📖 Documentation:</strong>
-            <span style="color: #451a03;">JUPYTER_DSN_INTEGRATION.md</span>
+            <strong style="color: var(--qs-doc-text);">Documentation:</strong>
+            <span style="color: var(--qs-doc-text);">JUPYTER_DSN_INTEGRATION.md</span>
         </div>
 
         <div style="font-size: 12px;
-                   color: #6b7280;
+                   color: var(--qs-hint);
                    font-style: italic;
                    text-align: center;
                    margin-top: 5px;">
-            To hide this message: <code style="background: #f6f8fa; padding: 2px 6px; border-radius: 3px;">SET DSN_QUICKSTART OFF</code>
+            To hide this message: <code style="background: var(--qs-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--qs-code-text);">SET DSN_QUICKSTART OFF</code>
         </div>
     </div>
 </div>
@@ -420,180 +469,232 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
     def _get_general_help(self) -> str:
         """Generate general DSN MODE help"""
         html = '''
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+<style>
+    .ariane-help {
+        --help-title: #4b5563;
+        --help-text: #24292e;
+        --help-code: #374151;
+        --help-card-bg: white;
+        --help-border: #e1e4e8;
+        --help-accent-1: #6b7280;
+        --help-accent-2: #4b5563;
+        --help-accent-3: #9ca3af;
+        --help-accent-4: #6b7280;
+        --help-accent-5: #374151;
+        --help-accent-6: #4b5563;
+        --help-hint-bg: #f6f8fa;
+        --help-code-bg: white;
+    }
+    @media (prefers-color-scheme: dark) {
+        .ariane-help {
+            --help-title: #9ca3af;
+            --help-text: #c9d1d9;
+            --help-code: #a5b4c4;
+            --help-card-bg: #21262d;
+            --help-border: #30363d;
+            --help-accent-1: #6b7280;
+            --help-accent-2: #4b5563;
+            --help-accent-3: #9ca3af;
+            --help-accent-4: #6b7280;
+            --help-accent-5: #374151;
+            --help-accent-6: #4b5563;
+            --help-hint-bg: #30363d;
+            --help-code-bg: #21262d;
+        }
+    }
+    [data-jp-theme-light="false"] .ariane-help,
+    .jp-Notebook.jp-mod-dark .ariane-help,
+    body.theme-dark .ariane-help {
+        --help-title: #9ca3af;
+        --help-text: #c9d1d9;
+        --help-code: #a5b4c4;
+        --help-card-bg: #21262d;
+        --help-border: #30363d;
+        --help-accent-1: #6b7280;
+        --help-accent-2: #4b5563;
+        --help-accent-3: #9ca3af;
+        --help-accent-4: #6b7280;
+        --help-accent-5: #374151;
+        --help-accent-6: #4b5563;
+        --help-hint-bg: #30363d;
+        --help-code-bg: #21262d;
+    }
+</style>
+<div class="ariane-help" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
             max-width: 900px;
-            margin: 20px 0;">
+            margin: 20px 0;
+            color: var(--help-text);">
 
-    <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
-        🇫🇷 DSN MODE - Command Reference
+    <h2 style="color: var(--help-title); border-bottom: 2px solid var(--help-accent-1); padding-bottom: 10px;">
+        DSN MODE - Command Reference
     </h2>
 
     <div style="display: grid; gap: 20px; margin-top: 20px;">
 
         <!-- Mode Control -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea;">
-            <h3 style="color: #24292e; margin-top: 0;">⚙️ Mode Control</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-1);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Mode Control</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SET MODE DSN</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SET MODE DSN</td>
                     <td style="padding: 8px;">Activate DSN mode</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET MODE STANDARD</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET MODE STANDARD</td>
                     <td style="padding: 8px;">Deactivate DSN mode</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET DSN_VERSION P25</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET DSN_VERSION P25</td>
                     <td style="padding: 8px;">Use P25 schema</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SET DSN_VERSION P26</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET DSN_VERSION P26</td>
                     <td style="padding: 8px;">Use P26 schema</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SHOW MODE</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SHOW MODE</td>
                     <td style="padding: 8px;">Display current mode</td>
                 </tr>
             </table>
         </div>
 
         <!-- Discovery Commands -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745;">
-            <h3 style="color: #24292e; margin-top: 0;">🔍 Discovery & Exploration</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-2);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Discovery & Exploration</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">BROWSE SCHEMA</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">BROWSE SCHEMA</td>
                     <td style="padding: 8px;">Explore all available fields</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">BROWSE BLOC 01</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">BROWSE BLOC 01</td>
                     <td style="padding: 8px;">Show all fields in specific bloc</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">DESCRIBE 01_001</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DESCRIBE 01_001</td>
                     <td style="padding: 8px;">Show field documentation</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SEARCH "keyword"</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SEARCH "keyword"</td>
                     <td style="padding: 8px;">Search fields by description</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">? 01_001</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">? 01_001</td>
                     <td style="padding: 8px;">Quick field lookup (same as DESCRIBE)</td>
                 </tr>
             </table>
         </div>
 
         <!-- Query Commands -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
-            <h3 style="color: #24292e; margin-top: 0;">📊 Query Operations</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-3);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Query Operations</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SELECT 01_001, 30_001 FROM file.xml</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SELECT 01_001, 30_001 FROM file.xml</td>
                     <td style="padding: 8px;">Query with shortcut notation</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">WHERE, ORDER BY, LIMIT</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">WHERE, ORDER BY, LIMIT</td>
                     <td style="padding: 8px;">Standard SQL operations</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE LIST</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE LIST</td>
                     <td style="padding: 8px;">View available query templates</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE &lt;name&gt;</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE &lt;name&gt;</td>
                     <td style="padding: 8px;">Use a predefined template</td>
                 </tr>
             </table>
         </div>
 
         <!-- Schema Tools -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #d73a49;">
-            <h3 style="color: #24292e; margin-top: 0;">🔄 Schema Tools</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-4);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Schema Tools</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">SHOW DSN_SCHEMA</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SHOW DSN_SCHEMA</td>
                     <td style="padding: 8px;">Display schema information</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">COMPARE P25 P26</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">COMPARE P25 P26</td>
                     <td style="padding: 8px;">Compare schema versions</td>
                 </tr>
             </table>
         </div>
 
         <!-- Query History (Phase 2) -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #8b5cf6;">
-            <h3 style="color: #24292e; margin-top: 0;">📜 Query History</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-5);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Query History</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">HISTORY</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">HISTORY</td>
                     <td style="padding: 8px;">Show last 10 queries</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">HISTORY 5</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">HISTORY 5</td>
                     <td style="padding: 8px;">Show last 5 queries</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">RERUN 3</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">RERUN 3</td>
                     <td style="padding: 8px;">Re-execute query #3</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">SAVE QUERY name</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SAVE QUERY name</td>
                     <td style="padding: 8px;">Save last query with a name</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">LOAD QUERY name</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LOAD QUERY name</td>
                     <td style="padding: 8px;">Load and execute saved query</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">LIST QUERIES</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LIST QUERIES</td>
                     <td style="padding: 8px;">Show all saved queries</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">DELETE QUERY name</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DELETE QUERY name</td>
                     <td style="padding: 8px;">Remove saved query</td>
                 </tr>
             </table>
         </div>
 
         <!-- Phase 3: Advanced Features -->
-        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
-            <h3 style="color: #24292e; margin-top: 0;">🚀 Advanced Features (Phase 3)</h3>
+        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-6);">
+            <h3 style="color: var(--help-text); margin-top: 0;">Advanced Features (Phase 3)</h3>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6; width: 40%;">%%dsn_query --output dataframe</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">%%dsn_query --output dataframe</td>
                     <td style="padding: 8px;">Cell magic for DataFrame integration</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE SAVE name</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE SAVE name</td>
                     <td style="padding: 8px;">Save last query as user template</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE DELETE name</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE DELETE name</td>
                     <td style="padding: 8px;">Remove user template</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE EXPORT</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE EXPORT</td>
                     <td style="padding: 8px;">Export all templates to JSON</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">TEMPLATE IMPORT file.json</td>
+                <tr style="border-bottom: 1px solid var(--help-border);">
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE IMPORT file.json</td>
                     <td style="padding: 8px;">Import templates from file</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; font-family: monospace; color: #0366d6;">📊 Export Buttons</td>
+                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">Export Buttons</td>
                     <td style="padding: 8px;">One-click CSV/JSON/HTML export in results</td>
                 </tr>
             </table>
         </div>
 
         <!-- Help -->
-        <div style="background: #f6f8fa; padding: 15px; border-radius: 6px;">
-            <h3 style="color: #24292e; margin-top: 0;">💡 Getting More Help</h3>
-            <p style="margin: 5px 0;">• Type <code style="background: white; padding: 2px 6px; border-radius: 3px;">HELP &lt;command&gt;</code> for detailed help on a specific command</p>
-            <p style="margin: 5px 0;">• Press <strong>TAB</strong> for autocomplete suggestions</p>
-            <p style="margin: 5px 0;">• See <code>JUPYTER_DSN_INTEGRATION.md</code> for full documentation</p>
+        <div style="background: var(--help-hint-bg); padding: 15px; border-radius: 6px;">
+            <h3 style="color: var(--help-text); margin-top: 0;">Getting More Help</h3>
+            <p style="margin: 5px 0;">Type <code style="background: var(--help-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--help-code);">HELP &lt;command&gt;</code> for detailed help on a specific command</p>
+            <p style="margin: 5px 0;">Press <strong>TAB</strong> for autocomplete suggestions</p>
+            <p style="margin: 5px 0;">See <code style="color: var(--help-code);">JUPYTER_DSN_INTEGRATION.md</code> for full documentation</p>
         </div>
     </div>
 </div>
@@ -1698,7 +1799,31 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
     def _format_dsn_describe_output(self, output: str) -> str:
         """Format DESCRIBE command output with enhanced styling"""
         lines = output.strip().split('\n')
-        html = ['<div style="font-family: monospace; background: #f6f8fa; padding: 15px; border-radius: 6px; border-left: 4px solid #0366d6;">']
+        html = ['''<style>
+    .ariane-describe {
+        --describe-bg: #f6f8fa;
+        --describe-border: #6b7280;
+        --describe-label: #4b5563;
+        --describe-text: #24292e;
+    }
+    @media (prefers-color-scheme: dark) {
+        .ariane-describe {
+            --describe-bg: #30363d;
+            --describe-border: #6b7280;
+            --describe-label: #9ca3af;
+            --describe-text: #c9d1d9;
+        }
+    }
+    [data-jp-theme-light="false"] .ariane-describe,
+    .jp-Notebook.jp-mod-dark .ariane-describe,
+    body.theme-dark .ariane-describe {
+        --describe-bg: #30363d;
+        --describe-border: #6b7280;
+        --describe-label: #9ca3af;
+        --describe-text: #c9d1d9;
+    }
+</style>
+<div class="ariane-describe" style="font-family: monospace; background: var(--describe-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--describe-border); color: var(--describe-text);">''']
 
         for line in lines:
             line = line.strip()
@@ -1710,7 +1835,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 parts = line.split(':', 1)
                 label = parts[0].strip()
                 value = parts[1].strip() if len(parts) > 1 else ''
-                html.append(f'<div style="margin: 4px 0;"><strong style="color: #0366d6;">{self._escape_html(label)}:</strong> {self._escape_html(value)}</div>')
+                html.append(f'<div style="margin: 4px 0;"><strong style="color: var(--describe-label);">{self._escape_html(label)}:</strong> {self._escape_html(value)}</div>')
             else:
                 html.append(f'<div style="margin: 4px 0;">{self._escape_html(line)}</div>')
 
@@ -1720,8 +1845,29 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
     def _format_dsn_template_list(self, output: str) -> str:
         """Format TEMPLATE LIST output with enhanced styling"""
         lines = output.strip().split('\n')
-        html = ['<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif;">']
-        html.append('<h3 style="color: #24292e; margin-top: 0;">📋 Available DSN Templates</h3>')
+        html = ['''<style>
+    .ariane-template-list {
+        --template-text: #24292e;
+        --template-heading: #4b5563;
+        --template-item-bg: #f6f8fa;
+    }
+    @media (prefers-color-scheme: dark) {
+        .ariane-template-list {
+            --template-text: #c9d1d9;
+            --template-heading: #9ca3af;
+            --template-item-bg: #30363d;
+        }
+    }
+    [data-jp-theme-light="false"] .ariane-template-list,
+    .jp-Notebook.jp-mod-dark .ariane-template-list,
+    body.theme-dark .ariane-template-list {
+        --template-text: #c9d1d9;
+        --template-heading: #9ca3af;
+        --template-item-bg: #30363d;
+    }
+</style>
+<div class="ariane-template-list" style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif; color: var(--template-text);">''']
+        html.append('<h3 style="color: var(--template-text); margin-top: 0;">Available DSN Templates</h3>')
         html.append('<div style="display: grid; gap: 10px;">')
 
         current_category = None
@@ -1735,11 +1881,11 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 if current_category:
                     html.append('</div>')  # Close previous category
                 current_category = line
-                html.append(f'<div style="margin-top: 10px;"><h4 style="color: #0366d6; margin: 5px 0;">{self._escape_html(line)}</h4>')
+                html.append(f'<div style="margin-top: 10px;"><h4 style="color: var(--template-heading); margin: 5px 0;">{self._escape_html(line)}</h4>')
             elif line.startswith('-') or line.startswith('•'):
                 # Template item
                 template_name = line.lstrip('-•').strip()
-                html.append(f'<div style="padding: 8px; background: #f6f8fa; border-radius: 4px; margin: 4px 0;">{self._escape_html(template_name)}</div>')
+                html.append(f'<div style="padding: 8px; background: var(--template-item-bg); border-radius: 4px; margin: 4px 0;">{self._escape_html(template_name)}</div>')
             else:
                 html.append(f'<div style="margin: 4px 0;">{self._escape_html(line)}</div>')
 
@@ -1751,8 +1897,41 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
     def _format_dsn_compare_output(self, output: str) -> str:
         """Format COMPARE command output with enhanced styling"""
         lines = output.strip().split('\n')
-        html = ['<div style="font-family: monospace; padding: 15px; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px;">']
-        html.append('<h3 style="color: #24292e; margin-top: 0;">📊 DSN Schema Comparison</h3>')
+        html = ['''<style>
+    .ariane-compare {
+        --compare-bg: #ffffff;
+        --compare-border: #e1e4e8;
+        --compare-text: #24292e;
+        --compare-added: #22863a;
+        --compare-removed: #cb2431;
+        --compare-modified: #b08800;
+        --compare-summary: #4b5563;
+    }
+    @media (prefers-color-scheme: dark) {
+        .ariane-compare {
+            --compare-bg: #21262d;
+            --compare-border: #30363d;
+            --compare-text: #c9d1d9;
+            --compare-added: #3fb950;
+            --compare-removed: #f85149;
+            --compare-modified: #d29922;
+            --compare-summary: #8b949e;
+        }
+    }
+    [data-jp-theme-light="false"] .ariane-compare,
+    .jp-Notebook.jp-mod-dark .ariane-compare,
+    body.theme-dark .ariane-compare {
+        --compare-bg: #21262d;
+        --compare-border: #30363d;
+        --compare-text: #c9d1d9;
+        --compare-added: #3fb950;
+        --compare-removed: #f85149;
+        --compare-modified: #d29922;
+        --compare-summary: #8b949e;
+    }
+</style>
+<div class="ariane-compare" style="font-family: monospace; padding: 15px; background: var(--compare-bg); border: 1px solid var(--compare-border); border-radius: 6px; color: var(--compare-text);">''']
+        html.append('<h3 style="color: var(--compare-text); margin-top: 0;">DSN Schema Comparison</h3>')
 
         for line in lines:
             line_stripped = line.strip()
@@ -1762,13 +1941,13 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
             # Color-code different types of changes
             if line_stripped.startswith('+'):
-                html.append(f'<div style="color: #28a745; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+                html.append(f'<div style="color: var(--compare-added); margin: 2px 0;">{self._escape_html(line_stripped)}</div>')
             elif line_stripped.startswith('-'):
-                html.append(f'<div style="color: #d73a49; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+                html.append(f'<div style="color: var(--compare-removed); margin: 2px 0;">{self._escape_html(line_stripped)}</div>')
             elif line_stripped.startswith('≠') or 'Modified' in line_stripped:
-                html.append(f'<div style="color: #f9826c; margin: 2px 0;">▸ {self._escape_html(line_stripped)}</div>')
+                html.append(f'<div style="color: var(--compare-modified); margin: 2px 0;">{self._escape_html(line_stripped)}</div>')
             elif line_stripped.startswith('Summary') or line_stripped.startswith('Total'):
-                html.append(f'<div style="font-weight: bold; color: #0366d6; margin: 8px 0;">{self._escape_html(line_stripped)}</div>')
+                html.append(f'<div style="font-weight: bold; color: var(--compare-summary); margin: 8px 0;">{self._escape_html(line_stripped)}</div>')
             else:
                 html.append(f'<div style="margin: 2px 0;">{self._escape_html(line_stripped)}</div>')
 
@@ -1855,23 +2034,73 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # Generate unique table ID for export functionality (Phase 3)
         table_id = f"table_{int(time.time() * 1000)}"
 
-        # Add CSS styling
+        # Add CSS styling with dark mode support
         html.append('''
 <style>
+    /* Light mode colors (default) */
     .ariane-xml-container {
+        --ariane-bg: #ffffff;
+        --ariane-bg-alt: #f6f8fa;
+        --ariane-bg-hover: #f0f2f4;
+        --ariane-text: #24292e;
+        --ariane-text-secondary: #586069;
+        --ariane-border: #e1e4e8;
+        --ariane-header-bg: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        --ariane-header-border: #4b5563;
+        --ariane-numeric: #374151;
+        --ariane-success: #22863a;
+        --ariane-shadow: rgba(0,0,0,0.12);
+        --ariane-shadow-strong: rgba(0,0,0,0.24);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
         margin: 15px 0;
     }
+
+    /* Dark mode - System preference */
+    @media (prefers-color-scheme: dark) {
+        .ariane-xml-container {
+            --ariane-bg: #21262d;
+            --ariane-bg-alt: #30363d;
+            --ariane-bg-hover: #3a424a;
+            --ariane-text: #c9d1d9;
+            --ariane-text-secondary: #8b949e;
+            --ariane-border: #30363d;
+            --ariane-header-bg: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            --ariane-header-border: #374151;
+            --ariane-numeric: #a5b4c4;
+            --ariane-success: #3fb950;
+            --ariane-shadow: rgba(0,0,0,0.3);
+            --ariane-shadow-strong: rgba(0,0,0,0.5);
+        }
+    }
+
+    /* Dark mode - JupyterLab specific */
+    [data-jp-theme-light="false"] .ariane-xml-container,
+    .jp-Notebook.jp-mod-dark .ariane-xml-container,
+    body.theme-dark .ariane-xml-container {
+        --ariane-bg: #21262d;
+        --ariane-bg-alt: #30363d;
+        --ariane-bg-hover: #3a424a;
+        --ariane-text: #c9d1d9;
+        --ariane-text-secondary: #8b949e;
+        --ariane-border: #30363d;
+        --ariane-header-bg: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        --ariane-header-border: #374151;
+        --ariane-numeric: #a5b4c4;
+        --ariane-success: #3fb950;
+        --ariane-shadow: rgba(0,0,0,0.3);
+        --ariane-shadow-strong: rgba(0,0,0,0.5);
+    }
+
     .ariane-xml-table {
         border-collapse: collapse;
         width: 100%;
-        background: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        background: var(--ariane-bg);
+        box-shadow: 0 1px 3px var(--ariane-shadow), 0 1px 2px var(--ariane-shadow-strong);
         border-radius: 4px;
         overflow: hidden;
     }
     .ariane-xml-table th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--ariane-header-bg);
         color: white;
         padding: 12px 16px;
         text-align: left;
@@ -1879,41 +2108,41 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border-bottom: 2px solid #5568d3;
+        border-bottom: 2px solid var(--ariane-header-border);
     }
     .ariane-xml-table td {
         padding: 10px 16px;
-        border-bottom: 1px solid #e1e4e8;
+        border-bottom: 1px solid var(--ariane-border);
         font-size: 14px;
-        color: #24292e;
+        color: var(--ariane-text);
     }
     .ariane-xml-table tr:last-child td {
         border-bottom: none;
     }
     .ariane-xml-table tr:hover {
-        background-color: #f6f8fa;
+        background-color: var(--ariane-bg-hover);
     }
     .ariane-xml-table tr:nth-child(even) {
-        background-color: #fafbfc;
+        background-color: var(--ariane-bg-alt);
     }
     .ariane-xml-table td.numeric {
         text-align: right;
         font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-        color: #0366d6;
+        color: var(--ariane-numeric);
     }
     .ariane-xml-result-count {
-        color: #586069;
+        color: var(--ariane-text-secondary);
         font-size: 13px;
         font-style: italic;
         margin-top: 8px;
         padding: 8px 12px;
-        background: #f6f8fa;
+        background: var(--ariane-bg-alt);
         border-radius: 4px;
         display: inline-block;
     }
     .ariane-xml-result-count::before {
         content: "✓ ";
-        color: #28a745;
+        color: var(--ariane-success);
         font-weight: bold;
     }
 </style>
@@ -1978,13 +2207,29 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # Show large result warning
         if total_rows > 100:
             html.append(f'''
-<div style="background: #fffbeb; padding: 12px; border-radius: 4px; margin-top: 10px; border-left: 4px solid #f59e0b;">
-    <strong style="color: #92400e;">⚠️  Large Result Set ({total_rows} rows)</strong>
-    <p style="margin: 5px 0; color: #92400e; font-size: 13px;">
-        Consider using <code style="background: white; padding: 2px 6px; border-radius: 3px;">WHERE</code> or
-        <code style="background: white; padding: 2px 6px; border-radius: 3px;">LIMIT</code> to reduce result size for better performance.
+<div class="ariane-xml-warning" style="padding: 12px; border-radius: 4px; margin-top: 10px; border-left: 4px solid var(--ariane-warning-border, #f59e0b); background: var(--ariane-warning-bg, #fffbeb);">
+    <strong style="color: var(--ariane-warning-text, #92400e);">Large Result Set ({total_rows} rows)</strong>
+    <p style="margin: 5px 0; color: var(--ariane-warning-text, #92400e); font-size: 13px;">
+        Consider using <code style="background: var(--ariane-bg, white); padding: 2px 6px; border-radius: 3px; color: var(--ariane-text, #24292e);">WHERE</code> or
+        <code style="background: var(--ariane-bg, white); padding: 2px 6px; border-radius: 3px; color: var(--ariane-text, #24292e);">LIMIT</code> to reduce result size for better performance.
     </p>
 </div>
+<style>
+    @media (prefers-color-scheme: dark) {{
+        .ariane-xml-warning {{
+            --ariane-warning-bg: #3d2f1f;
+            --ariane-warning-border: #d97706;
+            --ariane-warning-text: #fbbf24;
+        }}
+    }}
+    [data-jp-theme-light="false"] .ariane-xml-warning,
+    .jp-Notebook.jp-mod-dark .ariane-xml-warning,
+    body.theme-dark .ariane-xml-warning {{
+        --ariane-warning-bg: #3d2f1f;
+        --ariane-warning-border: #d97706;
+        --ariane-warning-text: #fbbf24;
+    }}
+</style>
 ''')
 
         html.append('</div>')
@@ -2096,23 +2341,53 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         Returns HTML with JavaScript for CSV, JSON, and Excel export.
         """
         html = f'''
-        <div style="margin: 10px 0; padding: 10px; background: #f6f8fa; border-radius: 6px; border: 1px solid #d0d7de;">
+        <style>
+            .ariane-export-container {{
+                --export-bg: #f6f8fa;
+                --export-border: #d0d7de;
+                --export-text: #24292e;
+                --export-btn-csv: #4b5563;
+                --export-btn-json: #6b7280;
+                --export-btn-html: #9ca3af;
+            }}
+            @media (prefers-color-scheme: dark) {{
+                .ariane-export-container {{
+                    --export-bg: #30363d;
+                    --export-border: #484f58;
+                    --export-text: #c9d1d9;
+                    --export-btn-csv: #6b7280;
+                    --export-btn-json: #4b5563;
+                    --export-btn-html: #374151;
+                }}
+            }}
+            [data-jp-theme-light="false"] .ariane-export-container,
+            .jp-Notebook.jp-mod-dark .ariane-export-container,
+            body.theme-dark .ariane-export-container {{
+                --export-bg: #30363d;
+                --export-border: #484f58;
+                --export-text: #c9d1d9;
+                --export-btn-csv: #6b7280;
+                --export-btn-json: #4b5563;
+                --export-btn-html: #374151;
+            }}
+        </style>
+        <div class="ariane-export-container" style="margin: 10px 0; padding: 10px; background: var(--export-bg); border-radius: 6px; border: 1px solid var(--export-border);">
             <div style="display: flex; gap: 10px; align-items: center;">
-                <strong style="color: #24292e;">📊 Export Results:</strong>
+                <strong style="color: var(--export-text);">Export Results:</strong>
                 <button onclick="exportData_{result_id}('csv')"
-                        style="padding: 6px 12px; background: #2ea44f; color: white; border: none;
+                        style="padding: 6px 12px; background: var(--export-btn-csv); color: white; border: none;
                                border-radius: 6px; cursor: pointer; font-weight: 500;">
-                    📄 Export CSV
+                    Export CSV
                 </button>
                 <button onclick="exportData_{result_id}('json')"
-                        style="padding: 6px 12px; background: #0969da; color: white; border: none;
+                        style="padding: 6px 12px; background: var(--export-btn-json); color: white; border: none;
                                border-radius: 6px; cursor: pointer; font-weight: 500;">
-                    📋 Export JSON
+                    Export JSON
                 </button>
                 <button onclick="exportData_{result_id}('html')"
-                        style="padding: 6px 12px; background: #8250df; color: white; border: none;
+                        style="padding: 6px 12px; background: var(--export-btn-html); color: white; border: none;
                                border-radius: 6px; cursor: pointer; font-weight: 500;">
-                    🌐 Export HTML
+                    Export HTML
                 </button>
             </div>
         </div>
