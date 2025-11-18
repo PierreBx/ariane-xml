@@ -1,0 +1,33 @@
+# Ariane-XML Jupyter Session Configuration
+#
+# This file configures the welcome notebook behavior when starting Jupyter Lab
+
+theme:
+  # Theme mode for the welcome notebook
+  # Options: auto | dark | light
+  # - auto: Detect from system/Jupyter preference (recommended)
+  # - dark: Force dark mode
+  # - light: Force light mode
+  mode: auto
+
+welcome:
+  # Path to the welcome message markdown file (relative to ariane-xml-config/)
+  message_file: "welcome.md"
+
+  # Display the current app version
+  show_version: true
+
+  # Number of recent changes to display from VERSION_HISTORY.txt
+  recent_changes_count: 3
+
+quick_links:
+  - name: "Getting Started"
+    path: "../ariane-xml-examples/00_Getting_Started.ipynb"
+  - name: "Documentation Index"
+    path: "../ariane-xml-documentation/00_Documentation_Index.md"
+  - name: "CLI Quick Start"
+    path: "../ariane-xml-documentation/01a_Quick_Start_CLI.md"
+  - name: "Jupyter Quick Start"
+    path: "../ariane-xml-documentation/01b_Quick_Start_Jupyter.md"
+  - name: "Encryption Quick Start"
+    path: "../ariane-xml-documentation/01c_Quick_Start_Encryption.md"
