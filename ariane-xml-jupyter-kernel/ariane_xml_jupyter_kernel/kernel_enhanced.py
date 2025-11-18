@@ -170,23 +170,73 @@ Special commands:
         """
         html = []
 
-        # Add CSS styling
+        # Add CSS styling with dark mode support
         html.append('''
 <style>
+    /* Light mode colors (default) */
     .ariane-xml-container {
+        --ariane-bg: #ffffff;
+        --ariane-bg-alt: #f6f8fa;
+        --ariane-bg-hover: #f0f2f4;
+        --ariane-text: #24292e;
+        --ariane-text-secondary: #586069;
+        --ariane-border: #e1e4e8;
+        --ariane-header-bg: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        --ariane-header-border: #4b5563;
+        --ariane-numeric: #374151;
+        --ariane-success: #22863a;
+        --ariane-shadow: rgba(0,0,0,0.12);
+        --ariane-shadow-strong: rgba(0,0,0,0.24);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
         margin: 15px 0;
     }
+
+    /* Dark mode - System preference */
+    @media (prefers-color-scheme: dark) {
+        .ariane-xml-container {
+            --ariane-bg: #21262d;
+            --ariane-bg-alt: #30363d;
+            --ariane-bg-hover: #3a424a;
+            --ariane-text: #c9d1d9;
+            --ariane-text-secondary: #8b949e;
+            --ariane-border: #30363d;
+            --ariane-header-bg: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            --ariane-header-border: #374151;
+            --ariane-numeric: #a5b4c4;
+            --ariane-success: #3fb950;
+            --ariane-shadow: rgba(0,0,0,0.3);
+            --ariane-shadow-strong: rgba(0,0,0,0.5);
+        }
+    }
+
+    /* Dark mode - JupyterLab specific */
+    [data-jp-theme-light="false"] .ariane-xml-container,
+    .jp-Notebook.jp-mod-dark .ariane-xml-container,
+    body.theme-dark .ariane-xml-container {
+        --ariane-bg: #21262d;
+        --ariane-bg-alt: #30363d;
+        --ariane-bg-hover: #3a424a;
+        --ariane-text: #c9d1d9;
+        --ariane-text-secondary: #8b949e;
+        --ariane-border: #30363d;
+        --ariane-header-bg: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        --ariane-header-border: #374151;
+        --ariane-numeric: #a5b4c4;
+        --ariane-success: #3fb950;
+        --ariane-shadow: rgba(0,0,0,0.3);
+        --ariane-shadow-strong: rgba(0,0,0,0.5);
+    }
+
     .ariane-xml-table {
         border-collapse: collapse;
         width: 100%;
-        background: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        background: var(--ariane-bg);
+        box-shadow: 0 1px 3px var(--ariane-shadow), 0 1px 2px var(--ariane-shadow-strong);
         border-radius: 4px;
         overflow: hidden;
     }
     .ariane-xml-table th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--ariane-header-bg);
         color: white;
         padding: 12px 16px;
         text-align: left;
@@ -194,41 +244,41 @@ Special commands:
         font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border-bottom: 2px solid #5568d3;
+        border-bottom: 2px solid var(--ariane-header-border);
     }
     .ariane-xml-table td {
         padding: 10px 16px;
-        border-bottom: 1px solid #e1e4e8;
+        border-bottom: 1px solid var(--ariane-border);
         font-size: 14px;
-        color: #24292e;
+        color: var(--ariane-text);
     }
     .ariane-xml-table tr:last-child td {
         border-bottom: none;
     }
     .ariane-xml-table tr:hover {
-        background-color: #f6f8fa;
+        background-color: var(--ariane-bg-hover);
     }
     .ariane-xml-table tr:nth-child(even) {
-        background-color: #fafbfc;
+        background-color: var(--ariane-bg-alt);
     }
     .ariane-xml-table td.numeric {
         text-align: right;
         font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-        color: #0366d6;
+        color: var(--ariane-numeric);
     }
     .ariane-xml-result-count {
-        color: #586069;
+        color: var(--ariane-text-secondary);
         font-size: 13px;
         font-style: italic;
         margin-top: 8px;
         padding: 8px 12px;
-        background: #f6f8fa;
+        background: var(--ariane-bg-alt);
         border-radius: 4px;
         display: inline-block;
     }
     .ariane-xml-result-count::before {
         content: "✓ ";
-        color: #28a745;
+        color: var(--ariane-success);
         font-weight: bold;
     }
 </style>
