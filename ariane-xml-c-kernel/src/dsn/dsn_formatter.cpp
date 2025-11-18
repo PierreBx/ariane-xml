@@ -132,7 +132,7 @@ std::string DsnFormatter::formatDsnStructured(const std::vector<ResultRow>& resu
                     }
                 }
 
-                output << "└" << drawLine('─', 68) << "\n";
+                output << "└" << drawLine('-', 68) << "\n";
             }
         }
     }

@@ -107,7 +107,7 @@ void updateAutoComplete() {
 
 // Readline completion generator function
 // This is called repeatedly by readline to get the next completion match
-char* completion_generator(const char* text, int state) {
+char* completion_generator(const char* text __attribute__((unused)), int state) {
     static size_t match_index = 0;
 
     // On first call (state == 0), generate all matches
@@ -143,7 +143,7 @@ char* completion_generator(const char* text, int state) {
 
 // Readline attempted completion function
 // This is called when user presses TAB
-char** attempted_completion(const char* text, int start, int end) {
+char** attempted_completion(const char* text, int start __attribute__((unused)), int end __attribute__((unused))) {
     // Disable default filename completion
     rl_attempted_completion_over = 1;
 

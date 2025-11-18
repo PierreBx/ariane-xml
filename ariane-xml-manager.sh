@@ -48,16 +48,22 @@ show_menu() {
     echo " 12. Stop running apps"
     echo ""
 
+    echo -e "${COLOR_GREEN}=== Jupyter Management ===${COLOR_RESET}"
+    echo " 13. Kill Jupyter servers"
+    echo " 14. List running Jupyter servers"
+    echo " 15. Clean Jupyter files"
+    echo ""
+
     echo -e "${COLOR_GREEN}=== Tests ===${COLOR_RESET}"
-    echo " 13. Run light test suite (Docker)"
-    echo " 14. Run hard test suite (Docker)"
-    echo " 15. Run hardest test suite (Docker)"
-    echo " 16. Run DSN mode test suite (Docker)"
+    echo " 16. Run light test suite (Docker)"
+    echo " 17. Run hard test suite (Docker)"
+    echo " 18. Run hardest test suite (Docker)"
+    echo " 19. Run DSN mode test suite (Docker)"
     echo ""
 
     echo -e "${COLOR_GREEN}=== Version history & files summary ===${COLOR_RESET}"
-    echo " 17. Show version history"
-    echo " 18. Show files summary"
+    echo " 20. Show version history"
+    echo " 21. Show files summary"
     echo ""
 
     echo -e "${COLOR_YELLOW}  0. Exit${COLOR_RESET}"
@@ -105,21 +111,30 @@ execute_option() {
             "${MANAGER_DIR}/app-stop.sh"
             ;;
         13)
-            "${MANAGER_DIR}/test-light-docker.sh"
+            "${MANAGER_DIR}/jupyter-kill.sh"
             ;;
         14)
-            "${MANAGER_DIR}/test-hard-docker.sh"
+            "${MANAGER_DIR}/jupyter-list.sh"
             ;;
         15)
-            "${MANAGER_DIR}/test-hardest-docker.sh"
+            "${MANAGER_DIR}/jupyter-clean.sh"
             ;;
         16)
-            "${MANAGER_DIR}/test-dsn-docker.sh"
+            "${MANAGER_DIR}/test-light-docker.sh"
             ;;
         17)
-            "${MANAGER_DIR}/version-show-history.sh"
+            "${MANAGER_DIR}/test-hard-docker.sh"
             ;;
         18)
+            "${MANAGER_DIR}/test-hardest-docker.sh"
+            ;;
+        19)
+            "${MANAGER_DIR}/test-dsn-docker.sh"
+            ;;
+        20)
+            "${MANAGER_DIR}/version-show-history.sh"
+            ;;
+        21)
             "${MANAGER_DIR}/version-show-files-summary.sh"
             ;;
         0)
@@ -206,7 +221,7 @@ main() {
     # Interactive mode
     while true; do
         show_menu
-        read -p "Enter your choice [0-18]: " choice
+        read -p "Enter your choice [0-21]: " choice
         echo ""
 
         execute_option "$choice"
