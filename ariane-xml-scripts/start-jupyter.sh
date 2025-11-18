@@ -93,11 +93,18 @@ echo "========================================="
 echo ""
 echo "Access Jupyter Lab at: http://localhost:8888"
 echo ""
-echo "The demo notebook is available at:"
-echo "  ariane-xml-examples/Ariane-XML_Demo.ipynb"
+echo "The welcome notebook will open automatically."
+echo "Example notebooks are available in ariane-xml-examples/"
 echo ""
 echo "Press Ctrl+C to stop Jupyter Lab"
 echo ""
+
+# Determine the sessions directory path
+if [ -d "/app/ariane-xml-jupyter-sessions" ]; then
+    SESSIONS_DIR="/app/ariane-xml-jupyter-sessions"
+else
+    SESSIONS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/ariane-xml-jupyter-sessions"
+fi
 
 # Start Jupyter Lab with appropriate settings
 exec jupyter lab \
@@ -105,6 +112,9 @@ exec jupyter lab \
     --port=8888 \
     --no-browser \
     --allow-root \
+    --notebook-dir="${SESSIONS_DIR}" \
+    --ServerApp.root_dir="/app" \
+    --LabApp.default_url='/lab/tree/welcome.ipynb' \
     --NotebookApp.token='' \
     --NotebookApp.password='' \
     --NotebookApp.allow_origin='*' \
