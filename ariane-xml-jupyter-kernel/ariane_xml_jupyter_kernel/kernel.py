@@ -365,8 +365,8 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         """
         query_upper = query.strip().upper()
 
-        # HELP command
-        if query_upper == 'HELP' or query_upper == 'HELP DSN':
+        # HELP command (with or without trailing semicolon)
+        if query_upper in ('HELP', 'HELP;', 'HELP DSN', 'HELP DSN;'):
             return self._get_help_output()
 
         # HELP <specific command>
@@ -467,7 +467,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         }
 
     def _get_general_help(self) -> str:
-        """Generate general DSN MODE help"""
+        """Generate general help with standard mode first, then DSN mode features"""
         html = '''
 <style>
     .ariane-help {
@@ -476,6 +476,8 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         --help-code: #374151;
         --help-card-bg: white;
         --help-border: #e1e4e8;
+        --help-accent-standard: #2563eb;
+        --help-accent-dsn: #7c3aed;
         --help-accent-1: #6b7280;
         --help-accent-2: #4b5563;
         --help-accent-3: #9ca3af;
@@ -492,6 +494,8 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             --help-code: #a5b4c4;
             --help-card-bg: #21262d;
             --help-border: #30363d;
+            --help-accent-standard: #60a5fa;
+            --help-accent-dsn: #a78bfa;
             --help-accent-1: #6b7280;
             --help-accent-2: #4b5563;
             --help-accent-3: #9ca3af;
@@ -510,6 +514,8 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         --help-code: #a5b4c4;
         --help-card-bg: #21262d;
         --help-border: #30363d;
+        --help-accent-standard: #60a5fa;
+        --help-accent-dsn: #a78bfa;
         --help-accent-1: #6b7280;
         --help-accent-2: #4b5563;
         --help-accent-3: #9ca3af;
@@ -525,177 +531,237 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             margin: 20px 0;
             color: var(--help-text);">
 
-    <h2 style="color: var(--help-title); border-bottom: 2px solid var(--help-accent-1); padding-bottom: 10px;">
-        DSN MODE - Command Reference
+    <h2 style="color: var(--help-title); border-bottom: 2px solid var(--help-accent-standard); padding-bottom: 10px;">
+        Ariane-XML - Command Reference
     </h2>
 
-    <div style="display: grid; gap: 20px; margin-top: 20px;">
+    <!-- STANDARD MODE SECTION -->
+    <div style="margin-top: 20px;">
+        <h3 style="color: var(--help-accent-standard); margin-bottom: 15px; font-size: 18px;">
+            Standard Mode
+        </h3>
 
-        <!-- Mode Control -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-1);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Mode Control</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SET MODE DSN</td>
-                    <td style="padding: 8px;">Activate DSN mode</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET MODE STANDARD</td>
-                    <td style="padding: 8px;">Deactivate DSN mode</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET DSN_VERSION P25</td>
-                    <td style="padding: 8px;">Use P25 schema</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET DSN_VERSION P26</td>
-                    <td style="padding: 8px;">Use P26 schema</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SHOW MODE</td>
-                    <td style="padding: 8px;">Display current mode</td>
-                </tr>
-            </table>
-        </div>
+        <div style="display: grid; gap: 15px;">
 
-        <!-- Discovery Commands -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-2);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Discovery & Exploration</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">BROWSE SCHEMA</td>
-                    <td style="padding: 8px;">Explore all available fields</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">BROWSE BLOC 01</td>
-                    <td style="padding: 8px;">Show all fields in specific bloc</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DESCRIBE 01_001</td>
-                    <td style="padding: 8px;">Show field documentation</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SEARCH "keyword"</td>
-                    <td style="padding: 8px;">Search fields by description</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">? 01_001</td>
-                    <td style="padding: 8px;">Quick field lookup (same as DESCRIBE)</td>
-                </tr>
-            </table>
-        </div>
+            <!-- SQL Query Syntax -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-standard);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">SQL-like Query Syntax</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">SELECT field FROM ./path</td>
+                        <td style="padding: 8px;">Basic query on XML files</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SELECT * FROM ./data</td>
+                        <td style="padding: 8px;">Select all fields</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SELECT a, b FROM ./path WHERE a > 10</td>
+                        <td style="padding: 8px;">Query with conditions</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">ORDER BY field ASC|DESC</td>
+                        <td style="padding: 8px;">Sort results</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LIMIT n</td>
+                        <td style="padding: 8px;">Limit number of results</td>
+                    </tr>
+                </table>
+            </div>
 
-        <!-- Query Commands -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-3);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Query Operations</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SELECT 01_001, 30_001 FROM file.xml</td>
-                    <td style="padding: 8px;">Query with shortcut notation</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">WHERE, ORDER BY, LIMIT</td>
-                    <td style="padding: 8px;">Standard SQL operations</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE LIST</td>
-                    <td style="padding: 8px;">View available query templates</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE &lt;name&gt;</td>
-                    <td style="padding: 8px;">Use a predefined template</td>
-                </tr>
-            </table>
-        </div>
+            <!-- WHERE Clause Operators -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-standard);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">WHERE Clause Operators</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">=, !=, &lt;, &gt;, &lt;=, &gt;=</td>
+                        <td style="padding: 8px;">Comparison operators</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">AND, OR</td>
+                        <td style="padding: 8px;">Logical operators</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LIKE '%pattern%'</td>
+                        <td style="padding: 8px;">Pattern matching</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">IN ('a', 'b', 'c')</td>
+                        <td style="padding: 8px;">Value in list</td>
+                    </tr>
+                </table>
+            </div>
 
-        <!-- Schema Tools -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-4);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Schema Tools</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">SHOW DSN_SCHEMA</td>
-                    <td style="padding: 8px;">Display schema information</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">COMPARE P25 P26</td>
-                    <td style="padding: 8px;">Compare schema versions</td>
-                </tr>
-            </table>
-        </div>
+            <!-- Special Fields -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-standard);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">Special Fields</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">FILE_NAME</td>
+                        <td style="padding: 8px;">Source file name</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">FILE_PATH</td>
+                        <td style="padding: 8px;">Full file path</td>
+                    </tr>
+                </table>
+            </div>
 
-        <!-- Query History (Phase 2) -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-5);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Query History</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">HISTORY</td>
-                    <td style="padding: 8px;">Show last 10 queries</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">HISTORY 5</td>
-                    <td style="padding: 8px;">Show last 5 queries</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">RERUN 3</td>
-                    <td style="padding: 8px;">Re-execute query #3</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SAVE QUERY name</td>
-                    <td style="padding: 8px;">Save last query with a name</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LOAD QUERY name</td>
-                    <td style="padding: 8px;">Load and execute saved query</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LIST QUERIES</td>
-                    <td style="padding: 8px;">Show all saved queries</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DELETE QUERY name</td>
-                    <td style="padding: 8px;">Remove saved query</td>
-                </tr>
-            </table>
         </div>
+    </div>
 
-        <!-- Phase 3: Advanced Features -->
-        <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-6);">
-            <h3 style="color: var(--help-text); margin-top: 0;">Advanced Features (Phase 3)</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 40%;">%%dsn_query --output dataframe</td>
-                    <td style="padding: 8px;">Cell magic for DataFrame integration</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE SAVE name</td>
-                    <td style="padding: 8px;">Save last query as user template</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE DELETE name</td>
-                    <td style="padding: 8px;">Remove user template</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE EXPORT</td>
-                    <td style="padding: 8px;">Export all templates to JSON</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--help-border);">
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE IMPORT file.json</td>
-                    <td style="padding: 8px;">Import templates from file</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; font-family: monospace; color: var(--help-code);">Export Buttons</td>
-                    <td style="padding: 8px;">One-click CSV/JSON/HTML export in results</td>
-                </tr>
-            </table>
-        </div>
+    <!-- DSN MODE SECTION -->
+    <div style="margin-top: 30px;">
+        <h3 style="color: var(--help-accent-dsn); margin-bottom: 15px; font-size: 18px;">
+            DSN Mode - Additional Features
+        </h3>
+        <p style="margin-bottom: 15px; color: var(--help-text); font-style: italic;">
+            Activate with <code style="background: var(--help-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--help-code);">SET MODE DSN</code>
+        </p>
 
-        <!-- Help -->
-        <div style="background: var(--help-hint-bg); padding: 15px; border-radius: 6px;">
-            <h3 style="color: var(--help-text); margin-top: 0;">Getting More Help</h3>
-            <p style="margin: 5px 0;">Type <code style="background: var(--help-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--help-code);">HELP &lt;command&gt;</code> for detailed help on a specific command</p>
-            <p style="margin: 5px 0;">Press <strong>TAB</strong> for autocomplete suggestions</p>
-            <p style="margin: 5px 0;">See <code style="color: var(--help-code);">JUPYTER_DSN_INTEGRATION.md</code> for full documentation</p>
+        <div style="display: grid; gap: 15px;">
+
+            <!-- Mode Control -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-dsn);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">Mode Control</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">SET MODE DSN</td>
+                        <td style="padding: 8px;">Activate DSN mode</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET MODE STANDARD</td>
+                        <td style="padding: 8px;">Deactivate DSN mode</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SET DSN_VERSION P25|P26</td>
+                        <td style="padding: 8px;">Select schema version</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SHOW MODE</td>
+                        <td style="padding: 8px;">Display current mode</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Discovery Commands -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-dsn);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">Discovery & Exploration</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">BROWSE SCHEMA</td>
+                        <td style="padding: 8px;">Explore all available fields</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">BROWSE BLOC 01</td>
+                        <td style="padding: 8px;">Show all fields in specific bloc</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DESCRIBE 01_001</td>
+                        <td style="padding: 8px;">Show field documentation</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SEARCH "keyword"</td>
+                        <td style="padding: 8px;">Search fields by description</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">? 01_001</td>
+                        <td style="padding: 8px;">Quick field lookup</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- DSN Query Features -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-dsn);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">DSN Query Features</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">SELECT 01_001, 30_001 FROM file.xml</td>
+                        <td style="padding: 8px;">Shortcut notation for DSN fields</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE LIST</td>
+                        <td style="padding: 8px;">View available query templates</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE &lt;name&gt;</td>
+                        <td style="padding: 8px;">Use a predefined template</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SHOW DSN_SCHEMA</td>
+                        <td style="padding: 8px;">Display schema information</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">COMPARE P25 P26</td>
+                        <td style="padding: 8px;">Compare schema versions</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Query History -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-dsn);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">Query History & Saved Queries</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">HISTORY [n]</td>
+                        <td style="padding: 8px;">Show last n queries (default: 10)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">RERUN n</td>
+                        <td style="padding: 8px;">Re-execute query #n</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">SAVE QUERY name</td>
+                        <td style="padding: 8px;">Save last query with a name</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LOAD QUERY name</td>
+                        <td style="padding: 8px;">Load and execute saved query</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">LIST QUERIES</td>
+                        <td style="padding: 8px;">Show all saved queries</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">DELETE QUERY name</td>
+                        <td style="padding: 8px;">Remove saved query</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Advanced Features -->
+            <div style="background: var(--help-card-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--help-accent-dsn);">
+                <h4 style="color: var(--help-text); margin-top: 0; margin-bottom: 10px;">Advanced Features</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code); width: 50%;">%%dsn_query --output dataframe</td>
+                        <td style="padding: 8px;">Cell magic for DataFrame integration</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE SAVE|DELETE name</td>
+                        <td style="padding: 8px;">Manage user templates</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--help-border);">
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">TEMPLATE EXPORT|IMPORT</td>
+                        <td style="padding: 8px;">Export/import templates as JSON</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-family: monospace; color: var(--help-code);">Export Buttons</td>
+                        <td style="padding: 8px;">One-click CSV/JSON/HTML export</td>
+                    </tr>
+                </table>
+            </div>
+
         </div>
+    </div>
+
+    <!-- Help Footer -->
+    <div style="background: var(--help-hint-bg); padding: 15px; border-radius: 6px; margin-top: 20px;">
+        <h4 style="color: var(--help-text); margin-top: 0;">Getting More Help</h4>
+        <p style="margin: 5px 0;">Type <code style="background: var(--help-code-bg); padding: 2px 6px; border-radius: 3px; color: var(--help-code);">HELP &lt;command&gt;</code> for detailed help on a specific command</p>
+        <p style="margin: 5px 0;">Press <strong>TAB</strong> for autocomplete suggestions</p>
+        <p style="margin: 5px 0;">See <code style="color: var(--help-code);">JUPYTER_DSN_INTEGRATION.md</code> for full documentation</p>
     </div>
 </div>
 '''
