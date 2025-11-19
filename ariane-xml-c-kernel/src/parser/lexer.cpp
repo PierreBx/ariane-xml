@@ -204,6 +204,11 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     if (upper == "FORMAT") return TokenType::FORMAT;
     if (upper == "LIST") return TokenType::LIST;
     if (upper == "UPGRADE_TO") return TokenType::UPGRADE_TO;
+    if (upper == "PSEUDONYMISE") return TokenType::PSEUDONYMISE;
+    if (upper == "PSEUDONYMIZE") return TokenType::PSEUDONYMISE;  // US spelling
+    if (upper == "TO") return TokenType::TO;
+    if (upper == "CONFIG") return TokenType::CONFIG;
+    if (upper == "STATUS") return TokenType::STATUS;
     if (upper == "FOR") return TokenType::FOR;
     if (upper == "IN") return TokenType::IN;
     if (upper == "AT") return TokenType::AT;

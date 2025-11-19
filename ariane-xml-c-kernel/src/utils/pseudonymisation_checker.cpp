@@ -7,7 +7,8 @@ namespace ariane_xml {
 
 bool PseudonymisationChecker::isPseudonymised(const std::string& filepath) {
     pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_file(filepath.c_str());
+    // Must use parse_pi flag to read processing instructions
+    pugi::xml_parse_result result = doc.load_file(filepath.c_str(), pugi::parse_default | pugi::parse_pi);
 
     if (!result) {
         return false;
@@ -27,7 +28,8 @@ bool PseudonymisationChecker::isPseudonymised(const std::string& filepath) {
 
 std::optional<PseudonymisationMetadata> PseudonymisationChecker::getMetadata(const std::string& filepath) {
     pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_file(filepath.c_str());
+    // Must use parse_pi flag to read processing instructions
+    pugi::xml_parse_result result = doc.load_file(filepath.c_str(), pugi::parse_default | pugi::parse_pi);
 
     if (!result) {
         return std::nullopt;

@@ -49,6 +49,11 @@ public:
     std::shared_ptr<DsnSchema> getDsnSchema() const;
     bool hasDsnSchema() const;
 
+    // Pseudonymisation config management
+    void setPseudoConfigPath(const std::string& path);
+    std::optional<std::string> getPseudoConfigPath() const;
+    bool hasPseudoConfigPath() const;
+
 private:
     std::optional<std::string> xsd_path_;
     std::optional<std::string> dest_path_;
@@ -58,6 +63,9 @@ private:
     QueryMode mode_ = QueryMode::STANDARD;
     std::string dsn_version_ = "AUTO";
     std::shared_ptr<DsnSchema> dsn_schema_;
+
+    // Pseudonymisation fields
+    std::optional<std::string> pseudo_config_path_;
 };
 
 } // namespace ariane_xml

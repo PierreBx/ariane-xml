@@ -27,13 +27,17 @@ private:
     bool handleDescribeCommand(const std::string& input);
     bool handleDsnTemplateCommand(const std::string& input);
     bool handleDsnCompareCommand(const std::string& input);
+    bool handlePseudonymiseCommand(const std::string& input);
 
     void setXsdPath(const std::string& path);
     void setDestPath(const std::string& path);
+    void setPseudoConfigPath(const std::string& path);
 
     void showXsdPath();
     void showDestPath();
     void showMode();
+    void showPseudoConfig();
+    void showPseudonymisationStatus(const std::string& filepath);
 
     void displayAttribute(const DsnAttribute& attr);
     void displayBloc(const DsnBloc& bloc);
