@@ -8,6 +8,8 @@
 
 namespace ariane_xml {
 
+class AppContext; // Forward declaration
+
 class ParseError : public std::runtime_error {
 public:
     explicit ParseError(const std::string& message)
@@ -16,7 +18,7 @@ public:
 
 class Parser {
 public:
-    explicit Parser(const std::vector<Token>& tokens);
+    explicit Parser(const std::vector<Token>& tokens, const AppContext* context = nullptr);
 
     // Parse the tokens into a Query AST
     std::unique_ptr<Query> parse();
@@ -24,6 +26,7 @@ public:
 private:
     std::vector<Token> tokens_;
     size_t current_;
+    const AppContext* context_;
 
     // Helper methods
     Token peek() const;
@@ -52,6 +55,10 @@ private:
     void parseGroupByClause(Query& query);  // Parse GROUP BY clause
     void parseHavingClause(Query& query);   // Parse HAVING clause
     void markVariableReferencesInWhere(WhereExpr* expr, const Query& query);
+
+    // DSN mode helpers
+    bool isDsnShortcutPattern(const std::string& component) const;
+    std::string convertDsnShortcutToFullName(const std::string& shortcut) const;
 };
 
 } // namespace ariane_xml

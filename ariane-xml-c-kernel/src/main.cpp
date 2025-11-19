@@ -288,7 +288,7 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
         auto tokens = lexer.tokenize();
 
         // Syntax analysis
-        ariane_xml::Parser parser(tokens);
+        ariane_xml::Parser parser(tokens, context);
         auto ast = parser.parse();
 
         // Check for ambiguous attributes if in verbose mode

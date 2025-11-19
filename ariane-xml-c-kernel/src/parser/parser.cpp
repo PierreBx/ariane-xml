@@ -1,10 +1,12 @@
 #include "parser/parser.h"
+#include "utils/app_context.h"
 #include <algorithm>
+#include <regex>
 
 namespace ariane_xml {
 
-Parser::Parser(const std::vector<Token>& tokens)
-    : tokens_(tokens), current_(0) {}
+Parser::Parser(const std::vector<Token>& tokens, const AppContext* context)
+    : tokens_(tokens), current_(0), context_(context) {}
 
 std::unique_ptr<Query> Parser::parse() {
     auto query = std::make_unique<Query>();
@@ -167,6 +169,10 @@ FieldPath Parser::parseFieldPath() {
 
         // Check for leading dot (partial path)
         if (peek().type == TokenType::DOT) {
+            // In DSN mode, leading dots are not allowed
+            if (context_ && context_->isDsnMode()) {
+                throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., COUNT(30.001))");
+            }
             field.is_partial_path = true;
             advance(); // consume leading dot
         }
@@ -179,23 +185,40 @@ FieldPath Parser::parseFieldPath() {
             }
             field.is_attribute = true;
             field.attribute_name = advance().value;
+        } else if (context_ && context_->isDsnMode() && peek().type == TokenType::NUMBER) {
+            // DSN mode: Handle YY.ZZZ shortcut pattern in aggregate
+            std::string numberValue = peek().value;
+
+            if (isDsnShortcutPattern(numberValue)) {
+                // Convert YY.ZZZ to S21_G00_YY_ZZZ and mark as partial path
+                std::string fullName = convertDsnShortcutToFullName(numberValue);
+                field.components.push_back(fullName);
+                field.is_partial_path = true;  // Enable partial path search
+                advance(); // consume the number token
+            } else {
+                throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
+            }
         } else {
             // Parse field path inside aggregate function
-            if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected field identifier in aggregate function");
-            }
-
-            field.components.push_back(advance().value);
-
-            // Parse remaining components (separated by . or /)
-            while (peek().type == TokenType::DOT || peek().type == TokenType::SLASH) {
-                advance(); // consume separator
-
-                if (peek().type != TokenType::IDENTIFIER) {
-                    throw ParseError("Expected identifier after separator");
+            if (peek().type == TokenType::IDENTIFIER) {
+                // In DSN mode, only YY.ZZZ format is allowed
+                if (context_ && context_->isDsnMode()) {
+                    throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
                 }
-
                 field.components.push_back(advance().value);
+
+                // Parse remaining components (separated by . or /)
+                while (peek().type == TokenType::DOT || peek().type == TokenType::SLASH) {
+                    advance(); // consume separator
+
+                    if (peek().type != TokenType::IDENTIFIER) {
+                        throw ParseError("Expected identifier after separator");
+                    }
+
+                    field.components.push_back(advance().value);
+                }
+            } else {
+                throw ParseError("Expected field identifier in aggregate function");
             }
         }
 
@@ -212,6 +235,10 @@ FieldPath Parser::parseFieldPath() {
 
     // Check for leading dot (partial path)
     if (peek().type == TokenType::DOT) {
+        // In DSN mode, leading dots are not allowed
+        if (context_ && context_->isDsnMode()) {
+            throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., 30.001)");
+        }
         field.is_partial_path = true;
         advance(); // consume leading dot
     }
@@ -232,12 +259,35 @@ FieldPath Parser::parseFieldPath() {
         return field;
     }
 
-    // Parse first component (regular field)
-    if (peek().type != TokenType::IDENTIFIER) {
-        throw ParseError("Expected field identifier");
+    // DSN mode: Handle YY.ZZZ shortcut pattern
+    if (context_ && context_->isDsnMode() && peek().type == TokenType::NUMBER) {
+        std::string numberValue = peek().value;
+
+        if (isDsnShortcutPattern(numberValue)) {
+            // Convert YY.ZZZ to S21_G00_YY_ZZZ and mark as partial path for recursive search
+            std::string fullName = convertDsnShortcutToFullName(numberValue);
+            field.components.push_back(fullName);
+            field.is_partial_path = true;  // Enable partial path search
+            advance(); // consume the number token
+            return field;
+        } else {
+            throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
+        }
     }
 
-    field.components.push_back(advance().value);
+    // Parse first component (regular field)
+    if (peek().type == TokenType::IDENTIFIER) {
+        // In DSN mode, only YY.ZZZ format is allowed
+        if (context_ && context_->isDsnMode()) {
+            throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
+        }
+        field.components.push_back(advance().value);
+    } else if (peek().type == TokenType::NUMBER) {
+        // Numbers are not allowed in standard mode as field names
+        throw ParseError("Expected field identifier, got number. In DSN mode, use YY.ZZZ format (e.g., 30.001)");
+    } else {
+        throw ParseError("Expected field identifier");
+    }
 
     // Parse remaining components (separated by . or /)
     while (peek().type == TokenType::DOT || peek().type == TokenType::SLASH) {
@@ -297,24 +347,45 @@ FieldPath Parser::parseSelectField() {
 
         // Check for leading dot (partial path)
         if (peek().type == TokenType::DOT) {
+            // In DSN mode, leading dots are not allowed
+            if (context_ && context_->isDsnMode()) {
+                throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format in aggregations");
+            }
             field.is_partial_path = true;
             advance(); // consume leading dot
         }
 
-        // Parse argument (can be a variable name or field path like emp.salary or .price)
-        if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected identifier in aggregation function");
-        }
+        // DSN mode: Handle YY.ZZZ shortcut pattern in aggregation
+        std::string arg;
+        if (context_ && context_->isDsnMode() && peek().type == TokenType::NUMBER) {
+            std::string numberValue = peek().value;
 
-        std::string arg = advance().value;
-
-        // Check for dot-separated field path (e.g., emp.salary)
-        while (peek().type == TokenType::DOT) {
-            advance(); // consume dot
-            if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected identifier after '.' in aggregation argument");
+            if (isDsnShortcutPattern(numberValue)) {
+                // Convert YY.ZZZ to S21_G00_YY_ZZZ and mark as partial path
+                arg = convertDsnShortcutToFullName(numberValue);
+                field.is_partial_path = true;  // Enable partial path search
+                advance(); // consume the number token
+            } else {
+                throw ParseError("In DSN mode, only YY.ZZZ format is accepted in aggregations");
             }
-            arg += "." + advance().value;
+        } else if (peek().type == TokenType::IDENTIFIER) {
+            // Standard mode or identifier in DSN mode (should error in DSN mode)
+            if (context_ && context_->isDsnMode()) {
+                throw ParseError("In DSN mode, only YY.ZZZ format is accepted in aggregations");
+            }
+
+            arg = advance().value;
+
+            // Check for dot-separated field path (e.g., emp.salary)
+            while (peek().type == TokenType::DOT) {
+                advance(); // consume dot
+                if (peek().type != TokenType::IDENTIFIER) {
+                    throw ParseError("Expected identifier after '.' in aggregation argument");
+                }
+                arg += "." + advance().value;
+            }
+        } else {
+            throw ParseError("Expected field identifier in aggregation function");
         }
 
         field.aggregate = aggFunc;
@@ -863,6 +934,25 @@ void Parser::markVariableReferencesInWhere(WhereExpr* expr, const Query& query) 
         markVariableReferencesInWhere(logical->left.get(), query);
         markVariableReferencesInWhere(logical->right.get(), query);
     }
+}
+
+// DSN mode helper methods
+bool Parser::isDsnShortcutPattern(const std::string& component) const {
+    // Check if string matches YY.ZZZ pattern (2 digits, dot, 3 digits)
+    std::regex pattern(R"(^\d{2}\.\d{3}$)");
+    return std::regex_match(component, pattern);
+}
+
+std::string Parser::convertDsnShortcutToFullName(const std::string& shortcut) const {
+    // Convert YY.ZZZ to S21_G00_YY_ZZZ
+    // Example: 30.001 -> S21_G00_30_001
+    std::string result = shortcut;
+    // Replace dot with underscore
+    size_t dot_pos = result.find('.');
+    if (dot_pos != std::string::npos) {
+        result[dot_pos] = '_';
+    }
+    return "S21_G00_" + result;
 }
 
 } // namespace ariane_xml
