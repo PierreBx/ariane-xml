@@ -66,4 +66,16 @@ bool AppContext::hasDsnSchema() const {
     return dsn_schema_ != nullptr;
 }
 
+void AppContext::setPseudoConfigPath(const std::string& path) {
+    pseudo_config_path_ = path;
+}
+
+std::optional<std::string> AppContext::getPseudoConfigPath() const {
+    return pseudo_config_path_;
+}
+
+bool AppContext::hasPseudoConfigPath() const {
+    return pseudo_config_path_.has_value();
+}
+
 } // namespace ariane_xml

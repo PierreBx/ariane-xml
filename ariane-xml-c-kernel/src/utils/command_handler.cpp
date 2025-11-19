@@ -1,4 +1,6 @@
 #include "utils/command_handler.h"
+#include "utils/pseudonymisation_checker.h"
+#include "utils/secure_input.h"
 #include "parser/lexer.h"
 #include "generator/xsd_parser.h"
 #include "generator/xml_generator.h"
@@ -8,6 +10,8 @@
 #include "dsn/dsn_validator.h"
 #include "dsn/dsn_templates.h"
 #include "dsn/dsn_migration.h"
+#include <array>
+#include <cstdio>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -63,6 +67,11 @@ bool CommandHandler::handleCommand(const std::string& input) {
         return handleDsnCompareCommand(input);
     }
 
+    // Check if it's a PSEUDONYMISE command
+    if (tokens[0].type == TokenType::PSEUDONYMISE) {
+        return handlePseudonymiseCommand(input);
+    }
+
     // Not a recognized command, treat as query
     return false;
 }
@@ -78,6 +87,7 @@ bool CommandHandler::handleSetCommand(const std::string& input) {
         std::cerr << "       SET DEST /path/to/directory\n";
         std::cerr << "       SET VERBOSE\n";
         std::cerr << "       SET MODE <STANDARD|DSN>\n";
+        std::cerr << "       SET PSEUDO_CONFIG /path/to/config.yaml\n";
         return true;
     }
 
@@ -156,8 +166,11 @@ bool CommandHandler::handleSetCommand(const std::string& input) {
         setXsdPath(path);
     } else if (paramType == TokenType::DEST) {
         setDestPath(path);
+    } else if (paramType == TokenType::IDENTIFIER &&
+               (tokens[1].value == "PSEUDO_CONFIG" || tokens[1].value == "pseudo_config")) {
+        setPseudoConfigPath(path);
     } else {
-        std::cerr << "Error: Unknown SET parameter. Use XSD or DEST\n";
+        std::cerr << "Error: Unknown SET parameter. Use XSD, DEST, or PSEUDO_CONFIG\n";
     }
 
     return true;
@@ -167,12 +180,14 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
     Lexer lexer(input);
     auto tokens = lexer.tokenize();
 
-    // Expect: SHOW <XSD|DEST|MODE>
+    // Expect: SHOW <XSD|DEST|MODE|PSEUDO_CONFIG|PSEUDONYMISATION STATUS>
     if (tokens.size() < 2) {
-        std::cerr << "Error: SHOW command requires a parameter (XSD, DEST, or MODE)\n";
+        std::cerr << "Error: SHOW command requires a parameter\n";
         std::cerr << "Usage: SHOW XSD\n";
         std::cerr << "       SHOW DEST\n";
         std::cerr << "       SHOW MODE\n";
+        std::cerr << "       SHOW PSEUDO_CONFIG\n";
+        std::cerr << "       SHOW PSEUDONYMISATION STATUS <file>\n";
         return true;
     }
 
@@ -185,8 +200,41 @@ bool CommandHandler::handleShowCommand(const std::string& input) {
         showDestPath();
     } else if (paramType == TokenType::MODE) {
         showMode();
+    } else if (paramType == TokenType::IDENTIFIER &&
+               (tokens[1].value == "PSEUDO_CONFIG" || tokens[1].value == "pseudo_config")) {
+        showPseudoConfig();
+    } else if (paramType == TokenType::PSEUDONYMISE ||
+               (paramType == TokenType::IDENTIFIER &&
+                (tokens[1].value == "PSEUDONYMISATION" || tokens[1].value == "pseudonymisation"))) {
+        // SHOW PSEUDONYMISATION STATUS <file>
+        if (tokens.size() < 4 || tokens[2].type != TokenType::STATUS) {
+            std::cerr << "Usage: SHOW PSEUDONYMISATION STATUS <file>\n";
+            return true;
+        }
+        // Collect filepath from remaining tokens
+        std::string filepath;
+        for (size_t i = 3; i < tokens.size(); ++i) {
+            if (tokens[i].type == TokenType::END_OF_INPUT) break;
+            if (!filepath.empty() &&
+                tokens[i].type != TokenType::DOT &&
+                tokens[i].type != TokenType::SLASH &&
+                tokens[i-1].type != TokenType::DOT &&
+                tokens[i-1].type != TokenType::SLASH) {
+                if (tokens[i].type == TokenType::STRING_LITERAL ||
+                    tokens[i-1].type == TokenType::STRING_LITERAL) {
+                    filepath += " ";
+                }
+            }
+            filepath += tokens[i].value;
+        }
+        if (filepath.empty()) {
+            std::cerr << "Error: File path required\n";
+            std::cerr << "Usage: SHOW PSEUDONYMISATION STATUS <file>\n";
+            return true;
+        }
+        showPseudonymisationStatus(filepath);
     } else {
-        std::cerr << "Error: Unknown SHOW parameter. Use XSD, DEST, or MODE\n";
+        std::cerr << "Error: Unknown SHOW parameter. Use XSD, DEST, MODE, PSEUDO_CONFIG, or PSEUDONYMISATION STATUS\n";
     }
 
     return true;
@@ -306,6 +354,52 @@ void CommandHandler::showMode() {
         }
     } else {
         std::cout << "MODE: STANDARD\n";
+    }
+}
+
+void CommandHandler::setPseudoConfigPath(const std::string& path) {
+    // Check if path exists
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "Error: Config file does not exist: " << path << "\n";
+        return;
+    }
+
+    // Check if it's a file (not directory)
+    if (std::filesystem::is_directory(path)) {
+        std::cerr << "Error: Path is a directory, expected YAML config file: " << path << "\n";
+        return;
+    }
+
+    context_.setPseudoConfigPath(path);
+    std::cout << "PSEUDO_CONFIG path set to: " << path << "\n";
+}
+
+void CommandHandler::showPseudoConfig() {
+    if (context_.hasPseudoConfigPath()) {
+        std::cout << "PSEUDO_CONFIG: " << context_.getPseudoConfigPath().value() << "\n";
+    } else {
+        std::cout << "PSEUDO_CONFIG: (not set)\n";
+    }
+}
+
+void CommandHandler::showPseudonymisationStatus(const std::string& filepath) {
+    // Check if file exists
+    if (!std::filesystem::exists(filepath)) {
+        std::cerr << "Error: File does not exist: " << filepath << "\n";
+        return;
+    }
+
+    if (PseudonymisationChecker::isPseudonymised(filepath)) {
+        std::cout << "File: " << filepath << "\n";
+        std::cout << "Status: PSEUDONYMISED\n";
+
+        auto metadata = PseudonymisationChecker::getMetadata(filepath);
+        if (metadata) {
+            std::cout << PseudonymisationChecker::formatMetadata(metadata.value()) << "\n";
+        }
+    } else {
+        std::cout << "File: " << filepath << "\n";
+        std::cout << "Status: NOT PSEUDONYMISED\n";
     }
 }
 
@@ -845,6 +939,173 @@ bool CommandHandler::handleDsnCompareCommand(const std::string& input) {
     std::cout << "  1. Loading DSN schema for " << version1 << "\n";
     std::cout << "  2. Loading DSN schema for " << version2 << "\n";
     std::cout << "  3. Using DsnMigrationHelper to compare schemas\n\n";
+
+    return true;
+}
+
+bool CommandHandler::handlePseudonymiseCommand(const std::string& input) {
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    // Expect: PSEUDONYMISE <input> [TO <output>] [CONFIG <config>]
+    if (tokens.size() < 2) {
+        std::cerr << "Error: PSEUDONYMISE command requires an input file\n";
+        std::cerr << "Usage: PSEUDONYMISE <input.xml>\n";
+        std::cerr << "       PSEUDONYMISE <input.xml> TO <output.xml>\n";
+        std::cerr << "       PSEUDONYMISE <input.xml> CONFIG <config.yaml>\n";
+        std::cerr << "       PSEUDONYMISE <input.xml> TO <output.xml> CONFIG <config.yaml>\n";
+        return true;
+    }
+
+    // Parse command arguments
+    std::string inputPath;
+    std::string outputPath;
+    std::string configPath;
+
+    size_t i = 1;
+    // Collect input path
+    while (i < tokens.size() &&
+           tokens[i].type != TokenType::TO &&
+           tokens[i].type != TokenType::CONFIG &&
+           tokens[i].type != TokenType::END_OF_INPUT) {
+        if (!inputPath.empty() &&
+            tokens[i].type != TokenType::DOT &&
+            tokens[i].type != TokenType::SLASH &&
+            tokens[i-1].type != TokenType::DOT &&
+            tokens[i-1].type != TokenType::SLASH) {
+            if (tokens[i].type == TokenType::STRING_LITERAL ||
+                tokens[i-1].type == TokenType::STRING_LITERAL) {
+                inputPath += " ";
+            }
+        }
+        inputPath += tokens[i].value;
+        ++i;
+    }
+
+    // Parse optional TO and CONFIG
+    while (i < tokens.size() && tokens[i].type != TokenType::END_OF_INPUT) {
+        if (tokens[i].type == TokenType::TO) {
+            ++i;
+            // Collect output path
+            while (i < tokens.size() &&
+                   tokens[i].type != TokenType::CONFIG &&
+                   tokens[i].type != TokenType::END_OF_INPUT) {
+                if (!outputPath.empty() &&
+                    tokens[i].type != TokenType::DOT &&
+                    tokens[i].type != TokenType::SLASH &&
+                    tokens[i-1].type != TokenType::DOT &&
+                    tokens[i-1].type != TokenType::SLASH) {
+                    if (tokens[i].type == TokenType::STRING_LITERAL ||
+                        tokens[i-1].type == TokenType::STRING_LITERAL) {
+                        outputPath += " ";
+                    }
+                }
+                outputPath += tokens[i].value;
+                ++i;
+            }
+        } else if (tokens[i].type == TokenType::CONFIG) {
+            ++i;
+            // Collect config path
+            while (i < tokens.size() &&
+                   tokens[i].type != TokenType::TO &&
+                   tokens[i].type != TokenType::END_OF_INPUT) {
+                if (!configPath.empty() &&
+                    tokens[i].type != TokenType::DOT &&
+                    tokens[i].type != TokenType::SLASH &&
+                    tokens[i-1].type != TokenType::DOT &&
+                    tokens[i-1].type != TokenType::SLASH) {
+                    if (tokens[i].type == TokenType::STRING_LITERAL ||
+                        tokens[i-1].type == TokenType::STRING_LITERAL) {
+                        configPath += " ";
+                    }
+                }
+                configPath += tokens[i].value;
+                ++i;
+            }
+        } else {
+            ++i;
+        }
+    }
+
+    // Validate input path
+    if (inputPath.empty()) {
+        std::cerr << "Error: Input file path is required\n";
+        return true;
+    }
+
+    if (!std::filesystem::exists(inputPath)) {
+        std::cerr << "Error: Input file does not exist: " << inputPath << "\n";
+        return true;
+    }
+
+    // Determine output path
+    if (outputPath.empty()) {
+        // Auto-generate output path: input_pseudo.xml
+        std::filesystem::path p(inputPath);
+        std::string stem = p.stem().string();
+        std::string ext = p.extension().string();
+        outputPath = p.parent_path() / (stem + "_pseudo" + ext);
+    }
+
+    // Determine config path
+    if (configPath.empty()) {
+        if (context_.hasPseudoConfigPath()) {
+            configPath = context_.getPseudoConfigPath().value();
+        } else {
+            std::cerr << "Error: No config file specified and PSEUDO_CONFIG not set\n";
+            std::cerr << "Use: SET PSEUDO_CONFIG /path/to/config.yaml\n";
+            std::cerr << "Or:  PSEUDONYMISE <input> CONFIG /path/to/config.yaml\n";
+            return true;
+        }
+    }
+
+    // Validate config exists
+    if (!std::filesystem::exists(configPath)) {
+        std::cerr << "Error: Config file does not exist: " << configPath << "\n";
+        return true;
+    }
+
+    // Prompt for password
+    std::string password = SecureInput::promptPassword("Enter encryption password: ");
+    if (password.empty()) {
+        std::cerr << "Error: Password cannot be empty\n";
+        return true;
+    }
+
+    // Build the command to call Python
+    std::string pythonCmd = "python3 -m ariane_xml_crypto.cli encrypt \"" +
+                            inputPath + "\" \"" +
+                            outputPath + "\" -c \"" +
+                            configPath + "\" -p \"" + password + "\"";
+
+    // Clear password from memory after building command
+    SecureInput::secureClear(password);
+
+    std::cout << "Pseudonymising: " << inputPath << "\n";
+    std::cout << "Output: " << outputPath << "\n";
+    std::cout << "Config: " << configPath << "\n";
+
+    // Execute the Python command
+    std::array<char, 256> buffer;
+    std::string result;
+
+    FILE* pipe = popen(pythonCmd.c_str(), "r");
+    if (!pipe) {
+        std::cerr << "Error: Failed to execute pseudonymisation command\n";
+        return true;
+    }
+
+    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+        result += buffer.data();
+        std::cout << buffer.data();  // Stream output to user
+    }
+
+    int status = pclose(pipe);
+    if (status != 0) {
+        std::cerr << "\nError: Pseudonymisation failed with exit code " << status << "\n";
+    } else {
+        std::cout << "\nPseudonymisation completed successfully\n";
+    }
 
     return true;
 }
