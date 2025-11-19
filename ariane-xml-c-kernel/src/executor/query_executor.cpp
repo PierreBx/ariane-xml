@@ -326,6 +326,194 @@ std::vector<ResultRow> QueryExecutor::execute(const Query& query) {
     return allResults;
 }
 
+std::vector<ResultRow> QueryExecutor::executeWithFiles(
+    const Query& query,
+    const std::vector<std::string>& xmlFiles
+) {
+    std::vector<ResultRow> allResults;
+
+    if (xmlFiles.empty()) {
+        return allResults;
+    }
+
+    // Check if any aggregate functions are used
+    bool hasAggregates = false;
+    for (const auto& field : query.select_fields) {
+        if (field.aggregate != AggregateFunc::NONE) {
+            hasAggregates = true;
+            break;
+        }
+    }
+
+    // For aggregates, use the standard execute with from_path
+    // (filtering doesn't make sense for aggregates across mixed files)
+    if (hasAggregates) {
+        return execute(query);
+    }
+
+    // Non-aggregate query - process the provided files
+    std::vector<FieldPath> modifiedSelectFields = query.select_fields;
+    std::vector<std::string> tempOrderByFields;
+
+    if (!query.order_by_fields.empty()) {
+        for (const auto& orderByField : query.order_by_fields) {
+            bool alreadyInSelect = false;
+            for (const auto& selectField : query.select_fields) {
+                std::string selectFieldName;
+                if (selectField.is_attribute) {
+                    selectFieldName = selectField.attribute_name;
+                } else if (!selectField.components.empty()) {
+                    selectFieldName = selectField.components.back();
+                }
+                if (selectFieldName == orderByField.field_name) {
+                    alreadyInSelect = true;
+                    break;
+                }
+            }
+            if (!alreadyInSelect) {
+                FieldPath tempField;
+                tempField.is_partial_path = true;
+                tempField.components.push_back(orderByField.field_name);
+                modifiedSelectFields.push_back(tempField);
+                tempOrderByFields.push_back(orderByField.field_name);
+            }
+        }
+    }
+
+    auto& mutableQuery = const_cast<Query&>(query);
+    auto originalSelectFields = mutableQuery.select_fields;
+    mutableQuery.select_fields = modifiedSelectFields;
+
+    for (const auto& filepath : xmlFiles) {
+        try {
+            auto fileResults = processFile(filepath, query);
+            allResults.insert(allResults.end(), fileResults.begin(), fileResults.end());
+        } catch (const std::exception& e) {
+            std::cerr << "Error processing file " << filepath << ": " << e.what() << std::endl;
+        }
+    }
+
+    mutableQuery.select_fields = originalSelectFields;
+
+    // Apply DISTINCT
+    if (query.distinct && !allResults.empty()) {
+        std::vector<ResultRow> uniqueResults;
+        std::set<std::string> seen;
+        for (const auto& row : allResults) {
+            std::string rowKey;
+            for (const auto& [field, value] : row) {
+                if (!rowKey.empty()) rowKey += "|||";
+                rowKey += value;
+            }
+            if (seen.find(rowKey) == seen.end()) {
+                seen.insert(rowKey);
+                uniqueResults.push_back(row);
+            }
+        }
+        allResults = std::move(uniqueResults);
+    }
+
+    // Apply ORDER BY
+    if (!query.order_by_fields.empty() && !allResults.empty()) {
+        const OrderByField& orderByField = query.order_by_fields[0];
+        const std::string& orderField = orderByField.field_name;
+        bool descending = (orderByField.direction == SortDirection::DESC);
+
+        std::sort(allResults.begin(), allResults.end(),
+            [&orderField, descending](const ResultRow& a, const ResultRow& b) {
+                std::string valA, valB;
+                for (const auto& [field, value] : a) {
+                    if (field.find(orderField) != std::string::npos ||
+                        field == orderField) {
+                        valA = value;
+                        break;
+                    }
+                }
+                for (const auto& [field, value] : b) {
+                    if (field.find(orderField) != std::string::npos ||
+                        field == orderField) {
+                        valB = value;
+                        break;
+                    }
+                }
+                if (descending) {
+                    return valA > valB;
+                }
+                return valA < valB;
+            });
+
+        // Remove temporary ORDER BY fields
+        if (!tempOrderByFields.empty()) {
+            for (auto& row : allResults) {
+                row.erase(
+                    std::remove_if(row.begin(), row.end(),
+                        [&tempOrderByFields](const std::pair<std::string, std::string>& p) {
+                            for (const auto& tempField : tempOrderByFields) {
+                                if (p.first.find(tempField) != std::string::npos) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }),
+                    row.end());
+            }
+        }
+    }
+
+    // Apply OFFSET
+    if (query.offset > 0 && static_cast<size_t>(query.offset) < allResults.size()) {
+        allResults.erase(allResults.begin(), allResults.begin() + query.offset);
+    } else if (query.offset > 0) {
+        allResults.clear();
+    }
+
+    // Apply LIMIT
+    if (query.limit >= 0 && static_cast<size_t>(query.limit) < allResults.size()) {
+        allResults.resize(query.limit);
+    }
+
+    return allResults;
+}
+
+std::vector<ResultRow> QueryExecutor::executeWithProgressAndFiles(
+    const Query& query,
+    const std::vector<std::string>& xmlFiles,
+    ProgressCallback progressCallback,
+    ExecutionStats* stats
+) {
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    if (xmlFiles.empty()) {
+        return std::vector<ResultRow>();
+    }
+
+    size_t fileCount = xmlFiles.size();
+    bool useThreading = shouldUseThreading(fileCount);
+    size_t threadCount = useThreading ? getOptimalThreadCount() : 1;
+
+    if (stats) {
+        stats->total_files = fileCount;
+        stats->thread_count = threadCount;
+        stats->used_threading = useThreading;
+    }
+
+    // For simplicity, use executeWithFiles for now
+    // (threading with filtered files can be added later)
+    auto results = executeWithFiles(query, xmlFiles);
+
+    // Final progress update
+    if (progressCallback) {
+        progressCallback(fileCount, fileCount, threadCount);
+    }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    if (stats) {
+        stats->execution_time_seconds = std::chrono::duration<double>(endTime - startTime).count();
+    }
+
+    return results;
+}
+
 std::vector<std::string> QueryExecutor::getXmlFiles(const std::string& path) {
     std::vector<std::string> xmlFiles;
 

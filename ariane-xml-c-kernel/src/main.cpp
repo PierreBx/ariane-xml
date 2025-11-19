@@ -307,6 +307,9 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
         }
 
         // Check pseudonymisation status if in DSN mode
+        std::vector<std::string> filteredFiles;  // Files to use for execution in DSN mode
+        bool useDsnFiltering = false;
+
         if (context && context->isDsnMode()) {
             // Get files that will be queried
             auto xmlFiles = ariane_xml::QueryExecutor::getXmlFiles(ast->from_path);
@@ -317,13 +320,22 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
                 // Display warning for non-pseudonymised files
                 displayPseudonymisationWarning(nonPseudonymised, xmlFiles.size());
 
-                // If all files are non-pseudonymised, show additional warning
+                // If all files are non-pseudonymised, show additional warning but still execute
                 if (pseudonymised.empty() && !nonPseudonymised.empty()) {
-                    std::cout << "\033[33mNote: Query results may contain sensitive unprotected data.\033[0m\n\n";
+                    std::cout << "\033[33mNote: No pseudonymised files found. Results may contain sensitive unprotected data.\033[0m\n\n";
+                    // Still execute with all files (user's data, their choice)
                 }
-                // If some files are pseudonymised, note that results are mixed
+                // If some files are pseudonymised, use only those
                 else if (!pseudonymised.empty() && !nonPseudonymised.empty()) {
-                    std::cout << "\033[33mNote: Results include data from both protected and unprotected files.\033[0m\n\n";
+                    std::cout << "\033[33mNote: Results filtered to " << pseudonymised.size()
+                              << " pseudonymised file(s) only. "
+                              << nonPseudonymised.size() << " file(s) excluded.\033[0m\n\n";
+                    filteredFiles = pseudonymised;
+                    useDsnFiltering = true;
+                }
+                // All files are pseudonymised - no filtering needed
+                else if (!pseudonymised.empty() && nonPseudonymised.empty()) {
+                    // All good, no message needed
                 }
             }
         }
@@ -361,7 +373,11 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
                 std::cout << lastProgressLine << std::flush;
             };
 
-            results = ariane_xml::QueryExecutor::executeWithProgress(*ast, progressCallback, &stats);
+            if (useDsnFiltering) {
+                results = ariane_xml::QueryExecutor::executeWithProgressAndFiles(*ast, filteredFiles, progressCallback, &stats);
+            } else {
+                results = ariane_xml::QueryExecutor::executeWithProgress(*ast, progressCallback, &stats);
+            }
 
             // Clear progress line
             if (!lastProgressLine.empty()) {
@@ -381,7 +397,11 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
 
         } else {
             // Non-verbose mode: use standard execution
-            results = ariane_xml::QueryExecutor::execute(*ast);
+            if (useDsnFiltering) {
+                results = ariane_xml::QueryExecutor::executeWithFiles(*ast, filteredFiles);
+            } else {
+                results = ariane_xml::QueryExecutor::execute(*ast);
+            }
         }
 
         // Format and print results
@@ -515,7 +535,7 @@ int handleAutocomplete(int argc, char* argv[]) {
     }
 }
 
-void interactiveMode() {
+void interactiveMode(bool startInDsnMode = false) {
     // Register signal handler for CTRL-C
     std::signal(SIGINT, signalHandler);
 
@@ -525,6 +545,11 @@ void interactiveMode() {
     // Create application context and command handler
     ariane_xml::AppContext context;
     ariane_xml::CommandHandler commandHandler(context);
+
+    // Set DSN mode if requested
+    if (startInDsnMode) {
+        context.setMode(ariane_xml::QueryMode::DSN);
+    }
 
     // Set global context for autocomplete
     g_context = &context;
@@ -665,6 +690,12 @@ int main(int argc, char* argv[]) {
         // Handle help flag
         if (arg == "-h" || arg == "--help") {
             printUsage(argv[0]);
+            return 0;
+        }
+
+        // Handle DSN mode flag
+        if (arg == "--dsn") {
+            interactiveMode(true);
             return 0;
         }
 
