@@ -31,9 +31,23 @@ public:
     // Execute the query and return results
     static std::vector<ResultRow> execute(const Query& query);
 
+    // Execute with a specific list of files (for filtering)
+    static std::vector<ResultRow> executeWithFiles(
+        const Query& query,
+        const std::vector<std::string>& xmlFiles
+    );
+
     // Execute with progress tracking (for VERBOSE mode)
     static std::vector<ResultRow> executeWithProgress(
         const Query& query,
+        ProgressCallback progressCallback,
+        ExecutionStats* stats = nullptr
+    );
+
+    // Execute with progress tracking and specific file list
+    static std::vector<ResultRow> executeWithProgressAndFiles(
+        const Query& query,
+        const std::vector<std::string>& xmlFiles,
         ProgressCallback progressCallback,
         ExecutionStats* stats = nullptr
     );
@@ -48,9 +62,10 @@ public:
     // Calculate if threading should be used based on file count and estimated work
     static bool shouldUseThreading(size_t fileCount);
 
-private:
-    // Get all XML files from directory
+    // Get all XML files from a path (made public for filtering)
     static std::vector<std::string> getXmlFiles(const std::string& path);
+
+private:
 
     // Process a single XML file
     static std::vector<ResultRow> processFile(

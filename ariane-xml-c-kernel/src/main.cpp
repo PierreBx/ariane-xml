@@ -4,6 +4,7 @@
 #include "utils/result_formatter.h"
 #include "utils/app_context.h"
 #include "utils/command_handler.h"
+#include "utils/pseudonymisation_checker.h"
 #include "dsn/dsn_autocomplete.h"
 #include "dsn/dsn_parser.h"
 #include <iostream>
@@ -231,6 +232,51 @@ std::string drawProgressBar(size_t completed, size_t total, size_t barWidth = 30
     return bar;
 }
 
+// Helper to check pseudonymisation status of files and display warning in DSN mode
+// Returns pair: (pseudonymised_files, non_pseudonymised_files)
+std::pair<std::vector<std::string>, std::vector<std::string>>
+checkPseudonymisationStatus(const std::vector<std::string>& files) {
+    std::vector<std::string> pseudonymised;
+    std::vector<std::string> nonPseudonymised;
+
+    for (const auto& file : files) {
+        if (ariane_xml::PseudonymisationChecker::isPseudonymised(file)) {
+            pseudonymised.push_back(file);
+        } else {
+            nonPseudonymised.push_back(file);
+        }
+    }
+
+    return {pseudonymised, nonPseudonymised};
+}
+
+// Display pseudonymisation warning for DSN mode
+void displayPseudonymisationWarning(const std::vector<std::string>& nonPseudonymisedFiles,
+                                     size_t totalFiles) {
+    if (nonPseudonymisedFiles.empty()) {
+        return;
+    }
+
+    std::cout << "\n\033[33m";  // Yellow color
+    std::cout << "WARNING: Non-pseudonymised data detected in DSN mode\n";
+    std::cout << "=========================================================\n";
+    std::cout << nonPseudonymisedFiles.size() << " of " << totalFiles
+              << " file(s) are not pseudonymised:\n";
+
+    // Show up to 5 files, then summarize
+    size_t showCount = std::min(nonPseudonymisedFiles.size(), size_t(5));
+    for (size_t i = 0; i < showCount; ++i) {
+        std::cout << "  - " << nonPseudonymisedFiles[i] << "\n";
+    }
+    if (nonPseudonymisedFiles.size() > 5) {
+        std::cout << "  ... and " << (nonPseudonymisedFiles.size() - 5) << " more\n";
+    }
+
+    std::cout << "\nDSN mode requires pseudonymised data for compliance.\n";
+    std::cout << "Use 'PSEUDONYMISE <file>' to pseudonymise files.\n";
+    std::cout << "\033[0m\n";  // Reset color
+}
+
 void executeQuery(const std::string& query, const ariane_xml::AppContext* context = nullptr) {
     if (query.empty()) {
         return;
@@ -257,6 +303,28 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
                     std::cout << ambiguous[i];
                 }
                 std::cout << "\033[0m\n\n";
+            }
+        }
+
+        // Check pseudonymisation status if in DSN mode
+        if (context && context->isDsnMode()) {
+            // Get files that will be queried
+            auto xmlFiles = ariane_xml::QueryExecutor::getXmlFiles(ast->from_path);
+
+            if (!xmlFiles.empty()) {
+                auto [pseudonymised, nonPseudonymised] = checkPseudonymisationStatus(xmlFiles);
+
+                // Display warning for non-pseudonymised files
+                displayPseudonymisationWarning(nonPseudonymised, xmlFiles.size());
+
+                // If all files are non-pseudonymised, show additional warning
+                if (pseudonymised.empty() && !nonPseudonymised.empty()) {
+                    std::cout << "\033[33mNote: Query results may contain sensitive unprotected data.\033[0m\n\n";
+                }
+                // If some files are pseudonymised, note that results are mixed
+                else if (!pseudonymised.empty() && !nonPseudonymised.empty()) {
+                    std::cout << "\033[33mNote: Results include data from both protected and unprotected files.\033[0m\n\n";
+                }
             }
         }
 
