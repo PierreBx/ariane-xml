@@ -12,7 +12,12 @@ specifically designed for French administrative data with support for:
 __version__ = "1.0.0"
 __author__ = "Ariane-XML Team"
 
-from .encryptor import XMLEncryptor
+from .encryptor import XMLEncryptor, is_pseudonymised, get_pseudonymisation_metadata
 from .config import EncryptionConfig
 
-__all__ = ["XMLEncryptor", "EncryptionConfig"]
+__all__ = [
+    "XMLEncryptor",
+    "EncryptionConfig",
+    "is_pseudonymised",
+    "get_pseudonymisation_metadata"
+]
