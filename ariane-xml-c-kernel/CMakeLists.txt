@@ -50,6 +50,8 @@ set(SOURCES
     src/dsn/dsn_templates.cpp
     src/dsn/dsn_formatter.cpp
     src/dsn/dsn_migration.cpp
+    src/utils/pseudonymisation_checker.cpp
+    src/utils/secure_input.cpp
 )
 
 # Create executable

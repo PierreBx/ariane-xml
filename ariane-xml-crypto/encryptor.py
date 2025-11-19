@@ -5,8 +5,59 @@ Main XML encryptor that coordinates all encryption operations.
 from lxml import etree
 from typing import Optional, Dict, Any
 import re
+import hashlib
+from datetime import datetime
 
 from .config import EncryptionConfig, AttributeRule
+
+# Pseudonymisation marker constants
+PSEUDO_MARKER_TARGET = "ariane-pseudonymised"
+PSEUDO_MARKER_VERSION = "1.0"
+
+
+def is_pseudonymised(file_path: str) -> bool:
+    """
+    Check if an XML file has been pseudonymised by ariane-xml.
+
+    Args:
+        file_path: Path to the XML file
+
+    Returns:
+        True if the file contains the pseudonymisation marker
+    """
+    try:
+        tree = etree.parse(file_path)
+        # Look for processing instruction using XPath
+        pis = tree.xpath(f'//processing-instruction("{PSEUDO_MARKER_TARGET}")')
+        return len(pis) > 0
+    except Exception:
+        return False
+
+
+def get_pseudonymisation_metadata(file_path: str) -> Optional[Dict[str, str]]:
+    """
+    Get pseudonymisation metadata from an XML file.
+
+    Args:
+        file_path: Path to the XML file
+
+    Returns:
+        Dictionary with metadata (version, date, tool, config-hash) or None
+    """
+    try:
+        tree = etree.parse(file_path)
+        # Look for processing instruction using XPath
+        pis = tree.xpath(f'//processing-instruction("{PSEUDO_MARKER_TARGET}")')
+        if pis:
+            # Parse the attributes from the PI text
+            pi_text = str(pis[0])
+            metadata = {}
+            for match in re.finditer(r'(\w+(?:-\w+)?)="([^"]*)"', pi_text):
+                metadata[match.group(1)] = match.group(2)
+            return metadata
+        return None
+    except Exception:
+        return None
 from .fpe import FPEEncryptor
 from .pseudonymizer import Pseudonymizer
 from .mapping_table import MappingTable
@@ -59,6 +110,9 @@ class XMLEncryptor:
         # Process all elements with attributes
         self._process_element(root)
 
+        # Add pseudonymisation marker
+        self._add_pseudonymisation_marker(root)
+
         # Save encrypted XML
         tree.write(
             output_path,
@@ -71,6 +125,31 @@ class XMLEncryptor:
         self.mapping_table.save()
 
         return self.stats
+
+    def _add_pseudonymisation_marker(self, root: etree.Element):
+        """
+        Add a processing instruction to mark the file as pseudonymised.
+
+        Args:
+            root: Root element of the XML document
+        """
+        # Generate config hash for traceability
+        config_str = str(self.config.attributes) + str(self.config.fpe_tweak)
+        config_hash = hashlib.sha256(config_str.encode()).hexdigest()[:16]
+
+        # Build marker content
+        marker_content = (
+            f'version="{PSEUDO_MARKER_VERSION}" '
+            f'date="{datetime.utcnow().isoformat()}Z" '
+            f'tool="ariane-xml-crypto" '
+            f'config-hash="{config_hash}"'
+        )
+
+        # Create processing instruction
+        pi = etree.ProcessingInstruction(PSEUDO_MARKER_TARGET, marker_content)
+
+        # Insert at the beginning (before root element)
+        root.getparent().insert(0, pi)
 
     def decrypt_file(self, input_path: str, output_path: str) -> Dict[str, Any]:
         """
