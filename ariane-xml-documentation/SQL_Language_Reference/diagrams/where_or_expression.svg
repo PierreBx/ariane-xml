@@ -1,0 +1,60 @@
+<svg class="railroad-diagram" width="597" height="81" viewBox="0 0 597 81">
+<g transform="translate(.5 .5)">
+<path d="M 20 31 v 20 m 10 -20 v 20 m -10 -10 h 20.5"></path>
+<g>
+<path d="M40 41h0"></path>
+<path d="M556 41h0"></path>
+<path d="M40 41h10"></path>
+<g>
+<path d="M50 41h0"></path>
+<path d="M230 41h0"></path>
+<rect x="50" y="30" width="180" height="22"></rect>
+<text x="140" y="45">where&#95;and&#95;expression</text>
+</g>
+<path d="M230 41h10"></path>
+<g>
+<path d="M240 41h0"></path>
+<path d="M556 41h0"></path>
+<path d="M240 41a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10"></path>
+<g>
+<path d="M260 21h276"></path>
+</g>
+<path d="M536 21a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10"></path>
+<path d="M240 41h20"></path>
+<g>
+<path d="M260 41h0"></path>
+<path d="M536 41h0"></path>
+<path d="M260 41h10"></path>
+<g>
+<path d="M270 41h0"></path>
+<path d="M526 41h0"></path>
+<path d="M270 41h10"></path>
+<g>
+<path d="M280 41h0"></path>
+<path d="M316 41h0"></path>
+<rect x="280" y="30" width="36" height="22" rx="10" ry="10"></rect>
+<text x="298" y="45">OR</text>
+</g>
+<path d="M316 41h10"></path>
+<path d="M326 41h10"></path>
+<g>
+<path d="M336 41h0"></path>
+<path d="M516 41h0"></path>
+<rect x="336" y="30" width="180" height="22"></rect>
+<text x="426" y="45">where&#95;and&#95;expression</text>
+</g>
+<path d="M516 41h10"></path>
+</g>
+<path d="M526 41h10"></path>
+<path d="M270 41a10 10 0 0 0 -10 10v0a10 10 0 0 0 10 10"></path>
+<g>
+<path d="M270 61h256"></path>
+</g>
+<path d="M526 61a10 10 0 0 0 10 -10v0a10 10 0 0 0 -10 -10"></path>
+</g>
+<path d="M536 41h20"></path>
+</g>
+</g>
+<path d="M 556 41 h 20 m -10 -10 v 20 m 10 -20 v 20"></path>
+</g>
+</svg>

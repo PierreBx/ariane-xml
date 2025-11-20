@@ -1,0 +1,71 @@
+<svg class="railroad-diagram" width="545" height="132" viewBox="0 0 545 132">
+<g transform="translate(.5 .5)">
+<path d="M 20 21 v 20 m 10 -20 v 20 m -10 -10 h 20.5"></path>
+<g>
+<path d="M40 31h0"></path>
+<path d="M504 31h0"></path>
+<path d="M40 31h20"></path>
+<g>
+<path d="M60 31h122"></path>
+<path d="M362 31h122"></path>
+<rect x="182" y="20" width="180" height="22"></rect>
+<text x="272" y="35">aggregation&#95;function</text>
+</g>
+<path d="M484 31h20"></path>
+<path d="M40 31a10 10 0 0 1 10 10v10a10 10 0 0 0 10 10"></path>
+<g>
+<path d="M60 61h166"></path>
+<path d="M318 61h166"></path>
+<rect x="226" y="50" width="92" height="22" rx="10" ry="10"></rect>
+<text x="272" y="65">FILE&#95;NAME</text>
+</g>
+<path d="M484 61a10 10 0 0 0 10 -10v-10a10 10 0 0 1 10 -10"></path>
+<path d="M40 31a10 10 0 0 1 10 10v50a10 10 0 0 0 10 10"></path>
+<g>
+<path d="M60 101h0"></path>
+<path d="M484 101h0"></path>
+<path d="M60 101h10"></path>
+<g>
+<path d="M70 101h0"></path>
+<path d="M258 101h0"></path>
+<rect x="70" y="90" width="188" height="22"></rect>
+<text x="164" y="105">field&#95;path&#95;expression</text>
+</g>
+<path d="M258 101h10"></path>
+<g>
+<path d="M268 101h0"></path>
+<path d="M484 101h0"></path>
+<path d="M268 101a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10"></path>
+<g>
+<path d="M288 81h176"></path>
+</g>
+<path d="M464 81a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10"></path>
+<path d="M268 101h20"></path>
+<g>
+<path d="M288 101h0"></path>
+<path d="M464 101h0"></path>
+<path d="M288 101h10"></path>
+<g>
+<path d="M298 101h0"></path>
+<path d="M334 101h0"></path>
+<rect x="298" y="90" width="36" height="22" rx="10" ry="10"></rect>
+<text x="316" y="105">AS</text>
+</g>
+<path d="M334 101h10"></path>
+<path d="M344 101h10"></path>
+<g>
+<path d="M354 101h0"></path>
+<path d="M454 101h0"></path>
+<rect x="354" y="90" width="100" height="22"></rect>
+<text x="404" y="105">identifier</text>
+</g>
+<path d="M454 101h10"></path>
+</g>
+<path d="M464 101h20"></path>
+</g>
+</g>
+<path d="M484 101a10 10 0 0 0 10 -10v-50a10 10 0 0 1 10 -10"></path>
+</g>
+<path d="M 504 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path>
+</g>
+</svg>
