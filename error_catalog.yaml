@@ -1,0 +1,517 @@
+# Ariane-XML Error Catalog
+# Format: ARX-CCNNNN
+#   ARX: Ariane-Xml prefix
+#   CC: Category code (2 digits)
+#   NNNN: Specific error number (4 digits)
+
+# ============================================================================
+# SUCCESS & GENERAL ERRORS (00xxxx)
+# ============================================================================
+
+ARX-000000:
+  category: "Success & General"
+  severity: SUCCESS
+  message: "Success"
+  description: "Query executed successfully with no errors"
+  suggestion: ""
+  example: ""
+
+ARX-000001:
+  category: "Success & General"
+  severity: ERROR
+  message: "Unexpected end of query"
+  description: "The query ended unexpectedly before being complete"
+  suggestion: "Check that your query is complete and all clauses are properly closed"
+  example: "SELECT * FROM file.xml"
+
+ARX-000002:
+  category: "Success & General"
+  severity: ERROR
+  message: "Invalid character in query"
+  description: "The query contains an invalid or unexpected character"
+  suggestion: "Remove any special characters that are not part of the SQL syntax"
+  example: "SELECT field FROM file.xml"
+
+ARX-000003:
+  category: "Success & General"
+  severity: ERROR
+  message: "Unmatched parenthesis"
+  description: "The query has mismatched opening and closing parentheses"
+  suggestion: "Ensure every opening parenthesis has a corresponding closing parenthesis"
+  example: "SELECT COUNT(field) FROM file.xml"
+
+ARX-000004:
+  category: "Success & General"
+  severity: ERROR
+  message: "Unexpected token after query"
+  description: "Extra tokens found after the query appears to be complete"
+  suggestion: "Remove any text after the query ends, or check for missing operators"
+  example: "SELECT * FROM file.xml"
+
+ARX-000005:
+  category: "Success & General"
+  severity: ERROR
+  message: "Missing required keyword"
+  description: "A required SQL keyword is missing from the query"
+  suggestion: "Add the required keyword as indicated in the error message"
+  example: "SELECT * FROM file.xml"
+
+# ============================================================================
+# SELECT CLAUSE ERRORS (01xxxx)
+# ============================================================================
+
+ARX-010001:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Missing SELECT keyword"
+  description: "The query must begin with the SELECT keyword"
+  suggestion: "Start your query with SELECT followed by field names"
+  example: "SELECT field1, field2 FROM file.xml"
+
+ARX-010002:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Invalid field identifier"
+  description: "The field identifier specified in SELECT is invalid"
+  suggestion: "Use valid field identifiers (alphanumeric with underscores)"
+  example: "SELECT field_name FROM file.xml"
+
+ARX-010003:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "COUNT(*) is not supported"
+  description: "Aggregate function COUNT(*) cannot be used. You must specify an element name"
+  suggestion: "Use COUNT(element_name) instead of COUNT(*)"
+  example: "SELECT COUNT(employee) FROM file.xml"
+
+ARX-010004:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Duplicate field in SELECT list"
+  description: "The same field appears multiple times in the SELECT list"
+  suggestion: "Remove duplicate field names from your SELECT list"
+  example: "SELECT field1, field2 FROM file.xml"
+
+ARX-010005:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Invalid aggregation function"
+  description: "The aggregation function specified is not supported"
+  suggestion: "Use supported aggregation functions: COUNT, SUM, AVG, MIN, MAX"
+  example: "SELECT COUNT(field) FROM file.xml"
+
+ARX-010010:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Expected identifier after SELECT"
+  description: "An identifier (field name) was expected after the SELECT keyword"
+  suggestion: "Provide a field name or * after SELECT"
+  example: "SELECT field_name FROM file.xml"
+
+ARX-010011:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "Expected field identifier, got number"
+  description: "A field identifier was expected but a number was found"
+  suggestion: "Field names cannot be pure numbers; use valid identifiers"
+  example: "SELECT field_name FROM file.xml"
+
+ARX-010020:
+  category: "SELECT Clause"
+  severity: ERROR
+  message: "DISTINCT not supported in this context"
+  description: "The DISTINCT keyword is not supported in the current context"
+  suggestion: "Remove DISTINCT or use alternative filtering methods"
+  example: "SELECT field FROM file.xml"
+
+# ============================================================================
+# FROM CLAUSE ERRORS (02xxxx)
+# ============================================================================
+
+ARX-020001:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "Missing FROM keyword"
+  description: "The FROM keyword is required to specify the data source"
+  suggestion: "Add FROM followed by the file path after your SELECT clause"
+  example: "SELECT * FROM 'path/to/file.xml'"
+
+ARX-020002:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "File not found"
+  description: "The specified XML file could not be found"
+  suggestion: "Check that the file path is correct and the file exists"
+  example: "SELECT * FROM '/absolute/path/to/file.xml'"
+
+ARX-020003:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "Invalid file path"
+  description: "The file path provided is not valid"
+  suggestion: "Use a valid absolute or relative file path"
+  example: "SELECT * FROM 'data/file.xml'"
+
+ARX-020004:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "File path contains invalid characters"
+  description: "The file path contains characters that are not allowed"
+  suggestion: "Remove special characters from the file path or use quotes"
+  example: "SELECT * FROM 'path/to/file.xml'"
+
+ARX-020005:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "Cannot open file for reading"
+  description: "The file exists but cannot be opened (permission or format issue)"
+  suggestion: "Check file permissions and ensure it's a valid XML file"
+  example: "chmod +r file.xml"
+
+ARX-020010:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "Multiple files not supported"
+  description: "Querying multiple files simultaneously is not currently supported"
+  suggestion: "Query one file at a time"
+  example: "SELECT * FROM 'file1.xml'"
+
+ARX-020020:
+  category: "FROM Clause"
+  severity: ERROR
+  message: "File format not recognized"
+  description: "The file format is not recognized as valid XML"
+  suggestion: "Ensure the file is a well-formed XML document"
+  example: "SELECT * FROM 'file.xml'"
+
+# ============================================================================
+# WHERE CLAUSE ERRORS (03xxxx)
+# ============================================================================
+
+ARX-030001:
+  category: "WHERE Clause"
+  severity: ERROR
+  message: "Invalid WHERE condition"
+  description: "The WHERE clause contains an invalid condition"
+  suggestion: "Check the syntax of your WHERE condition"
+  example: "SELECT * FROM file.xml WHERE field = 'value'"
+
+ARX-030002:
+  category: "WHERE Clause"
+  severity: ERROR
+  message: "Missing comparison operator"
+  description: "A comparison operator is required in the WHERE condition"
+  suggestion: "Use a valid comparison operator: =, !=, <, >, <=, >="
+  example: "SELECT * FROM file.xml WHERE age > 18"
+
+ARX-030003:
+  category: "WHERE Clause"
+  severity: ERROR
+  message: "Type mismatch in comparison"
+  description: "The types being compared in the WHERE clause are incompatible"
+  suggestion: "Ensure you're comparing compatible data types"
+  example: "SELECT * FROM file.xml WHERE age > 18"
+
+ARX-030004:
+  category: "WHERE Clause"
+  severity: ERROR
+  message: "Invalid logical operator"
+  description: "The logical operator used is not valid"
+  suggestion: "Use valid logical operators: AND, OR, NOT"
+  example: "SELECT * FROM file.xml WHERE age > 18 AND status = 'active'"
+
+ARX-030005:
+  category: "WHERE Clause"
+  severity: ERROR
+  message: "Unmatched quotes in string literal"
+  description: "String literals in the WHERE clause have mismatched quotes"
+  suggestion: "Ensure all string literals are properly quoted"
+  example: "SELECT * FROM file.xml WHERE name = 'John'"
+
+# ============================================================================
+# FOR CLAUSE ERRORS (04xxxx - DSN Mode)
+# ============================================================================
+
+ARX-040001:
+  category: "FOR Clause"
+  severity: ERROR
+  message: "FOR clause requires DSN mode"
+  description: "The FOR clause can only be used when DSN mode is activated"
+  suggestion: "Enable DSN mode with --dsn flag or activate it in kernel settings"
+  example: "ariane-xml --dsn -q 'FOR Salarie IN S21.G00.50 SELECT * FROM file.xml'"
+
+ARX-040002:
+  category: "FOR Clause"
+  severity: ERROR
+  message: "Invalid variable name in FOR clause"
+  description: "The variable name specified in the FOR clause is not valid"
+  suggestion: "Use a valid identifier for the loop variable"
+  example: "FOR Salarie IN S21.G00.50 SELECT * FROM file.xml"
+
+ARX-040003:
+  category: "FOR Clause"
+  severity: ERROR
+  message: "FOR variable already defined"
+  description: "A FOR loop variable with this name is already defined"
+  suggestion: "Use a different variable name for nested FOR loops"
+  example: "FOR Employee IN S21.G00.50 SELECT * FROM file.xml"
+
+ARX-040004:
+  category: "FOR Clause"
+  severity: ERROR
+  message: "FOR clause must precede WHERE clause"
+  description: "The FOR clause must appear before the WHERE clause in the query"
+  suggestion: "Move the FOR clause before any WHERE conditions"
+  example: "FOR Salarie IN S21.G00.50 SELECT * FROM file.xml WHERE ..."
+
+ARX-040005:
+  category: "FOR Clause"
+  severity: ERROR
+  message: "Missing IN keyword in FOR clause"
+  description: "The FOR clause requires the IN keyword"
+  suggestion: "Use syntax: FOR variable IN path SELECT ..."
+  example: "FOR Salarie IN S21.G00.50 SELECT * FROM file.xml"
+
+# ============================================================================
+# DSN FORMAT ERRORS (06xxxx)
+# ============================================================================
+
+ARX-060001:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid SIRET number format"
+  description: "SIRET number must be exactly 14 digits"
+  suggestion: "Verify the SIRET number has 14 digits and contains only numbers"
+  example: "Valid SIRET: 12345678901234"
+
+ARX-060002:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid SIRET checksum"
+  description: "The SIRET number has an invalid checksum"
+  suggestion: "Verify the SIRET number is correct using the Luhn algorithm"
+  example: "Recalculate the checksum digit"
+
+ARX-060010:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid NIR number format"
+  description: "NIR (social security number) has an invalid format"
+  suggestion: "NIR must follow the standard French format (15 characters)"
+  example: "Valid NIR: 1 89 05 75 116 123 45"
+
+ARX-060011:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid NIR checksum"
+  description: "The NIR number has an invalid checksum (key)"
+  suggestion: "Verify the NIR key is correct (97 - NIR mod 97)"
+  example: "Recalculate the NIR key"
+
+ARX-060020:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid date format"
+  description: "The date format does not match the expected pattern"
+  suggestion: "Use the format YYYY-MM-DD or YYYYMMDD"
+  example: "Valid date: 2024-01-15"
+
+ARX-060030:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid decimal format"
+  description: "The decimal number format is invalid"
+  suggestion: "Use proper decimal notation (e.g., 123.45)"
+  example: "Valid decimal: 1234.56"
+
+ARX-060040:
+  category: "DSN Format"
+  severity: ERROR
+  message: "Invalid numeric format"
+  description: "The numeric value has an invalid format"
+  suggestion: "Ensure the value contains only digits"
+  example: "Valid number: 12345"
+
+# ============================================================================
+# SCHEMA VALIDATION ERRORS (07xxxx)
+# ============================================================================
+
+ARX-070001:
+  category: "Schema Validation"
+  severity: ERROR
+  message: "Schema file not found"
+  description: "The DSN schema file could not be found"
+  suggestion: "Ensure the schema file exists in the expected location"
+  example: "Check ~/.ariane-xml/schemas/ directory"
+
+ARX-070002:
+  category: "Schema Validation"
+  severity: ERROR
+  message: "Schema version mismatch"
+  description: "The schema version does not match the DSN file version"
+  suggestion: "Use the correct schema version for your DSN file"
+  example: "Specify the correct schema version with --schema-version"
+
+ARX-070003:
+  category: "Schema Validation"
+  severity: ERROR
+  message: "Invalid schema format"
+  description: "The schema file has an invalid format"
+  suggestion: "Verify the schema file is a valid JSON schema"
+  example: "Validate your schema file against JSON schema spec"
+
+ARX-070004:
+  category: "Schema Validation"
+  severity: ERROR
+  message: "Schema loading failed"
+  description: "Failed to load the schema file"
+  suggestion: "Check the schema file for syntax errors or corruption"
+  example: "Verify the schema file is readable and valid JSON"
+
+ARX-070005:
+  category: "Schema Validation"
+  severity: ERROR
+  message: "Incompatible schema version"
+  description: "The schema version is not compatible with this version of ariane-xml"
+  suggestion: "Update ariane-xml or use a compatible schema version"
+  example: "Use schema version matching your ariane-xml version"
+
+# ============================================================================
+# FILE OPERATIONS ERRORS (10xxxx)
+# ============================================================================
+
+ARX-100001:
+  category: "File Operations"
+  severity: ERROR
+  message: "File not found"
+  description: "The specified file could not be found"
+  suggestion: "Verify the file path is correct and the file exists"
+  example: "ls -la /path/to/file.xml"
+
+ARX-100002:
+  category: "File Operations"
+  severity: ERROR
+  message: "Permission denied"
+  description: "Insufficient permissions to access the file"
+  suggestion: "Check file permissions or run with appropriate privileges"
+  example: "chmod +r file.xml"
+
+ARX-100003:
+  category: "File Operations"
+  severity: ERROR
+  message: "File already exists"
+  description: "Cannot create file because it already exists"
+  suggestion: "Use a different filename or remove the existing file"
+  example: "rm existing_file.xml"
+
+ARX-100004:
+  category: "File Operations"
+  severity: ERROR
+  message: "Directory not found"
+  description: "The specified directory does not exist"
+  suggestion: "Create the directory or verify the path is correct"
+  example: "mkdir -p /path/to/directory"
+
+ARX-100005:
+  category: "File Operations"
+  severity: ERROR
+  message: "Cannot create directory"
+  description: "Failed to create the specified directory"
+  suggestion: "Check permissions and available disk space"
+  example: "Check with: df -h"
+
+ARX-100010:
+  category: "File Operations"
+  severity: ERROR
+  message: "File is empty"
+  description: "The file exists but contains no data"
+  suggestion: "Verify the file has content or use a different file"
+  example: "cat file.xml"
+
+ARX-100011:
+  category: "File Operations"
+  severity: ERROR
+  message: "File too large"
+  description: "The file exceeds the maximum size limit"
+  suggestion: "Process smaller files or increase memory limits"
+  example: "Split large files into smaller chunks"
+
+# ============================================================================
+# KERNEL/CLI ERRORS (20xxxx)
+# ============================================================================
+
+ARX-200001:
+  category: "Kernel/CLI"
+  severity: ERROR
+  message: "Invalid kernel command"
+  description: "The kernel command is not recognized"
+  suggestion: "Use %help to see available commands"
+  example: "%help"
+
+ARX-200002:
+  category: "Kernel/CLI"
+  severity: ERROR
+  message: "Command execution timeout"
+  description: "The command execution exceeded the timeout limit"
+  suggestion: "Try a simpler query or increase the timeout"
+  example: "Use %timeout 60 to set 60-second timeout"
+
+ARX-200003:
+  category: "Kernel/CLI"
+  severity: ERROR
+  message: "Subprocess creation failed"
+  description: "Failed to create subprocess for query execution"
+  suggestion: "Check system resources and try again"
+  example: "Verify ariane-xml binary exists"
+
+ARX-200004:
+  category: "Kernel/CLI"
+  severity: ERROR
+  message: "Binary not found"
+  description: "The ariane-xml executable could not be found"
+  suggestion: "Ensure ariane-xml is installed and in PATH"
+  example: "which ariane-xml"
+
+ARX-200005:
+  category: "Kernel/CLI"
+  severity: ERROR
+  message: "Invalid command arguments"
+  description: "The arguments provided to the command are invalid"
+  suggestion: "Check the command syntax and try again"
+  example: "Use %help <command> for usage information"
+
+# ============================================================================
+# WARNINGS (80xxxx)
+# ============================================================================
+
+ARX-800001:
+  category: "Warnings"
+  severity: WARNING
+  message: "Deprecated syntax used"
+  description: "The syntax used is deprecated and may be removed in future versions"
+  suggestion: "Update to the recommended syntax shown in the latest documentation"
+  example: "See documentation for current syntax"
+
+ARX-800002:
+  category: "Warnings"
+  severity: WARNING
+  message: "Performance warning: large dataset"
+  description: "Processing a large dataset may impact performance"
+  suggestion: "Consider filtering data with WHERE clause for better performance"
+  example: "SELECT * FROM file.xml WHERE date > '2024-01-01'"
+
+ARX-800003:
+  category: "Warnings"
+  severity: WARNING
+  message: "Schema validation disabled"
+  description: "Schema validation is disabled; data integrity may not be guaranteed"
+  suggestion: "Enable schema validation for DSN files in production"
+  example: "Use --validate flag to enable schema validation"
+
+ARX-800010:
+  category: "Warnings"
+  severity: WARNING
+  message: "Missing optional field"
+  description: "An optional field is missing from the data"
+  suggestion: "This is informational; no action required unless field is expected"
+  example: "Verify expected fields are present in source data"
