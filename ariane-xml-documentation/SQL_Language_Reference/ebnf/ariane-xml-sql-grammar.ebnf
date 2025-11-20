@@ -1,0 +1,206 @@
+/*
+ * Ariane-XML SQL Grammar (W3C EBNF Notation)
+ *
+ * This grammar defines the SQL dialect used by Ariane-XML for querying XML files.
+ * It follows W3C EBNF notation conventions.
+ *
+ * Notation:
+ *   ::= defines a production rule
+ *   |   separates alternatives
+ *   ?   zero or one (optional)
+ *   *   zero or more (repetition)
+ *   +   one or more
+ *   ()  grouping
+ *   'x' terminal symbol
+ */
+
+/* ====================
+   Main Statement
+   ==================== */
+
+select_statement ::= SELECT distinct? field_list
+                     from_clause
+                     for_clause*
+                     where_clause?
+                     group_by_clause?
+                     having_clause?
+                     order_by_clause?
+                     limit_clause?
+                     offset_clause?
+
+/* ====================
+   SELECT Clause
+   ==================== */
+
+distinct ::= DISTINCT
+
+field_list ::= field (',' field)*
+
+field ::= aggregation_function
+        | file_name_selector
+        | field_path_expression (AS identifier)?
+
+aggregation_function ::= aggregate_name '(' field_path_expression ')' (AS identifier)?
+
+aggregate_name ::= COUNT | SUM | AVG | MIN | MAX
+
+file_name_selector ::= FILE_NAME
+
+/* ====================
+   FROM Clause
+   ==================== */
+
+from_clause ::= FROM file_path
+
+file_path ::= string_literal
+            | path_expression
+
+path_expression ::= path_component (path_separator path_component)*
+
+path_separator ::= '/' | '.'
+
+path_component ::= identifier
+
+/* ====================
+   FOR Clause (ariane-xml specific)
+   ==================== */
+
+for_clause ::= FOR identifier IN field_path_expression at_clause?
+
+at_clause ::= AT identifier
+
+/* ====================
+   WHERE Clause
+   ==================== */
+
+where_clause ::= WHERE where_expression
+
+where_expression ::= where_or_expression
+
+where_or_expression ::= where_and_expression (OR where_and_expression)*
+
+where_and_expression ::= where_primary (AND where_primary)*
+
+where_primary ::= '(' where_expression ')'
+                | condition
+
+condition ::= comparison_condition
+            | null_condition
+            | like_condition
+            | in_condition
+
+comparison_condition ::= field_path_expression comparison_operator value
+
+comparison_operator ::= '=' | '!=' | '<' | '>' | '<=' | '>='
+
+null_condition ::= field_path_expression IS NOT? NULL
+
+like_condition ::= field_path_expression NOT? LIKE regex_pattern
+
+in_condition ::= field_path_expression NOT? IN '(' value_list ')'
+
+value_list ::= value (',' value)*
+
+/* ====================
+   GROUP BY Clause
+   ==================== */
+
+group_by_clause ::= GROUP BY field_name (',' field_name)*
+
+/* ====================
+   HAVING Clause
+   ==================== */
+
+having_clause ::= HAVING where_expression
+
+/* ====================
+   ORDER BY Clause
+   ==================== */
+
+order_by_clause ::= ORDER BY order_field (',' order_field)*
+
+order_field ::= field_name sort_direction?
+
+sort_direction ::= ASC | DESC
+
+/* ====================
+   LIMIT and OFFSET Clauses
+   ==================== */
+
+limit_clause ::= LIMIT number
+
+offset_clause ::= OFFSET number
+
+/* ====================
+   Expressions
+   ==================== */
+
+field_path_expression ::= partial_path
+                        | absolute_path
+                        | attribute_path
+                        | variable_reference
+
+partial_path ::= '.' path_component (path_separator path_component)*
+
+absolute_path ::= path_component (path_separator path_component)*
+
+attribute_path ::= '@' identifier
+
+variable_reference ::= identifier ('.' path_component)*
+
+field_name ::= identifier
+             | attribute_path
+
+/* ====================
+   Literals and Values
+   ==================== */
+
+value ::= string_literal
+        | number
+        | identifier
+
+string_literal ::= '"' string_content '"'
+                 | "'" string_content "'"
+
+string_content ::= [^"']* /* any characters except quotes */
+
+number ::= [0-9]+ ('.' [0-9]+)?
+
+regex_pattern ::= '/' regex_content '/'
+
+regex_content ::= [^/]+ /* any characters except slash */
+
+identifier ::= [a-zA-Z_] [a-zA-Z0-9_]*
+
+/* ====================
+   Keywords (terminals)
+   ==================== */
+
+SELECT      ::= 'SELECT'
+DISTINCT    ::= 'DISTINCT'
+FROM        ::= 'FROM'
+WHERE       ::= 'WHERE'
+FOR         ::= 'FOR'
+IN          ::= 'IN'
+AT          ::= 'AT'
+GROUP       ::= 'GROUP'
+BY          ::= 'BY'
+HAVING      ::= 'HAVING'
+ORDER       ::= 'ORDER'
+LIMIT       ::= 'LIMIT'
+OFFSET      ::= 'OFFSET'
+AS          ::= 'AS'
+AND         ::= 'AND'
+OR          ::= 'OR'
+NOT         ::= 'NOT'
+IS          ::= 'IS'
+NULL        ::= 'NULL'
+LIKE        ::= 'LIKE'
+COUNT       ::= 'COUNT'
+SUM         ::= 'SUM'
+AVG         ::= 'AVG'
+MIN         ::= 'MIN'
+MAX         ::= 'MAX'
+FILE_NAME   ::= 'FILE_NAME'
+ASC         ::= 'ASC'
+DESC        ::= 'DESC'
