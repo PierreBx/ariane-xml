@@ -1,5 +1,6 @@
 #include "parser/parser.h"
 #include "utils/app_context.h"
+#include "error/error_codes.h"
 #include <algorithm>
 #include <regex>
 
@@ -77,7 +78,8 @@ std::unique_ptr<Query> Parser::parse() {
     // Ensure we're at the end
     if (!isAtEnd() && peek().type != TokenType::END_OF_INPUT) {
         std::string tokenInfo = "token: " + peek().value + " (type: " + std::to_string(static_cast<int>(peek().type)) + ")";
-        throw ParseError("Unexpected tokens after query - " + tokenInfo);
+        throw ARX_ERROR(ErrorCategory::SUCCESS_GENERAL, ErrorCodes::GENERAL_UNEXPECTED_TOKEN,
+                       "Unexpected tokens after query - " + tokenInfo);
     }
 
     // Post-processing: Mark variable references in field paths
@@ -136,7 +138,8 @@ bool Parser::isAtEnd() const {
 
 void Parser::expect(TokenType type, const std::string& message) {
     if (!check(type)) {
-        throw ParseError(message + " (got: " + peek().value + ")");
+        throw ARX_ERROR(ErrorCategory::SUCCESS_GENERAL, ErrorCodes::GENERAL_MISSING_KEYWORD,
+                       message + " (got: " + peek().value + ")");
     }
     advance();
 }
@@ -164,14 +167,16 @@ FieldPath Parser::parseFieldPath() {
 
         // Check for COUNT(*) - not supported
         if (field.aggregate == AggregateFunc::COUNT && peek().type == TokenType::ASTERISK) {
-            throw ParseError("COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_COUNT_STAR_NOT_SUPPORTED,
+                           "COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
         }
 
         // Check for leading dot (partial path)
         if (peek().type == TokenType::DOT) {
             // In DSN mode, leading dots are not allowed
             if (context_ && context_->isDsnMode()) {
-                throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., COUNT(30.001))");
+                throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_LEADING_DOT_NOT_ALLOWED,
+                               "In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., COUNT(30.001))");
             }
             field.is_partial_path = true;
             advance(); // consume leading dot
@@ -181,7 +186,8 @@ FieldPath Parser::parseFieldPath() {
             // Parse @attribute syntax inside aggregate
             advance(); // consume @
             if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected attribute name after '@' in aggregate function");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                               "Expected attribute name after '@' in aggregate function");
             }
             field.is_attribute = true;
             field.attribute_name = advance().value;
@@ -196,14 +202,16 @@ FieldPath Parser::parseFieldPath() {
                 field.is_partial_path = true;  // Enable partial path search
                 advance(); // consume the number token
             } else {
-                throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
+                throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_INVALID_FIELD_FORMAT,
+                               "In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
             }
         } else {
             // Parse field path inside aggregate function
             if (peek().type == TokenType::IDENTIFIER) {
                 // In DSN mode, only YY.ZZZ format is allowed
                 if (context_ && context_->isDsnMode()) {
-                    throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
+                    throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_ONLY_SHORTCUT_FORMAT,
+                                   "In DSN mode, only YY.ZZZ format is accepted (e.g., COUNT(30.001))");
                 }
                 field.components.push_back(advance().value);
 
@@ -212,13 +220,15 @@ FieldPath Parser::parseFieldPath() {
                     advance(); // consume separator
 
                     if (peek().type != TokenType::IDENTIFIER) {
-                        throw ParseError("Expected identifier after separator");
+                        throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                                       "Expected identifier after separator");
                     }
 
                     field.components.push_back(advance().value);
                 }
             } else {
-                throw ParseError("Expected field identifier in aggregate function");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                               "Expected field identifier in aggregate function");
             }
         }
 
@@ -237,7 +247,8 @@ FieldPath Parser::parseFieldPath() {
     if (peek().type == TokenType::DOT) {
         // In DSN mode, leading dots are not allowed
         if (context_ && context_->isDsnMode()) {
-            throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., 30.001)");
+            throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_LEADING_DOT_NOT_ALLOWED,
+                           "In DSN mode, leading dots are not allowed. Use YY.ZZZ format (e.g., 30.001)");
         }
         field.is_partial_path = true;
         advance(); // consume leading dot
@@ -248,7 +259,8 @@ FieldPath Parser::parseFieldPath() {
         advance(); // consume @
 
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected attribute name after '@'");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected attribute name after '@'");
         }
 
         field.is_attribute = true;
@@ -271,7 +283,8 @@ FieldPath Parser::parseFieldPath() {
             advance(); // consume the number token
             return field;
         } else {
-            throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
+            throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_INVALID_FIELD_FORMAT,
+                           "In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
         }
     }
 
@@ -279,14 +292,17 @@ FieldPath Parser::parseFieldPath() {
     if (peek().type == TokenType::IDENTIFIER) {
         // In DSN mode, only YY.ZZZ format is allowed
         if (context_ && context_->isDsnMode()) {
-            throw ParseError("In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
+            throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_ONLY_SHORTCUT_FORMAT,
+                           "In DSN mode, only YY.ZZZ format is accepted (e.g., 30.001)");
         }
         field.components.push_back(advance().value);
     } else if (peek().type == TokenType::NUMBER) {
         // Numbers are not allowed in standard mode as field names
-        throw ParseError("Expected field identifier, got number. In DSN mode, use YY.ZZZ format (e.g., 30.001)");
+        throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_FIELD_NOT_NUMBER,
+                       "Expected field identifier, got number. In DSN mode, use YY.ZZZ format (e.g., 30.001)");
     } else {
-        throw ParseError("Expected field identifier");
+        throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                       "Expected field identifier");
     }
 
     // Parse remaining components (separated by . or /)
@@ -294,7 +310,8 @@ FieldPath Parser::parseFieldPath() {
         advance(); // consume separator
 
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected identifier after separator");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected identifier after separator");
         }
 
         field.components.push_back(advance().value);
@@ -334,7 +351,8 @@ FieldPath Parser::parseSelectField() {
                 aggFunc = AggregateFunc::MAX;
                 break;
             default:
-                throw ParseError("Invalid aggregation function");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_INVALID_AGGREGATION,
+                               "Invalid aggregation function");
         }
 
         advance(); // consume function name
@@ -342,14 +360,16 @@ FieldPath Parser::parseSelectField() {
 
         // Check for COUNT(*) - not supported
         if (aggFunc == AggregateFunc::COUNT && peek().type == TokenType::ASTERISK) {
-            throw ParseError("COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_COUNT_STAR_NOT_SUPPORTED,
+                           "COUNT(*) is not supported. Use COUNT(element_name) instead. Examples: COUNT(book), COUNT(.book.price)");
         }
 
         // Check for leading dot (partial path)
         if (peek().type == TokenType::DOT) {
             // In DSN mode, leading dots are not allowed
             if (context_ && context_->isDsnMode()) {
-                throw ParseError("In DSN mode, leading dots are not allowed. Use YY.ZZZ format in aggregations");
+                throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_LEADING_DOT_NOT_ALLOWED,
+                               "In DSN mode, leading dots are not allowed. Use YY.ZZZ format in aggregations");
             }
             field.is_partial_path = true;
             advance(); // consume leading dot
@@ -366,12 +386,14 @@ FieldPath Parser::parseSelectField() {
                 field.is_partial_path = true;  // Enable partial path search
                 advance(); // consume the number token
             } else {
-                throw ParseError("In DSN mode, only YY.ZZZ format is accepted in aggregations");
+                throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_INVALID_FIELD_FORMAT,
+                               "In DSN mode, only YY.ZZZ format is accepted in aggregations");
             }
         } else if (peek().type == TokenType::IDENTIFIER) {
             // Standard mode or identifier in DSN mode (should error in DSN mode)
             if (context_ && context_->isDsnMode()) {
-                throw ParseError("In DSN mode, only YY.ZZZ format is accepted in aggregations");
+                throw ARX_ERROR(ErrorCategory::DSN_MODE, ErrorCodes::DSN_ONLY_SHORTCUT_FORMAT,
+                               "In DSN mode, only YY.ZZZ format is accepted in aggregations");
             }
 
             arg = advance().value;
@@ -380,12 +402,14 @@ FieldPath Parser::parseSelectField() {
             while (peek().type == TokenType::DOT) {
                 advance(); // consume dot
                 if (peek().type != TokenType::IDENTIFIER) {
-                    throw ParseError("Expected identifier after '.' in aggregation argument");
+                    throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                                   "Expected identifier after '.' in aggregation argument");
                 }
                 arg += "." + advance().value;
             }
         } else {
-            throw ParseError("Expected field identifier in aggregation function");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected field identifier in aggregation function");
         }
 
         field.aggregate = aggFunc;
@@ -396,7 +420,8 @@ FieldPath Parser::parseSelectField() {
         // Optional AS alias
         if (match(TokenType::AS)) {
             if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected alias name after AS");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                               "Expected alias name after AS");
             }
             field.alias = advance().value;
         }
@@ -410,7 +435,8 @@ FieldPath Parser::parseSelectField() {
     // Check for optional AS alias
     if (match(TokenType::AS)) {
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected alias name after AS");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected alias name after AS");
         }
         field.alias = advance().value;
     }
@@ -476,7 +502,8 @@ std::string Parser::parseFilePath() {
     }
 
     if (path.empty()) {
-        throw ParseError("Expected file or directory path after FROM");
+        throw ARX_ERROR(ErrorCategory::FROM_CLAUSE, ErrorCodes::FROM_MISSING_KEYWORD,
+                       "Expected file or directory path after FROM");
     }
 
     return path;
@@ -491,7 +518,8 @@ ForClause Parser::parseForClause() {
 
     // Expect variable name (identifier)
     if (peek().type != TokenType::IDENTIFIER) {
-        throw ParseError("Expected variable name after FOR");
+        throw ARX_ERROR(ErrorCategory::FOR_CLAUSE, ErrorCodes::FOR_INVALID_VARIABLE,
+                       "Expected variable name after FOR");
     }
     forClause.variable = advance().value;
 
@@ -504,7 +532,8 @@ ForClause Parser::parseForClause() {
     // Optional AT keyword for position variable
     if (match(TokenType::AT)) {
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected position variable name after AT");
+            throw ARX_ERROR(ErrorCategory::FOR_CLAUSE, ErrorCodes::FOR_INVALID_VARIABLE,
+                           "Expected position variable name after AT");
         }
         forClause.position_var = advance().value;
         forClause.has_position = true;
@@ -595,7 +624,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
                 return condition;
             }
             else {
-                throw ParseError("Expected NULL or LIKE after IS NOT");
+                throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                               "Expected NULL or LIKE after IS NOT");
             }
         }
         else if (peek().type == TokenType::NULL_LITERAL) {
@@ -606,7 +636,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
             return condition;
         }
         else {
-            throw ParseError("Expected NULL or NOT after IS");
+            throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                           "Expected NULL or NOT after IS");
         }
     }
     else if (peek().type == TokenType::LIKE) {
@@ -636,7 +667,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
                     valueToken.type == TokenType::IDENTIFIER) {
                     condition->values.push_back(advance().value);
                 } else {
-                    throw ParseError("Expected value in NOT IN list");
+                    throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                                   "Expected value in NOT IN list");
                 }
 
                 // Check for comma or closing paren
@@ -645,7 +677,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
                 } else if (peek().type == TokenType::RPAREN) {
                     break;
                 } else {
-                    throw ParseError("Expected ',' or ')' in NOT IN list");
+                    throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                                   "Expected ',' or ')' in NOT IN list");
                 }
             } while (true);
 
@@ -653,7 +686,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
             condition->is_numeric = false;
             return condition;
         } else {
-            throw ParseError("Expected IN after NOT in WHERE clause");
+            throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_LOGICAL_OP,
+                           "Expected IN after NOT in WHERE clause");
         }
     }
     else if (peek().type == TokenType::IN) {
@@ -671,7 +705,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
                 valueToken.type == TokenType::IDENTIFIER) {
                 condition->values.push_back(advance().value);
             } else {
-                throw ParseError("Expected value in IN list");
+                throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                               "Expected value in IN list");
             }
 
             // Check for comma or closing paren
@@ -680,7 +715,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
             } else if (peek().type == TokenType::RPAREN) {
                 break;
             } else {
-                throw ParseError("Expected ',' or ')' in IN list");
+                throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                               "Expected ',' or ')' in IN list");
             }
         } while (true);
 
@@ -704,7 +740,8 @@ std::unique_ptr<WhereExpr> Parser::parseWhereCondition() {
         condition->is_numeric = false;
     }
     else {
-        throw ParseError("Expected value in WHERE clause");
+        throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_INVALID_CONDITION,
+                       "Expected value in WHERE clause");
     }
 
     return condition;
@@ -733,7 +770,8 @@ ComparisonOp Parser::parseComparisonOp() {
             advance();
             return ComparisonOp::GREATER_EQUAL;
         default:
-            throw ParseError("Expected comparison operator");
+            throw ARX_ERROR(ErrorCategory::WHERE_CLAUSE, ErrorCodes::WHERE_MISSING_OPERATOR,
+                           "Expected comparison operator");
     }
 }
 
@@ -775,14 +813,16 @@ void Parser::parseOrderByClause(Query& query) {
 
     // Parse field to order by (supports @attribute or regular field)
     if (peek().type != TokenType::IDENTIFIER && peek().type != TokenType::AT) {
-        throw ParseError("Expected field name after ORDER BY");
+        throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                       "Expected field name after ORDER BY");
     }
 
     OrderByField orderByField;
     if (peek().type == TokenType::AT) {
         advance(); // consume @
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected attribute name after '@'");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected attribute name after '@'");
         }
         orderByField.field_name = "@" + advance().value;
     } else {
@@ -801,14 +841,16 @@ void Parser::parseOrderByClause(Query& query) {
     // Support multiple ORDER BY fields separated by commas
     while (match(TokenType::COMMA)) {
         if (peek().type != TokenType::IDENTIFIER && peek().type != TokenType::AT) {
-            throw ParseError("Expected field name after comma in ORDER BY");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected field name after comma in ORDER BY");
         }
 
         orderByField = OrderByField();  // Reset to defaults
         if (peek().type == TokenType::AT) {
             advance(); // consume @
             if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected attribute name after '@'");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                               "Expected attribute name after '@'");
             }
             orderByField.field_name = "@" + advance().value;
         } else {
@@ -830,18 +872,22 @@ void Parser::parseLimitClause(Query& query) {
     expect(TokenType::LIMIT, "Expected LIMIT keyword");
 
     if (peek().type != TokenType::NUMBER) {
-        throw ParseError("Expected number after LIMIT");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_INVALID_NUMBER,
+                       "Expected number after LIMIT");
     }
 
     try {
         query.limit = std::stoi(advance().value);
         if (query.limit < 0) {
-            throw ParseError("LIMIT value must be non-negative");
+            throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_VALUE_MUST_BE_NON_NEGATIVE,
+                           "LIMIT value must be non-negative");
         }
     } catch (const std::invalid_argument&) {
-        throw ParseError("Invalid LIMIT value");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_INVALID_NUMBER,
+                       "Invalid LIMIT value");
     } catch (const std::out_of_range&) {
-        throw ParseError("LIMIT value out of range");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_NUMBER_OUT_OF_RANGE,
+                       "LIMIT value out of range");
     }
 }
 
@@ -849,18 +895,22 @@ void Parser::parseOffsetClause(Query& query) {
     expect(TokenType::OFFSET, "Expected OFFSET keyword");
 
     if (peek().type != TokenType::NUMBER) {
-        throw ParseError("Expected number after OFFSET");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_INVALID_NUMBER,
+                       "Expected number after OFFSET");
     }
 
     try {
         query.offset = std::stoi(advance().value);
         if (query.offset < 0) {
-            throw ParseError("OFFSET value must be non-negative");
+            throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_VALUE_MUST_BE_NON_NEGATIVE,
+                           "OFFSET value must be non-negative");
         }
     } catch (const std::invalid_argument&) {
-        throw ParseError("Invalid OFFSET value");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_INVALID_NUMBER,
+                       "Invalid OFFSET value");
     } catch (const std::out_of_range&) {
-        throw ParseError("OFFSET value out of range");
+        throw ARX_ERROR(ErrorCategory::PROCESSING, ErrorCodes::PROCESSING_NUMBER_OUT_OF_RANGE,
+                       "OFFSET value out of range");
     }
 }
 
@@ -870,7 +920,8 @@ void Parser::parseGroupByClause(Query& query) {
 
     // Parse field to group by (can be dotted path like dept.name)
     if (peek().type != TokenType::IDENTIFIER) {
-        throw ParseError("Expected field name after GROUP BY");
+        throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                       "Expected field name after GROUP BY");
     }
 
     std::string fieldName = advance().value;
@@ -879,7 +930,8 @@ void Parser::parseGroupByClause(Query& query) {
     while (peek().type == TokenType::DOT) {
         advance(); // consume dot
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected identifier after '.' in GROUP BY field");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected identifier after '.' in GROUP BY field");
         }
         fieldName += "." + advance().value;
     }
@@ -889,7 +941,8 @@ void Parser::parseGroupByClause(Query& query) {
     // Support multiple GROUP BY fields separated by commas
     while (match(TokenType::COMMA)) {
         if (peek().type != TokenType::IDENTIFIER) {
-            throw ParseError("Expected field name after comma in GROUP BY");
+            throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected field name after comma in GROUP BY");
         }
         fieldName = advance().value;
 
@@ -897,7 +950,8 @@ void Parser::parseGroupByClause(Query& query) {
         while (peek().type == TokenType::DOT) {
             advance(); // consume dot
             if (peek().type != TokenType::IDENTIFIER) {
-                throw ParseError("Expected identifier after '.' in GROUP BY field");
+                throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE, ErrorCodes::SELECT_EXPECTED_IDENTIFIER,
+                           "Expected identifier after '.' in GROUP BY field");
             }
             fieldName += "." + advance().value;
         }

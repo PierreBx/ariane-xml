@@ -288,6 +288,11 @@ namespace ErrorCodes {
     constexpr int DSN_INVALID_DECIMAL_FORMAT = 30;
     constexpr int DSN_INVALID_NUMERIC_FORMAT = 40;
 
+    // DSN Mode Syntax Errors (22xxx)
+    constexpr int DSN_LEADING_DOT_NOT_ALLOWED = 1;
+    constexpr int DSN_ONLY_SHORTCUT_FORMAT = 2;
+    constexpr int DSN_INVALID_FIELD_FORMAT = 3;
+
     // Schema Validation (07xxx)
     constexpr int SCHEMA_FILE_NOT_FOUND = 1;
     constexpr int SCHEMA_VERSION_MISMATCH = 2;
@@ -303,6 +308,11 @@ namespace ErrorCodes {
     constexpr int FILE_CANNOT_CREATE_DIR = 5;
     constexpr int FILE_EMPTY = 10;
     constexpr int FILE_TOO_LARGE = 11;
+
+    // Processing Errors (12xxx)
+    constexpr int PROCESSING_INVALID_NUMBER = 1;
+    constexpr int PROCESSING_NUMBER_OUT_OF_RANGE = 2;
+    constexpr int PROCESSING_VALUE_MUST_BE_NON_NEGATIVE = 3;
 
     // Kernel/CLI Errors (20xxx)
     constexpr int KERNEL_INVALID_COMMAND = 1;
