@@ -277,6 +277,34 @@ ARX-04005:
   example: "FOR Salarie IN S21.G00.50 SELECT * FROM file.xml"
 
 # ============================================================================
+# XML STRUCTURE ERRORS (05xxx)
+# ============================================================================
+
+ARX-05001:
+  category: "XML Structure"
+  severity: Error
+  message: "Ambiguous partial path"
+  description: "The partial path matches multiple locations in the XML document"
+  suggestion: "Use the full path to disambiguate between multiple matches"
+  example: "Use 'company.employee.name' instead of '.name'"
+
+ARX-05002:
+  category: "XML Structure"
+  severity: Error
+  message: "Malformed XML document"
+  description: "The XML document has structural errors"
+  suggestion: "Validate your XML document structure and ensure it's well-formed"
+  example: "Check for missing closing tags or invalid nesting"
+
+ARX-05003:
+  category: "XML Structure"
+  severity: Error
+  message: "Invalid XML element"
+  description: "An invalid or unexpected XML element was encountered"
+  suggestion: "Verify the element name and structure against your XML schema"
+  example: "Ensure element names are valid XML identifiers"
+
+# ============================================================================
 # DSN FORMAT ERRORS (06xxx)
 # ============================================================================
 
@@ -380,6 +408,30 @@ ARX-07005:
   suggestion: "Update ariane-xml or use a compatible schema version"
   example: "Use schema version matching your ariane-xml version"
 
+ARX-07006:
+  category: "Schema Validation"
+  severity: Error
+  message: "Schema parse error"
+  description: "Failed to parse the XSD schema file"
+  suggestion: "Verify the XSD file is well-formed and follows XML schema specification"
+  example: "Validate your XSD file against XML Schema standard"
+
+ARX-07007:
+  category: "Schema Validation"
+  severity: Error
+  message: "No root element in schema"
+  description: "The XSD schema does not define a root element or any complex types"
+  suggestion: "Add a root element definition or at least one complexType to your schema"
+  example: "Define <xs:element name='root' type='rootType'/> in your schema"
+
+ARX-07008:
+  category: "Schema Validation"
+  severity: Error
+  message: "No schema element found"
+  description: "The XSD file does not contain a schema element"
+  suggestion: "Ensure your XSD file has a proper <xs:schema> root element"
+  example: "Start your XSD with <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>"
+
 # ============================================================================
 # FILE OPERATIONS ERRORS (10xxx)
 # ============================================================================
@@ -439,6 +491,22 @@ ARX-10011:
   description: "The file exceeds the maximum size limit"
   suggestion: "Process smaller files or increase memory limits"
   example: "Split large files into smaller chunks"
+
+ARX-10020:
+  category: "File Operations"
+  severity: Error
+  message: "XML file load failed"
+  description: "Failed to load the XML file"
+  suggestion: "Verify the XML file is well-formed and readable"
+  example: "Use an XML validator to check your file: xmllint file.xml"
+
+ARX-10021:
+  category: "File Operations"
+  severity: Error
+  message: "XML parse error"
+  description: "The XML file could not be parsed"
+  suggestion: "Check for syntax errors in the XML file"
+  example: "Ensure all tags are properly closed and nested"
 
 # ============================================================================
 # KERNEL/CLI ERRORS (20xxx)
