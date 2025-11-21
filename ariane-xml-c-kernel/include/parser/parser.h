@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "ast.h"
+#include "error/error_codes.h"
 #include <vector>
 #include <memory>
 #include <stdexcept>
@@ -10,11 +11,9 @@ namespace ariane_xml {
 
 class AppContext; // Forward declaration
 
-class ParseError : public std::runtime_error {
-public:
-    explicit ParseError(const std::string& message)
-        : std::runtime_error(message) {}
-};
+// ParseError is now an alias for ArianeError for backward compatibility
+// All parsing errors should use the unified error numbering system
+using ParseError = ArianeError;
 
 class Parser {
 public:

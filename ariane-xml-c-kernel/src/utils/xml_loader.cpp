@@ -1,4 +1,5 @@
 #include "utils/xml_loader.h"
+#include "error/error_codes.h"
 #include <algorithm>
 
 namespace ariane_xml {
@@ -9,8 +10,8 @@ std::unique_ptr<pugi::xml_document> XmlLoader::load(const std::string& filepath)
     pugi::xml_parse_result result = doc->load_file(filepath.c_str());
 
     if (!result) {
-        throw std::runtime_error("Failed to load XML file: " + filepath +
-                               "\nError: " + result.description());
+        throw ARX_ERROR(ErrorCategory::FILE_OPERATIONS, ErrorCodes::FILE_XML_LOAD_FAILED,
+                       "Failed to load XML file: " + filepath + "\nError: " + result.description());
     }
 
     return doc;

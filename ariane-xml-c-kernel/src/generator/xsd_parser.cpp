@@ -1,4 +1,5 @@
 #include "generator/xsd_parser.h"
+#include "error/error_codes.h"
 #include <iostream>
 #include <algorithm>
 #include <cstring>
@@ -16,7 +17,8 @@ std::unique_ptr<XsdSchema> XsdParser::parse(const std::string& xsd_file_path) {
     pugi::xml_parse_result result = doc.load_file(xsd_file_path.c_str());
 
     if (!result) {
-        throw std::runtime_error("Failed to parse XSD file: " + std::string(result.description()));
+        throw ARX_ERROR(ErrorCategory::SCHEMA_VALIDATION, ErrorCodes::SCHEMA_PARSE_ERROR,
+                       "Failed to parse XSD file: " + std::string(result.description()));
     }
 
     auto schema = std::make_unique<XsdSchema>();
@@ -31,7 +33,8 @@ std::unique_ptr<XsdSchema> XsdParser::parse(const std::string& xsd_file_path) {
     }
 
     if (!schemaNode) {
-        throw std::runtime_error("No schema element found in XSD file");
+        throw ARX_ERROR(ErrorCategory::SCHEMA_VALIDATION, ErrorCodes::SCHEMA_NO_SCHEMA_ELEMENT,
+                       "No schema element found in XSD file");
     }
 
     // Get target namespace if present
@@ -60,7 +63,8 @@ std::unique_ptr<XsdSchema> XsdParser::parse(const std::string& xsd_file_path) {
     } else {
         // No explicit root element - find first complexType (not simpleType)
         if (named_types_.empty()) {
-            throw std::runtime_error("No root element or named types found in XSD schema");
+            throw ARX_ERROR(ErrorCategory::SCHEMA_VALIDATION, ErrorCodes::SCHEMA_NO_ROOT_ELEMENT,
+                           "No root element or named types found in XSD schema");
         }
 
         // Find the first complex type (skip simple types)
