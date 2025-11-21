@@ -279,6 +279,11 @@ namespace ErrorCodes {
     constexpr int FOR_MUST_PRECEDE_WHERE = 4;
     constexpr int FOR_MISSING_IN_KEYWORD = 5;
 
+    // XML Structure Errors (05xxx)
+    constexpr int XML_AMBIGUOUS_PARTIAL_PATH = 1;
+    constexpr int XML_MALFORMED_DOCUMENT = 2;
+    constexpr int XML_INVALID_ELEMENT = 3;
+
     // DSN Format Errors (06xxx)
     constexpr int DSN_INVALID_SIRET_FORMAT = 1;
     constexpr int DSN_INVALID_SIRET_CHECKSUM = 2;
@@ -299,6 +304,9 @@ namespace ErrorCodes {
     constexpr int SCHEMA_INVALID_FORMAT = 3;
     constexpr int SCHEMA_LOADING_FAILED = 4;
     constexpr int SCHEMA_INCOMPATIBLE_VERSION = 5;
+    constexpr int SCHEMA_PARSE_ERROR = 6;
+    constexpr int SCHEMA_NO_ROOT_ELEMENT = 7;
+    constexpr int SCHEMA_NO_SCHEMA_ELEMENT = 8;
 
     // File Operations (10xxx)
     constexpr int FILE_NOT_FOUND = 1;
@@ -308,6 +316,8 @@ namespace ErrorCodes {
     constexpr int FILE_CANNOT_CREATE_DIR = 5;
     constexpr int FILE_EMPTY = 10;
     constexpr int FILE_TOO_LARGE = 11;
+    constexpr int FILE_XML_LOAD_FAILED = 20;
+    constexpr int FILE_XML_PARSE_ERROR = 21;
 
     // Processing Errors (12xxx)
     constexpr int PROCESSING_INVALID_NUMBER = 1;

@@ -1,4 +1,5 @@
 #include "executor/xml_navigator.h"
+#include "error/error_codes.h"
 #include <stdexcept>
 #include <typeinfo>
 #include <functional>
@@ -102,7 +103,8 @@ std::vector<XmlResult> XmlNavigator::extractValues(
                     if (!pathList.empty()) pathList += "\n  - ";
                     pathList += path;
                 }
-                throw std::runtime_error("Ambiguous path '." + targetName + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
+                throw ARX_ERROR(ErrorCategory::XML_STRUCTURE, ErrorCodes::XML_AMBIGUOUS_PARTIAL_PATH,
+                               "Ambiguous path '." + targetName + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
             }
 
             return results;
@@ -154,7 +156,8 @@ std::vector<XmlResult> XmlNavigator::extractValues(
                 partialPathStr += field.components[i];
             }
 
-            throw std::runtime_error("Ambiguous path '." + partialPathStr + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
+            throw ARX_ERROR(ErrorCategory::XML_STRUCTURE, ErrorCodes::XML_AMBIGUOUS_PARTIAL_PATH,
+                           "Ambiguous path '." + partialPathStr + "': found at multiple locations:\n  - " + pathList + "\nUse full path to disambiguate.");
         }
     }
 
