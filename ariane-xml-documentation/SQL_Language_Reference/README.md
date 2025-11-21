@@ -221,7 +221,7 @@ This documentation is part of the main ariane-xml project:
 - [Main README](../../README.md)
 - [CLI Quick Start](../01a_Quick_Start_CLI.md)
 - [Jupyter Quick Start](../01b_Quick_Start_Jupyter.md)
-- [DSN Mode Design](../DSN_MODE_DESIGN.md)
+- [DSN Mode Design](../Analysis/DSN_MODE_DESIGN.md)
 - [Examples Collection](../../ariane-xml-examples/EXAMPLES.md)
 
 ## Contributing

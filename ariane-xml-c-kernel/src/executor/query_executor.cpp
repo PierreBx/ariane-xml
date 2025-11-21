@@ -1,5 +1,6 @@
 #include "executor/query_executor.h"
 #include "utils/xml_loader.h"
+#include "error/error_codes.h"
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
@@ -530,11 +531,22 @@ std::vector<std::string> QueryExecutor::getXmlFiles(const std::string& path) {
                     xmlFiles.push_back(entry.path().string());
                 }
             }
+        } else if (std::filesystem::exists(path)) {
+            // Path exists but is neither a file nor a directory (e.g., a device file)
+            throw ARX_ERROR(ErrorCategory::FROM_CLAUSE, ErrorCodes::FROM_INVALID_PATH,
+                           "Path is not a regular file or directory: " + path);
         } else {
-            std::cerr << "Warning: Path is neither a file nor a directory: " << path << std::endl;
+            // Path doesn't exist at all
+            throw ARX_ERROR(ErrorCategory::FROM_CLAUSE, ErrorCodes::FROM_FILE_NOT_FOUND,
+                           "File or directory not found: " + path);
         }
+    } catch (const ArianeError& e) {
+        // Re-throw ARX errors
+        throw;
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Filesystem error: " << e.what() << std::endl;
+        // Convert filesystem errors to ARX errors
+        throw ARX_ERROR(ErrorCategory::FILE_OPERATIONS, ErrorCodes::FILE_PERMISSION_DENIED,
+                       "Cannot access path: " + path + "\nError: " + e.what());
     }
 
     return xmlFiles;

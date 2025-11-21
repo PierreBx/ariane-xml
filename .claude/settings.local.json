@@ -57,7 +57,12 @@
       "Bash(git cherry-pick:*)",
       "Bash(python3:*)",
       "Bash(docker version:*)",
-      "Bash(docker buildx:*)"
+      "Bash(docker buildx:*)",
+      "Bash(jupyter nbconvert:*)",
+      "Bash(./ariane-xml-scripts/start-jupyter.sh:*)",
+      "Bash(docker compose:*)",
+      "Bash(./ariane-xml-manager.sh:*)",
+      "Bash(bash -n:*)"
     ],
     "deny": [],
     "ask": []

@@ -481,7 +481,7 @@ Excludes employees with certain status values.
 
 - Ariane-xml supports a special **DSN mode** for French tax forms
 - In DSN mode, shortcuts like `30.001` are automatically expanded to `S21_G00_30_001`
-- See [DSN Mode Documentation](../../DSN_MODE_DESIGN.md) for details
+- See [DSN Mode Documentation](../../Analysis/DSN_MODE_DESIGN.md) for details
 
 ## Related Topics
 

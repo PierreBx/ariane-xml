@@ -106,7 +106,7 @@ New to ariane-xml? Start here:
 - [Main README](../../README.md) - Project overview and installation
 - [CLI Quick Start](../01a_Quick_Start_CLI.md) - Command-line interface guide
 - [Jupyter Quick Start](../01b_Quick_Start_Jupyter.md) - Jupyter notebook integration
-- [DSN Mode Design](../DSN_MODE_DESIGN.md) - Technical details on DSN mode
+- [DSN Mode Design](../Analysis/DSN_MODE_DESIGN.md) - Technical details on DSN mode
 - [Examples Collection](../../ariane-xml-examples/EXAMPLES.md) - Real-world query examples
 
 ---

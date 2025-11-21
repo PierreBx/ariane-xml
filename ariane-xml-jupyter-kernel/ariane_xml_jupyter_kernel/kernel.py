@@ -21,8 +21,12 @@ from typing import Dict, Any, List, Optional, Tuple
 try:
     import pandas as pd
     PANDAS_AVAILABLE = True
-except ImportError:
+    import sys
+    print(f"[Ariane-XML Kernel] Pandas {pd.__version__} loaded successfully", file=sys.stderr)
+except ImportError as e:
     PANDAS_AVAILABLE = False
+    import sys
+    print(f"[Ariane-XML Kernel] Pandas not available: {e}", file=sys.stderr)
 
 try:
     import ipywidgets as widgets
@@ -30,6 +34,14 @@ try:
     IPYWIDGETS_AVAILABLE = True
 except ImportError:
     IPYWIDGETS_AVAILABLE = False
+
+try:
+    from itables import to_html_datatable
+    ITABLES_AVAILABLE = True
+    import sys
+    print(f"[Ariane-XML Kernel] itables loaded - interactive tables enabled", file=sys.stderr)
+except ImportError:
+    ITABLES_AVAILABLE = False
 
 
 class ArianeXMLKernel(Kernel):
@@ -87,6 +99,9 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         super().__init__(**kwargs)
         self.ariane_xml_path = self._find_ariane_xml()
         self.working_directory = self._find_working_directory()
+
+        # Load version
+        self.version = self._load_version()
 
         # DSN MODE state tracking
         self.dsn_mode = False
@@ -162,6 +177,24 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         # For Docker or system-installed versions, use current directory
         return os.getcwd()
+
+    def _load_version(self) -> str:
+        """Load ariane-xml version from VERSION file"""
+        version_paths = [
+            '/app/ariane-xml-config/VERSION',  # Docker
+            os.path.join(self.working_directory, 'ariane-xml-config', 'VERSION'),  # Development
+            os.path.expanduser('~/ariane-xml/ariane-xml-config/VERSION'),  # User install
+        ]
+
+        for version_path in version_paths:
+            try:
+                if os.path.exists(version_path):
+                    with open(version_path, 'r') as f:
+                        return f.read().strip()
+            except Exception:
+                continue
+
+        return "unknown"  # Fallback
 
     def _ensure_workspace_exists(self):
         """Create workspace directory structure if it doesn't exist"""
@@ -1687,28 +1720,16 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
     def _enhance_error_message(self, error_msg: str, query: str) -> str:
         """
         Enhance error messages with helpful suggestions and tips.
-        Analyzes the error and provides context-aware guidance.
+        Plain text format - terminal-like output.
         """
         if not error_msg:
             return error_msg
 
-        # Build enhanced HTML error message
-        html = '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif;">'
+        # Build plain text error message
+        output = []
 
-        # Main error display
-        html += '''
-<div style="background: #fff5f5;
-            border-left: 4px solid #f56565;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="font-size: 24px;">❌</span>
-        <strong style="color: #c53030; font-size: 16px;">Error</strong>
-    </div>
-    <div style="font-family: monospace; color: #742a2a; white-space: pre-wrap;">'''
-        html += self._escape_html(error_msg)
-        html += '</div></div>'
+        # Main error display (ARX code already contains severity info)
+        output.append(error_msg)
 
         # Analyze error and provide suggestions
         suggestions = []
@@ -1725,8 +1746,8 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         # Unknown field errors
         elif 'unknown field' in error_lower or 'invalid field' in error_lower:
-            suggestions.append('Use <code>BROWSE SCHEMA</code> to see all available fields')
-            suggestions.append('Use <code>SEARCH "keyword"</code> to find fields by description')
+            suggestions.append('Use BROWSE SCHEMA to see all available fields')
+            suggestions.append('Use SEARCH "keyword" to find fields by description')
             suggestions.append('Verify you\'re using the correct DSN version (P25 or P26)')
             tips.append('Field codes are case-sensitive')
             tips.append('Use TAB for autocomplete when typing field names')
@@ -1736,19 +1757,19 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             suggestions.append('Check your SQL syntax')
             suggestions.append('Make sure field names are separated by commas')
             suggestions.append('Verify you have a FROM clause with a file path')
-            tips.append('Type <code>HELP</code> to see command syntax')
-            tips.append('Use <code>TEMPLATE LIST</code> to see example queries')
+            tips.append('Type HELP to see command syntax')
+            tips.append('Use TEMPLATE LIST to see example queries')
 
         # DSN mode not activated
         elif 'dsn' in error_lower and 'not' in error_lower:
-            suggestions.append('Activate DSN mode with: <code>SET MODE DSN</code>')
-            suggestions.append('Set DSN version with: <code>SET DSN_VERSION P26</code>')
+            suggestions.append('Activate DSN mode with: SET MODE DSN')
+            suggestions.append('Set DSN version with: SET DSN_VERSION P26')
 
         # Schema/version errors
         elif 'schema' in error_lower or 'version' in error_lower:
-            suggestions.append('Set DSN version: <code>SET DSN_VERSION P25</code> or <code>SET DSN_VERSION P26</code>')
-            suggestions.append('Use <code>SHOW DSN_SCHEMA</code> to see current schema info')
-            suggestions.append('Compare versions with: <code>COMPARE P25 P26</code>')
+            suggestions.append('Set DSN version: SET DSN_VERSION P25 or SET DSN_VERSION P26')
+            suggestions.append('Use SHOW DSN_SCHEMA to see current schema info')
+            suggestions.append('Compare versions with: COMPARE P25 P26')
 
         # Empty result isn't really an error, but let's handle it
         elif 'no rows' in error_lower or 'empty' in error_lower:
@@ -1758,56 +1779,21 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         # Add suggestions section if we have any
         if suggestions:
-            html += '''
-<div style="background: #fffaf0;
-            border-left: 4px solid #ed8936;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="font-size: 20px;">💡</span>
-        <strong style="color: #7c2d12; font-size: 15px;">Suggestions</strong>
-    </div>
-    <ul style="margin: 5px 0; padding-left: 25px; color: #7c2d12;">'''
-            for suggestion in suggestions:
-                html += f'<li style="margin: 5px 0;">{suggestion}</li>'
-            html += '</ul></div>'
+            output.append("SUGGESTIONS:")
+            for i, suggestion in enumerate(suggestions, 1):
+                output.append(f"  {i}. {suggestion}")
 
         # Add tips section if we have any
         if tips:
-            html += '''
-<div style="background: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="font-size: 20px;">ℹ️</span>
-        <strong style="color: #1e3a8a; font-size: 15px;">Tips</strong>
-    </div>
-    <ul style="margin: 5px 0; padding-left: 25px; color: #1e3a8a;">'''
-            for tip in tips:
-                html += f'<li style="margin: 5px 0;">{tip}</li>'
-            html += '</ul></div>'
+            output.append("TIPS:")
+            for i, tip in enumerate(tips, 1):
+                output.append(f"  {i}. {tip}")
 
         # Always add help reference
         if self.dsn_mode:
-            html += '''
-<div style="background: #f6f8fa;
-            padding: 12px;
-            border-radius: 4px;
-            margin: 15px 0;
-            text-align: center;
-            color: #586069;
-            font-size: 13px;">
-    Type <code style="background: white; padding: 2px 6px; border-radius: 3px; color: #0366d6;">HELP</code>
-    for command reference or
-    <code style="background: white; padding: 2px 6px; border-radius: 3px; color: #0366d6;">BROWSE SCHEMA</code>
-    to explore available fields
-</div>'''
+            output.append("Type HELP for command reference or BROWSE SCHEMA to explore available fields")
 
-        html += '</div>'
-        return html
+        return '\n'.join(output)
 
     def _execute_query(self, query: str) -> Dict[str, Any]:
         """Execute an Ariane-XML query and return the result"""
@@ -1844,22 +1830,22 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             return {
                 'success': False,
                 'output': '',
-                'error': '⏱️  Query execution timed out (30s limit)\n\n💡 Tip: Try adding a LIMIT clause or filtering with WHERE to reduce results.'
+                'error': 'Query execution timed out (30s limit)\n\nTip: Try adding a LIMIT clause or filtering with WHERE to reduce results.'
             }
         except FileNotFoundError:
             return {
                 'success': False,
                 'output': '',
-                'error': f'❌ Ariane-XML executable not found at: {self.ariane_xml_path}\n\n'
-                        '📋 Please ensure Ariane-XML is built:\n'
-                        '   Docker: Already built during image creation\n'
-                        '   Local: cd build && cmake .. && make'
+                'error': f'Ariane-XML executable not found at: {self.ariane_xml_path}\n\n'
+                        'Please ensure Ariane-XML is built:\n'
+                        '  Docker: Already built during image creation\n'
+                        '  Local: cd build && cmake .. && make'
             }
         except Exception as e:
             return {
                 'success': False,
                 'output': '',
-                'error': f'💥 Unexpected error: {str(e)}'
+                'error': f'Unexpected error: {str(e)}'
             }
 
     def _format_dsn_describe_output(self, output: str) -> str:
@@ -2060,13 +2046,45 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # Try to parse as table
         lines = output.strip().split('\n')
 
-        # Check if this looks like a table (contains | separators)
-        if len(lines) > 0 and '|' in lines[0]:
-            html = self._create_html_table(lines)
-            return {
-                'text/html': html,
-                'text/plain': plain_output  # Fallback
-            }
+        # Check if this looks like a table
+        # Format 1: Pipe-separated (| header1 | header2 |)
+        # Format 2: Dash-separated with header line then dashes (------)
+        is_table = False
+        if len(lines) >= 2:
+            # Check for pipe format
+            if '|' in lines[0]:
+                is_table = True
+            # Check for dash-separated format (header, then line of dashes)
+            elif len(lines[1].strip()) > 0 and lines[1].strip().replace('-', '').replace(' ', '') == '':
+                is_table = True
+
+        if is_table:
+            # Try to convert to pandas DataFrame (preferred in Jupyter)
+            if PANDAS_AVAILABLE:
+                df = self._convert_to_dataframe(output)
+                if df is not None:
+                    # Use interactive tables if available, otherwise use pandas default
+                    if ITABLES_AVAILABLE:
+                        # Interactive table with sorting, filtering, pagination
+                        html = to_html_datatable(df, classes="display compact", showIndex=False)
+                        return {
+                            'text/html': html,
+                            'text/plain': df.to_string(index=False)
+                        }
+                    else:
+                        # Standard pandas HTML rendering
+                        return {
+                            'text/html': df._repr_html_(),
+                            'text/plain': df.to_string(index=False)
+                        }
+                else:
+                    # DataFrame conversion failed - show warning and plain text
+                    warning = "WARNING: Could not convert results to DataFrame, displaying as plain text\n\n"
+                    return {'text/plain': warning + plain_output}
+            else:
+                # Pandas not available - show warning and plain text
+                warning = "WARNING: pandas not installed - install with: pip install pandas\n\n"
+                return {'text/plain': warning + plain_output}
 
         # Not a table, return plain text
         return {'text/plain': plain_output}
@@ -2079,6 +2097,73 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 count += 1
         # Subtract 1 for header
         return max(0, count - 1)
+
+    def _parse_fixed_width_table(self, table_rows: List[str], separator_idx: int) -> List[List[str]]:
+        """
+        Parse a fixed-width table format into rows of cells.
+
+        Format:
+        col1          col2          col3
+        ------------- ------------- -------------
+        value1        value2        value3
+
+        Args:
+            table_rows: All table rows including header and separator
+            separator_idx: Index of the dash separator line
+
+        Returns:
+            List of rows, each row is a list of cell values
+        """
+        if separator_idx < 0 or separator_idx >= len(table_rows):
+            return []
+
+        # Get the separator line to determine column positions
+        separator = table_rows[separator_idx]
+
+        # Find column boundaries by finding groups of dashes
+        col_positions = []
+        in_column = False
+        start_pos = 0
+
+        for i, char in enumerate(separator):
+            if char == '-':
+                if not in_column:
+                    start_pos = i
+                    in_column = True
+            else:
+                if in_column:
+                    col_positions.append((start_pos, i))
+                    in_column = False
+
+        # Add the last column if it ends with dashes
+        if in_column:
+            col_positions.append((start_pos, len(separator)))
+
+        if not col_positions:
+            return []
+
+        # Parse all rows using the column positions
+        parsed_rows = []
+
+        # Header row (before separator)
+        if separator_idx > 0:
+            header_line = table_rows[separator_idx - 1]
+            header_cells = []
+            for start, end in col_positions:
+                cell = header_line[start:end].strip() if start < len(header_line) else ""
+                header_cells.append(cell)
+            parsed_rows.append(header_cells)
+
+        # Data rows (after separator)
+        for i in range(separator_idx + 1, len(table_rows)):
+            line = table_rows[i]
+            row_cells = []
+            for start, end in col_positions:
+                cell = line[start:end].strip() if start < len(line) else ""
+                row_cells.append(cell)
+            parsed_rows.append(row_cells)
+
+        return parsed_rows
 
     def _create_html_table(self, lines: List[str]) -> str:
         """
@@ -2235,31 +2320,67 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
 
         # Process table rows
         if table_rows:
-            # Header row
-            if len(table_rows) > 0:
-                cells = [cell.strip() for cell in table_rows[0].split('|')]
-                cells = [c for c in cells if c]  # Remove empty cells
+            # Determine table format (pipe-separated vs fixed-width)
+            is_pipe_format = '|' in table_rows[0] if len(table_rows) > 0 else False
 
-                html.append('<thead><tr>')
-                for cell in cells:
-                    html.append(f'<th>{self._escape_html(cell)}</th>')
-                html.append('</tr></thead>')
-
-            # Data rows
-            if len(table_rows) > 1:
-                html.append('<tbody>')
-                for line in table_rows[1:]:
-                    cells = [cell.strip() for cell in line.split('|')]
+            if is_pipe_format:
+                # Pipe-separated format
+                # Header row
+                if len(table_rows) > 0:
+                    cells = [cell.strip() for cell in table_rows[0].split('|')]
                     cells = [c for c in cells if c]  # Remove empty cells
 
-                    html.append('<tr>')
+                    html.append('<thead><tr>')
                     for cell in cells:
-                        # Detect if cell contains numeric data
-                        cell_class = 'numeric' if self._is_numeric(cell) else ''
-                        class_attr = f' class="{cell_class}"' if cell_class else ''
-                        html.append(f'<td{class_attr}>{self._escape_html(cell)}</td>')
-                    html.append('</tr>')
-                html.append('</tbody>')
+                        html.append(f'<th>{self._escape_html(cell)}</th>')
+                    html.append('</tr></thead>')
+
+                # Data rows
+                if len(table_rows) > 1:
+                    html.append('<tbody>')
+                    for line in table_rows[1:]:
+                        cells = [cell.strip() for cell in line.split('|')]
+                        cells = [c for c in cells if c]  # Remove empty cells
+
+                        html.append('<tr>')
+                        for cell in cells:
+                            # Detect if cell contains numeric data
+                            cell_class = 'numeric' if self._is_numeric(cell) else ''
+                            class_attr = f' class="{cell_class}"' if cell_class else ''
+                            html.append(f'<td{class_attr}>{self._escape_html(cell)}</td>')
+                        html.append('</tr>')
+                    html.append('</tbody>')
+            else:
+                # Fixed-width format (space-separated with dash separator)
+                # Find column positions from the dash separator line (should be second row)
+                separator_idx = -1
+                for i, line in enumerate(table_rows):
+                    if line.strip() and line.strip().replace('-', '').replace(' ', '') == '':
+                        separator_idx = i
+                        break
+
+                if separator_idx >= 0 and separator_idx < len(table_rows):
+                    # Parse using fixed-width columns
+                    parsed_rows = self._parse_fixed_width_table(table_rows, separator_idx)
+
+                    if parsed_rows and len(parsed_rows) > 0:
+                        # Header row
+                        html.append('<thead><tr>')
+                        for cell in parsed_rows[0]:
+                            html.append(f'<th>{self._escape_html(cell)}</th>')
+                        html.append('</tr></thead>')
+
+                        # Data rows
+                        if len(parsed_rows) > 1:
+                            html.append('<tbody>')
+                            for row in parsed_rows[1:]:
+                                html.append('<tr>')
+                                for cell in row:
+                                    cell_class = 'numeric' if self._is_numeric(cell) else ''
+                                    class_attr = f' class="{cell_class}"' if cell_class else ''
+                                    html.append(f'<td{class_attr}>{self._escape_html(cell)}</td>')
+                                html.append('</tr>')
+                            html.append('</tbody>')
 
         html.append('</table>')
 
@@ -2364,6 +2485,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         """
         Convert Ariane-XML output to pandas DataFrame.
         Returns None if pandas is not available or conversion fails.
+        Handles both pipe-separated and fixed-width formats.
         """
         if not PANDAS_AVAILABLE:
             return None
@@ -2373,29 +2495,65 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
             if len(lines) < 2:
                 return None
 
-            # Parse header
-            header_line = lines[0]
-            headers = [h.strip() for h in header_line.split('|') if h.strip()]
+            # Detect format (pipe-separated vs fixed-width)
+            is_pipe_format = '|' in lines[0]
 
-            # Skip separator line (if present)
-            data_start = 1
-            if len(lines) > 1 and all(c in '-|+' for c in lines[1].strip()):
-                data_start = 2
+            if is_pipe_format:
+                # Pipe-separated format
+                header_line = lines[0]
+                headers = [h.strip() for h in header_line.split('|') if h.strip()]
 
-            # Parse data rows
-            data = []
-            for line in lines[data_start:]:
-                line = line.strip()
-                if not line or all(c in '-|+=' for c in line):
-                    continue
-                values = [v.strip() for v in line.split('|') if v.strip() or v == '']
-                if len(values) == len(headers):
-                    data.append(values)
+                # Skip separator line (if present)
+                data_start = 1
+                if len(lines) > 1 and all(c in '-|+' for c in lines[1].strip()):
+                    data_start = 2
 
-            if not data:
-                return pd.DataFrame(columns=headers)
+                # Parse data rows
+                data = []
+                for line in lines[data_start:]:
+                    line = line.strip()
+                    if not line or all(c in '-|+=' for c in line) or 'row(s) returned' in line or 'rows returned' in line:
+                        continue
+                    values = [v.strip() for v in line.split('|') if v.strip() or v == '']
+                    if len(values) == len(headers):
+                        data.append(values)
 
-            return pd.DataFrame(data, columns=headers)
+                if not data:
+                    return pd.DataFrame(columns=headers)
+
+                return pd.DataFrame(data, columns=headers)
+            else:
+                # Fixed-width format
+                # Filter out the row count line first
+                filtered_lines = [line for line in lines if line.strip() and 'row(s) returned' not in line and 'rows returned' not in line]
+
+                if len(filtered_lines) < 3:
+                    return None
+
+                # Find separator line (line of dashes) in filtered lines
+                separator_idx = -1
+                for i, line in enumerate(filtered_lines):
+                    if line.strip() and line.strip().replace('-', '').replace(' ', '') == '':
+                        separator_idx = i
+                        break
+
+                if separator_idx < 1 or separator_idx >= len(filtered_lines):
+                    return None
+
+                # Parse using the fixed-width table parser
+                parsed_rows = self._parse_fixed_width_table(filtered_lines, separator_idx)
+
+                if not parsed_rows or len(parsed_rows) < 1:
+                    return None
+
+                # First row is header
+                headers = parsed_rows[0]
+                data = parsed_rows[1:] if len(parsed_rows) > 1 else []
+
+                if not data:
+                    return pd.DataFrame(columns=headers)
+
+                return pd.DataFrame(data, columns=headers)
 
         except Exception as e:
             # If conversion fails, return None
@@ -2921,12 +3079,10 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
         # Show DSN quickstart card when DSN mode is first activated
         show_quickstart = (not was_dsn_mode and self.dsn_mode and self.dsn_quickstart)
 
-        # Show execution status with DSN mode badge
+        # Show execution status with version and mode
         if not silent:
-            mode_badge = self._get_dsn_mode_badge()
-            status_msg = '⚡ Executing query...'
-            if mode_badge:
-                status_msg = f'{mode_badge} ⚡ Executing query...'
+            mode = "DSN" if self.dsn_mode else "STANDARD"
+            status_msg = f'ariane-xml {self.version} - [{mode}] - Executing...'
             self.send_response(
                 self.iopub_socket,
                 'stream',
@@ -3002,7 +3158,7 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                         'stream',
                         {
                             'name': 'stdout',
-                            'text': f'\n✓ Done in {execution_time_ms:.1f} ms\n'
+                            'text': f'{execution_time_ms:.1f} ms\n'
                         }
                     )
 
@@ -3022,20 +3178,20 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                         )
                 else:
                     # Query succeeded but produced no output - provide helpful feedback
-                    help_msg = f'\n✓ Query executed successfully (no output) - {execution_time_ms:.1f} ms\n\n'
-                    help_msg += '💡 Possible reasons:\n'
-                    help_msg += '   • File path not found\n'
-                    help_msg += '   • Query syntax may be incorrect\n'
-                    help_msg += '   • No data matched your WHERE clause\n'
-                    help_msg += '   • Empty XML file\n\n'
+                    help_msg = f'\nQuery executed successfully (no output) - {execution_time_ms:.1f} ms\n\n'
+                    help_msg += 'POSSIBLE REASONS:\n'
+                    help_msg += '  1. File path not found\n'
+                    help_msg += '  2. Query syntax may be incorrect\n'
+                    help_msg += '  3. No data matched your WHERE clause\n'
+                    help_msg += '  4. Empty XML file\n\n'
                     help_msg += 'Tip: Check your file path and query syntax.'
 
                     # Add DSN-specific help if in DSN mode
                     if self.dsn_mode:
-                        help_msg += '\n\n🇫🇷 DSN MODE Tips:\n'
-                        help_msg += '   • Use "DESCRIBE <field>" to see field documentation\n'
-                        help_msg += '   • Use "TEMPLATE LIST" to see available query templates\n'
-                        help_msg += '   • Check DSN version with "SHOW DSN_SCHEMA"\n'
+                        help_msg += '\n\nDSN MODE TIPS:\n'
+                        help_msg += '  - Use "DESCRIBE <field>" to see field documentation\n'
+                        help_msg += '  - Use "TEMPLATE LIST" to see available query templates\n'
+                        help_msg += '  - Check DSN version with "SHOW DSN_SCHEMA"\n'
 
                     self.send_response(
                         self.iopub_socket,
@@ -3049,39 +3205,16 @@ Welcome! Query XML files using familiar SQL syntax with rich HTML output.
                 # Send enhanced formatted error
                 error_msg = result['error'] or 'Unknown error'
 
-                # Use enhanced HTML error formatting in DSN mode
-                if self.dsn_mode:
-                    enhanced_html = self._enhance_error_message(error_msg, code)
-                    self.send_response(
-                        self.iopub_socket,
-                        'display_data',
-                        {
-                            'data': {
-                                'text/html': enhanced_html,
-                                'text/plain': error_msg
-                            },
-                            'metadata': {}
-                        }
-                    )
-                    # Send timing info separately
-                    self.send_response(
-                        self.iopub_socket,
-                        'stream',
-                        {
-                            'name': 'stderr',
-                            'text': f'✗ Failed after {execution_time_ms:.1f} ms\n'
-                        }
-                    )
-                else:
-                    # Standard error output for non-DSN mode
-                    self.send_response(
-                        self.iopub_socket,
-                        'stream',
-                        {
-                            'name': 'stderr',
-                            'text': f'{error_msg}\n\n✗ Failed after {execution_time_ms:.1f} ms\n'
-                        }
-                    )
+                # Use enhanced plain text error formatting
+                enhanced_msg = self._enhance_error_message(error_msg, code)
+                self.send_response(
+                    self.iopub_socket,
+                    'stream',
+                    {
+                        'name': 'stdout',
+                        'text': f'{enhanced_msg}\n{execution_time_ms:.1f} ms\n'
+                    }
+                )
 
         # Add to history (Phase 2 feature)
         row_count = 0

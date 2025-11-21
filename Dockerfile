@@ -34,7 +34,9 @@ RUN pip3 install --no-cache-dir \
     jupyterlab \
     notebook \
     ipykernel \
-    jupyter-client
+    jupyter-client \
+    pandas \
+    itables
 
 # Install encryption module dependencies
 RUN pip3 install --no-cache-dir \

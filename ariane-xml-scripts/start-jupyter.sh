@@ -113,7 +113,6 @@ exec jupyter lab \
     --no-browser \
     --allow-root \
     --notebook-dir="${SESSIONS_DIR}" \
-    --ServerApp.root_dir="/app" \
     --LabApp.default_url='/lab/tree/welcome.ipynb' \
     --NotebookApp.token='' \
     --NotebookApp.password='' \

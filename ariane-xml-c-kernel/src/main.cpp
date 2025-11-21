@@ -7,6 +7,7 @@
 #include "utils/pseudonymisation_checker.h"
 #include "dsn/dsn_autocomplete.h"
 #include "dsn/dsn_parser.h"
+#include "error/error_codes.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -407,10 +408,13 @@ void executeQuery(const std::string& query, const ariane_xml::AppContext* contex
         // Format and print results
         ariane_xml::ResultFormatter::print(results);
 
-    } catch (const ariane_xml::ParseError& e) {
-        std::cerr << "Parse Error: " << e.what() << std::endl;
+    } catch (const ariane_xml::ArianeError& e) {
+        // Re-throw so caller (main) can print error and return exit code
+        // Note: ParseError is an alias for ArianeError, so this catches both
+        throw;
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        // Re-throw so caller (main) can print error and return exit code
+        throw;
     }
 }
 
@@ -527,6 +531,11 @@ int handleAutocomplete(int argc, char* argv[]) {
 
         return 0;
 
+    } catch (const ariane_xml::ArianeError& e) {
+        // On error, return empty array (fail gracefully for autocomplete)
+        std::cerr << "Autocomplete error: " << e.getFullMessage() << std::endl;
+        std::cout << "[]" << std::endl;
+        return e.getExitCode();
     } catch (const std::exception& e) {
         // On error, return empty array (fail gracefully for autocomplete)
         std::cerr << "Autocomplete error: " << e.what() << std::endl;
@@ -705,6 +714,10 @@ int main(int argc, char* argv[]) {
 
         return 0;
 
+    } catch (const ariane_xml::ArianeError& e) {
+        // Use getFullMessage() to include ARX-XXYYY error code
+        std::cerr << e.getFullMessage() << std::endl;
+        return e.getExitCode();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

@@ -47,7 +47,7 @@ if [ "$FILE_COUNT" -eq ${NUM_FILES} ]; then
     GENERATION_TIME=0
 else
     echo -e "${COLOR_BOLD}${COLOR_YELLOW}Phase 1: Generating ${NUM_FILES} XML files (~${TARGET_FILE_SIZE_MB}MB each)...${COLOR_RESET}"
-    echo -e "${COLOR_CYAN}This will create approximately $(( NUM_FILES * TARGET_FILE_SIZE_MB / 1000 )) GB of test data${COLOR_RESET}"
+    echo -e "${COLOR_CYAN}This will create approximately $(( NUM_FILES * TARGET_FILE_SIZE_MB )) MB of test data${COLOR_RESET}"
     echo ""
 
     # Clean up any partial/old files

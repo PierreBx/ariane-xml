@@ -232,7 +232,7 @@ Ariane-XML is ideal for:
 - [CLI Quick Start](../../01a_Quick_Start_CLI.md)
 - [Jupyter Notebook Integration](../../01b_Quick_Start_Jupyter.md)
 - [Installation Guide](../../02_Installation_Guide.md)
-- [DSN Mode Documentation](../../DSN_MODE_DESIGN.md)
+- [DSN Mode Documentation](../../Analysis/DSN_MODE_DESIGN.md)
 
 ---
 
