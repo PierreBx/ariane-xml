@@ -12,29 +12,43 @@ Ariane-XML uses a unified error numbering system inspired by Oracle's error code
 
 ## Error Code Format
 
-### Structure: `ARX-CCNNNN`
+### Structure: `ARX-XXYYY`
 
 - **ARX** = Ariane-Xml prefix (identifies errors from ariane-xml)
-- **CC** = Category code (2 digits, range: 00-99)
-- **NNNN** = Specific error number (4 digits, range: 0000-9999)
+- **XX** = Category code (2 digits, range: 00-99)
+- **YYY** = Specific error number (3 digits, range: 000-999)
 
-### Severity Prefix
+**Total Capacity:** 100 categories × 1,000 codes = **100,000 unique error codes**
 
-Errors include a severity prefix for better classification:
+### Key Design Principle
 
-| Prefix | Severity | Description | Exit Code |
-|--------|----------|-------------|-----------|
-| *(none)* | Success | Normal completion (ARX-000000 only) | 0 |
-| **E-** | Error | Fatal errors that stop execution | 1 |
-| **W-** | Warning | Non-fatal issues, execution continues | 0 |
-| **I-** | Info | Informational messages | 0 |
+**Severity is an attribute, not part of the code.**
+
+Like Oracle's system, each error code (e.g., `ARX-01004`) represents a specific issue, and the severity (Success, Error, Warning, Info) is metadata about that code, not encoded in the identifier itself.
+
+### Display Format
+
+```
+ARX-XXYYY [Severity] Message
+```
 
 ### Examples
 
-- `ARX-000000` - Success (no errors)
-- `E-ARX-010001` - Error: Missing SELECT keyword
-- `W-ARX-800001` - Warning: Deprecated syntax used
-- `I-ARX-850001` - Info: Query statistics
+- `ARX-00000 [Success] Query executed successfully`
+- `ARX-01001 [Error] Missing SELECT keyword`
+- `ARX-01004 [Warning] Duplicate field in SELECT list`
+- `ARX-02002 [Error] File not found`
+- `ARX-80001 [Warning] Deprecated syntax used`
+- `ARX-85001 [Info] Query statistics`
+
+## Severity Levels
+
+| Severity | Description | Exit Code | Example |
+|----------|-------------|-----------|---------|
+| **Success** | Normal completion (ARX-00000 only) | 0 | `ARX-00000 [Success] Query executed successfully` |
+| **Error** | Fatal errors that stop execution | 1 | `ARX-01001 [Error] Missing SELECT keyword` |
+| **Warning** | Non-fatal issues, execution continues | 0 | `ARX-80001 [Warning] Deprecated syntax used` |
+| **Info** | Informational messages | 0 | `ARX-85001 [Info] Query statistics` |
 
 ## Category Ranges
 
@@ -42,55 +56,55 @@ Errors include a severity prefix for better classification:
 
 | Category | Range | Description |
 |----------|-------|-------------|
-| **00** | ARX-000000 to ARX-009999 | Success & general parse errors |
-| **01** | ARX-010000 to ARX-019999 | SELECT clause errors |
-| **02** | ARX-020000 to ARX-029999 | FROM clause errors |
-| **03** | ARX-030000 to ARX-039999 | WHERE clause errors |
-| **04** | ARX-040000 to ARX-049999 | FOR clause errors (DSN mode) |
-| **05** | ARX-050000 to ARX-059999 | XML structure errors |
-| **06** | ARX-060000 to ARX-069999 | DSN format errors (SIRET, NIR, dates) |
-| **07** | ARX-070000 to ARX-079999 | Schema validation errors |
-| **08** | ARX-080000 to ARX-089999 | Field validation errors |
-| **09** | ARX-090000 to ARX-099999 | Data integrity errors |
-| **10** | ARX-100000 to ARX-109999 | File operations errors |
-| **11** | ARX-110000 to ARX-119999 | Memory/resource errors |
-| **12** | ARX-120000 to ARX-129999 | Processing errors |
-| **13** | ARX-130000 to ARX-139999 | Timeout errors |
-| **14** | ARX-140000 to ARX-149999 | Output errors |
-| **15** | ARX-150000 to ARX-159999 | Encryption errors |
-| **16** | ARX-160000 to ARX-169999 | Decryption errors |
-| **17** | ARX-170000 to ARX-179999 | Key management errors |
-| **18** | ARX-180000 to ARX-189999 | Certificate errors |
-| **19** | ARX-190000 to ARX-199999 | Access control errors |
+| **00** | ARX-00000 to ARX-00999 | Success & general parse errors |
+| **01** | ARX-01000 to ARX-01999 | SELECT clause errors |
+| **02** | ARX-02000 to ARX-02999 | FROM clause errors |
+| **03** | ARX-03000 to ARX-03999 | WHERE clause errors |
+| **04** | ARX-04000 to ARX-04999 | FOR clause errors (DSN mode) |
+| **05** | ARX-05000 to ARX-05999 | XML structure errors |
+| **06** | ARX-06000 to ARX-06999 | DSN format errors (SIRET, NIR, dates) |
+| **07** | ARX-07000 to ARX-07999 | Schema validation errors |
+| **08** | ARX-08000 to ARX-08999 | Field validation errors |
+| **09** | ARX-09000 to ARX-09999 | Data integrity errors |
+| **10** | ARX-10000 to ARX-10999 | File operations errors |
+| **11** | ARX-11000 to ARX-11999 | Memory/resource errors |
+| **12** | ARX-12000 to ARX-12999 | Processing errors |
+| **13** | ARX-13000 to ARX-13999 | Timeout errors |
+| **14** | ARX-14000 to ARX-14999 | Output errors |
+| **15** | ARX-15000 to ARX-15999 | Encryption errors |
+| **16** | ARX-16000 to ARX-16999 | Decryption errors |
+| **17** | ARX-17000 to ARX-17999 | Key management errors |
+| **18** | ARX-18000 to ARX-18999 | Certificate errors |
+| **19** | ARX-19000 to ARX-19999 | Access control errors |
 
 ### Module Categories (20-39)
 
 | Category | Range | Description |
 |----------|-------|-------------|
-| **20** | ARX-200000 to ARX-209999 | Kernel/CLI errors |
-| **21** | ARX-210000 to ARX-219999 | Jupyter integration errors |
-| **22** | ARX-220000 to ARX-229999 | DSN mode errors |
-| **23** | ARX-230000 to ARX-239999 | Aggregation function errors |
-| **24-39** | ARX-240000 to ARX-399999 | Reserved for future features |
+| **20** | ARX-20000 to ARX-20999 | Kernel/CLI errors |
+| **21** | ARX-21000 to ARX-21999 | Jupyter integration errors |
+| **22** | ARX-22000 to ARX-22999 | DSN mode errors |
+| **23** | ARX-23000 to ARX-23999 | Aggregation function errors |
+| **24-39** | ARX-24000 to ARX-39999 | Reserved for future features |
 
 ### System Categories (40-49)
 
 | Category | Range | Description |
 |----------|-------|-------------|
-| **40** | ARX-400000 to ARX-409999 | Configuration errors |
-| **41** | ARX-410000 to ARX-419999 | Environment errors |
-| **42** | ARX-420000 to ARX-429999 | Dependency errors |
-| **43** | ARX-430000 to ARX-439999 | System resource errors |
-| **44-49** | ARX-440000 to ARX-499999 | Reserved |
+| **40** | ARX-40000 to ARX-40999 | Configuration errors |
+| **41** | ARX-41000 to ARX-41999 | Environment errors |
+| **42** | ARX-42000 to ARX-42999 | Dependency errors |
+| **43** | ARX-43000 to ARX-43999 | System resource errors |
+| **44-49** | ARX-44000 to ARX-49999 | Reserved |
 
 ### Special Categories (80-99)
 
 | Category | Range | Description |
 |----------|-------|-------------|
-| **80-84** | ARX-800000 to ARX-849999 | Warnings |
-| **85-89** | ARX-850000 to ARX-899999 | Informational messages |
-| **90-94** | ARX-900000 to ARX-949999 | Debug/internal errors |
-| **95-99** | ARX-950000 to ARX-999999 | Reserved |
+| **80-84** | ARX-80000 to ARX-84999 | Warnings |
+| **85-89** | ARX-85000 to ARX-89999 | Informational messages |
+| **90-94** | ARX-90000 to ARX-94999 | Debug/internal errors |
+| **95-99** | ARX-95000 to ARX-99999 | Reserved |
 
 ## Usage Examples
 
@@ -105,52 +119,63 @@ try {
     // Success case
     auto result = executeQuery(query);
     std::cout << ARX_SUCCESS().getFullMessage() << std::endl;
-    // Output: ARX-000000: Success
+    // Output: ARX-00000 [Success] Query executed successfully
 
 } catch (const ArianeError& e) {
     std::cerr << e.getFullMessage() << std::endl;
     return e.getExitCode();
 }
 
-// Creating specific errors
-throw ARX_ERROR(SELECT_CLAUSE, ErrorCodes::SELECT_MISSING_KEYWORD,
+// Creating specific errors using category and code numbers
+throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE,
+                ErrorCodes::SELECT_MISSING_KEYWORD,
                 "Missing SELECT keyword");
-// Output: E-ARX-010001: Missing SELECT keyword
+// Output: ARX-01001 [Error] Missing SELECT keyword
 
 // Creating warnings
-throw ARX_WARNING(WARNINGS, ErrorCodes::WARN_DEPRECATED_SYNTAX,
+throw ARX_WARNING(ErrorCategory::WARNINGS,
+                  ErrorCodes::WARN_DEPRECATED_SYNTAX,
                   "Deprecated syntax used");
-// Output: W-ARX-800001: Deprecated syntax used
+// Output: ARX-80001 [Warning] Deprecated syntax used
 
 // Error with context
-auto error = ARX_ERROR(FROM_CLAUSE, ErrorCodes::FROM_FILE_NOT_FOUND,
+auto error = ARX_ERROR(ErrorCategory::FROM_CLAUSE,
+                       ErrorCodes::FROM_FILE_NOT_FOUND,
                        "File not found");
 error.setPath("/path/to/file.xml");
 error.setLine(42);
 throw error;
-// Output: E-ARX-020002: File not found (line 42) [/path/to/file.xml]
+// Output: ARX-02002 [Error] File not found (line 42) [/path/to/file.xml]
 ```
 
 ### Python Example
 
 ```python
 from ariane_xml_jupyter_kernel.error_codes import (
-    ArianeError, ErrorCategory, ErrorCodes, success, error, warning
+    ArianeError, ErrorCategory, ErrorCodes, ErrorSeverity,
+    success, error, warning, info
 )
 
 # Success case
-result = ArianeError.success("Query executed successfully")
+result = success("Query executed successfully")
 print(result.get_full_message())
-# Output: ARX-000000: Query executed successfully
+# Output: ARX-00000 [Success] Query executed successfully
 
 # Creating errors
 err = error(
-    ErrorCategory.SELECT_CLAUSE,
+    ErrorCategory.SELECT_CLAUSE.value,
     ErrorCodes.SELECT_MISSING_KEYWORD,
     "Missing SELECT keyword"
 )
 print(err.get_full_message())
-# Output: E-ARX-010001: Missing SELECT keyword
+# Output: ARX-01001 [Error] Missing SELECT keyword
+
+# Using convenience function with ErrorCategory enum
+err = error(
+    ErrorCategory.SELECT_CLAUSE,  # Automatically converts to .value
+    ErrorCodes.SELECT_MISSING_KEYWORD,
+    "Missing SELECT keyword"
+)
 
 # Creating warnings
 warn = warning(
@@ -159,7 +184,7 @@ warn = warning(
     "Deprecated syntax used"
 )
 print(warn.get_full_message())
-# Output: W-ARX-800001: Deprecated syntax used
+# Output: ARX-80001 [Warning] Deprecated syntax used
 
 # Error with context
 err = error(
@@ -170,7 +195,7 @@ err = error(
     line=42
 )
 print(err.get_full_message())
-# Output: E-ARX-020002: File not found (line 42) [/path/to/file.xml]
+# Output: ARX-02002 [Error] File not found (line 42) [/path/to/file.xml]
 
 # Get appropriate exit code
 exit_code = err.get_exit_code()  # Returns 1 for errors, 0 for warnings
@@ -181,23 +206,23 @@ exit_code = err.get_exit_code()  # Returns 1 for errors, 0 for warnings
 ```bash
 # Success
 $ ariane-xml -q "SELECT * FROM file.xml"
-ARX-000000: Success
+ARX-00000 [Success] Query executed successfully
 
 # Error
 $ ariane-xml -q "COUNT(*) FROM file.xml"
-E-ARX-010001: Missing SELECT keyword
+ARX-01001 [Error] Missing SELECT keyword
 💡 Suggestion: Start your query with SELECT followed by field names
 📖 Example: SELECT field1, field2 FROM file.xml
 
-# Warning (non-fatal)
-$ ariane-xml -q "SELECT * WHERE x='1' FROM file.xml"
-W-ARX-800001: Deprecated syntax used (WHERE before FROM)
-💡 Suggestion: Place WHERE clause after FROM clause
+# Warning (non-fatal, query continues)
+$ ariane-xml -q "SELECT field, field FROM file.xml"
+ARX-01004 [Warning] Duplicate field in SELECT list
+💡 Suggestion: Remove duplicate field names from your SELECT list
 [Results displayed here...]
 
 # File not found
 $ ariane-xml -q "SELECT * FROM missing.xml"
-E-ARX-020002: File not found [missing.xml]
+ARX-02002 [Error] File not found [missing.xml]
 💡 Suggestion: Check that the file path is correct and the file exists
 📖 Example: SELECT * FROM '/absolute/path/to/file.xml'
 ```
@@ -205,57 +230,68 @@ E-ARX-020002: File not found [missing.xml]
 ## Common Error Codes Quick Reference
 
 ### Success
-- `ARX-000000` - Success (normal completion)
+- `ARX-00000` - Success (normal completion)
 
-### SELECT Clause (01xxxx)
-- `ARX-010001` - Missing SELECT keyword
-- `ARX-010003` - COUNT(*) not supported (use COUNT(element))
-- `ARX-010011` - Expected field identifier, got number
+### General Errors (00xxx)
+- `ARX-00001` - Unexpected end of query
+- `ARX-00002` - Invalid character in query
+- `ARX-00003` - Unmatched parenthesis
+- `ARX-00004` - Unexpected token after query
+- `ARX-00005` - Missing required keyword
 
-### FROM Clause (02xxxx)
-- `ARX-020001` - Missing FROM keyword
-- `ARX-020002` - File not found
-- `ARX-020005` - Cannot open file for reading
+### SELECT Clause (01xxx)
+- `ARX-01001` - Missing SELECT keyword
+- `ARX-01003` - COUNT(*) not supported (use COUNT(element))
+- `ARX-01004` - Duplicate field in SELECT list (Warning)
+- `ARX-01011` - Expected field identifier, got number
 
-### WHERE Clause (03xxxx)
-- `ARX-030001` - Invalid WHERE condition
-- `ARX-030002` - Missing comparison operator
-- `ARX-030005` - Unmatched quotes in string literal
+### FROM Clause (02xxx)
+- `ARX-02001` - Missing FROM keyword
+- `ARX-02002` - File not found
+- `ARX-02005` - Cannot open file for reading
 
-### FOR Clause - DSN Mode (04xxxx)
-- `ARX-040001` - FOR clause requires DSN mode
-- `ARX-040002` - Invalid variable name in FOR clause
-- `ARX-040005` - Missing IN keyword in FOR clause
+### WHERE Clause (03xxx)
+- `ARX-03001` - Invalid WHERE condition
+- `ARX-03002` - Missing comparison operator
+- `ARX-03005` - Unmatched quotes in string literal
 
-### DSN Format (06xxxx)
-- `ARX-060001` - Invalid SIRET number format
-- `ARX-060002` - Invalid SIRET checksum
-- `ARX-060010` - Invalid NIR number format
-- `ARX-060011` - Invalid NIR checksum
-- `ARX-060020` - Invalid date format
+### FOR Clause - DSN Mode (04xxx)
+- `ARX-04001` - FOR clause requires DSN mode
+- `ARX-04002` - Invalid variable name in FOR clause
+- `ARX-04005` - Missing IN keyword in FOR clause
 
-### File Operations (10xxxx)
-- `ARX-100001` - File not found
-- `ARX-100002` - Permission denied
-- `ARX-100010` - File is empty
+### DSN Format (06xxx)
+- `ARX-06001` - Invalid SIRET number format
+- `ARX-06002` - Invalid SIRET checksum
+- `ARX-06010` - Invalid NIR number format
+- `ARX-06011` - Invalid NIR checksum
+- `ARX-06020` - Invalid date format
 
-### Kernel/CLI (20xxxx)
-- `ARX-200001` - Invalid kernel command
-- `ARX-200002` - Command execution timeout
-- `ARX-200004` - Binary not found
+### File Operations (10xxx)
+- `ARX-10001` - File not found
+- `ARX-10002` - Permission denied
+- `ARX-10010` - File is empty
 
-### Warnings (80xxxx)
-- `ARX-800001` - Deprecated syntax used
-- `ARX-800002` - Performance warning: large dataset
-- `ARX-800003` - Schema validation disabled
+### Kernel/CLI (20xxx)
+- `ARX-20001` - Invalid kernel command
+- `ARX-20002` - Command execution timeout
+- `ARX-20004` - Binary not found
+
+### Warnings (80xxx)
+- `ARX-80001` - Deprecated syntax used
+- `ARX-80002` - Performance warning: large dataset
+- `ARX-80003` - Schema validation disabled
+
+### Informational (85xxx)
+- `ARX-85001` - Query statistics
 
 ## Error Catalog
 
 The complete error catalog is maintained in `error_catalog.yaml`. Each error includes:
 
-- **Code**: Unique error identifier (ARX-CCNNNN)
+- **Code**: Unique error identifier (ARX-XXYYY)
 - **Category**: Error category name
-- **Severity**: SUCCESS, ERROR, WARNING, or INFO
+- **Severity**: Success, Error, Warning, or Info
 - **Message**: Short error message
 - **Description**: Detailed explanation
 - **Suggestion**: How to fix or avoid the error
@@ -264,9 +300,9 @@ The complete error catalog is maintained in `error_catalog.yaml`. Each error inc
 ### Example Catalog Entry
 
 ```yaml
-ARX-010003:
+ARX-01003:
   category: "SELECT Clause"
-  severity: ERROR
+  severity: Error
   message: "COUNT(*) is not supported"
   description: "Aggregate function COUNT(*) cannot be used. You must specify an element name"
   suggestion: "Use COUNT(element_name) instead of COUNT(*)"
@@ -275,46 +311,96 @@ ARX-010003:
 
 ## Benefits
 
-### 1. Searchability
-Users can search for specific error codes in documentation, forums, and support channels.
+### 1. Oracle-Like Simplicity
+Each error has one code. Severity is metadata, not identity. This matches Oracle's proven design:
+- Oracle: `ORA-00942` - table or view does not exist (it's an ERROR by definition)
+- Ariane-XML: `ARX-02002` - File not found (it's an ERROR by definition)
 
-### 2. Internationalization
-Error codes remain constant across different languages, making them ideal for:
-- Multi-language documentation
-- International support teams
-- Automated error tracking systems
+### 2. Fixed-Width Format
+All codes are exactly 10 characters: `ARX-01004`
+- Easy to parse
+- Clean in logs
+- Simple to search
 
-### 3. Categorization
-The category code (CC) immediately identifies the subsystem where the error occurred:
-- `ARX-01xxxx` → SELECT clause issue
-- `ARX-02xxxx` → FROM clause issue
-- `ARX-10xxxx` → File operation issue
+### 3. Searchability
+Users can search for specific error codes in documentation, forums, and support channels:
+```bash
+grep "ARX-02002" logfile
+grep "\[Error\]" logfile
+grep "\[Warning\]" logfile
+```
 
-### 4. Consistency
+### 4. Internationalization
+Error codes remain constant across different languages:
+- English: `ARX-01004 [Warning] Duplicate field in SELECT list`
+- French: `ARX-01004 [Avertissement] Champ dupliqué dans la liste SELECT`
+- The code `ARX-01004` never changes!
+
+### 5. Catalog-Driven Flexibility
+Severity is defined in the catalog, not the code:
+```yaml
+ARX-01004:
+  severity: Warning  # Can change this without touching any code!
+```
+
+If you later decide `ARX-01004` should be an Error instead, just update the catalog.
+
+### 6. Categorization
+The category code (XX) immediately identifies the subsystem:
+- `ARX-01xxx` → SELECT clause issue
+- `ARX-02xxx` → FROM clause issue
+- `ARX-10xxx` → File operation issue
+- `ARX-80xxx` → Warning
+
+### 7. Consistency
 Unified error handling across:
 - C++ backend
 - Python kernel
 - Jupyter notebook integration
 - CLI interface
 
-### 5. Debugging & Support
+### 8. Debugging & Support
 - Error codes make bug reports more precise
 - Support teams can quickly locate relevant documentation
 - Developers can track error patterns in logs
+- No ambiguity: one code = one specific problem
 
-### 6. Extensibility
+### 9. Extensibility
 The system supports:
 - 100 categories (00-99)
-- 10,000 errors per category
-- Total capacity: 1,000,000 unique error codes
+- 1,000 errors per category (000-999)
+- Total capacity: 100,000 unique error codes
+
+For reference:
+- Oracle: ~20,000 documented error codes
+- PostgreSQL: ~1,000 error codes
+- Ariane-XML capacity: 100,000 codes
+
+## Design Philosophy
+
+### Why Not Encode Severity in the Code?
+
+We considered formats like `ARX-E010001` (severity in code) but chose the simpler `ARX-01001` approach because:
+
+1. **Oracle's Proven Model**: Oracle doesn't encode severity in codes. `ORA-00001` is just `ORA-00001`, and it's always an error.
+
+2. **One Code = One Issue**: Each logical problem has ONE code, not multiple codes for different severities.
+   - Better: `ARX-01004` is defined as a Warning in the catalog
+   - Not: `ARX-E01004` vs `ARX-W01004` (two codes for same issue)
+
+3. **Flexibility**: Severity can be changed in the catalog without code changes.
+
+4. **Simpler**: Just a number with a prefix. No encoding/decoding logic needed.
+
+5. **Display Flexibility**: The display format can change (colors, languages, formatting) while the code remains constant.
 
 ## Migration Strategy
 
-### Phase 1: Foundation (Current)
-✅ Error code enum definitions (C++ and Python)
-✅ ArianeError base class implementations
-✅ Error catalog YAML structure
-✅ Documentation
+### Phase 1: Foundation (Current) ✅
+- Error code enum definitions (C++ and Python)
+- ArianeError base class implementations
+- Error catalog YAML structure
+- Documentation
 
 ### Phase 2: Core Errors (Next)
 - Replace parsing errors with error codes
@@ -352,23 +438,23 @@ Find the appropriate category for your error:
 **C++:** Add constant to `include/error/error_codes.h`
 ```cpp
 namespace ErrorCodes {
-    constexpr int SELECT_NEW_ERROR = 15;  // ARX-010015
+    constexpr int SELECT_NEW_ERROR = 15;  // Will be ARX-01015
 }
 ```
 
 **Python:** Add constant to `error_codes.py`
 ```python
 class ErrorCodes:
-    SELECT_NEW_ERROR = 15  # ARX-010015
+    SELECT_NEW_ERROR = 15  # Will be ARX-01015
 ```
 
 ### 3. Add to Error Catalog
 
 Update `error_catalog.yaml`:
 ```yaml
-ARX-010015:
+ARX-01015:
   category: "SELECT Clause"
-  severity: ERROR
+  severity: Error  # or Warning, Info
   message: "Your error message"
   description: "Detailed description of the error"
   suggestion: "How to fix it"
@@ -379,26 +465,30 @@ ARX-010015:
 
 **C++:**
 ```cpp
-throw ARX_ERROR(SELECT_CLAUSE, ErrorCodes::SELECT_NEW_ERROR,
+throw ARX_ERROR(ErrorCategory::SELECT_CLAUSE,
+                ErrorCodes::SELECT_NEW_ERROR,
                 "Your error message");
+// Output: ARX-01015 [Error] Your error message
 ```
 
 **Python:**
 ```python
-raise error(ErrorCategory.SELECT_CLAUSE, ErrorCodes.SELECT_NEW_ERROR,
+raise error(ErrorCategory.SELECT_CLAUSE,
+            ErrorCodes.SELECT_NEW_ERROR,
             "Your error message")
+# Output: ARX-01015 [Error] Your error message
 ```
 
-## Error Lookup Utility
+## Error Lookup Utility (Future)
 
 A future enhancement will provide a command-line utility to look up error details:
 
 ```bash
-$ ariane-xml error ARX-010003
+$ ariane-xml error ARX-01003
 
-Error Code: ARX-010003
+Code: ARX-01003
 Category: SELECT Clause
-Severity: ERROR
+Severity: Error
 Message: COUNT(*) is not supported
 
 Description:
@@ -409,20 +499,63 @@ Suggestion:
 
 Example:
   SELECT COUNT(employee) FROM file.xml
+
+Documentation:
+  https://docs.ariane-xml.org/errors/ARX-01003
+```
+
+## Log Examples
+
+### Standard Format
+```
+2025-11-21 10:15:23 ARX-00000 [Success] Query executed successfully
+2025-11-21 10:16:45 ARX-02002 [Error] File not found: data.xml
+2025-11-21 10:17:12 ARX-80001 [Warning] Deprecated syntax used
+2025-11-21 10:18:05 ARX-85001 [Info] Processed 1,245 records in 0.32s
+```
+
+### With Colors (Terminal)
+```
+✓ ARX-00000 [Success] Query executed successfully
+✗ ARX-02002 [Error] File not found: data.xml
+⚠ ARX-80001 [Warning] Deprecated syntax used
+ℹ ARX-85001 [Info] Processed 1,245 records in 0.32s
+```
+
+### Filtering Examples
+```bash
+# All errors
+grep "\[Error\]" logfile
+
+# All warnings
+grep "\[Warning\]" logfile
+
+# Specific error code
+grep "ARX-02002" logfile
+
+# All FROM clause errors (02xxx)
+grep "ARX-02" logfile
+
+# All file operation errors (10xxx)
+grep "ARX-10" logfile
 ```
 
 ## References
 
-- Error code definitions: `ariane-xml-c-kernel/include/error/error_codes.h`
+- C++ error codes: `ariane-xml-c-kernel/include/error/error_codes.h`
 - Python error codes: `ariane-xml-jupyter-kernel/ariane_xml_jupyter_kernel/error_codes.py`
 - Error catalog: `error_catalog.yaml`
-- Oracle error system inspiration: ORA-NNNNN format
+- Oracle error system: ORA-NNNNN format (inspiration)
 
 ## Version History
 
+- **v2.0** (2025-11-21) - Refactored to ARX-XXYYY format
+  - Simplified from ARX-CCNNNN (4-digit codes) to ARX-XXYYY (3-digit codes)
+  - Severity is now an attribute, not encoded in the code
+  - Matches Oracle's design philosophy
+  - 100,000 code capacity (100 categories × 1,000 codes)
+  - Fixed-width 10-character format
+
 - **v1.0** (2025-11-20) - Initial unified error numbering system
-  - ARX-CCNNNN format
-  - 100 categories, 10,000 codes per category
-  - Success code: ARX-000000
-  - Severity levels: Success, Error, Warning, Info
-  - Comprehensive error catalog
+  - ARX-CCNNNN format with severity prefix
+  - Foundation implementation
