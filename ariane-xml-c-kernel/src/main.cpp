@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
@@ -711,13 +712,33 @@ int main(int argc, char* argv[]) {
         // Single query mode: execute query from command line
         std::string query = argv[1];
 
-        // Initialize context and command handler
-        ariane_xml::AppContext context;
-        ariane_xml::CommandHandler commandHandler(context);
+        // Quick check: is this likely a command? (avoid double tokenization for SELECT queries)
+        // Commands start with: SET, SHOW, GENERATE, CHECK, DESCRIBE, TEMPLATE, COMPARE, PSEUDONYMISE, LIST
+        std::string queryUpper = query;
+        std::transform(queryUpper.begin(), queryUpper.end(), queryUpper.begin(), ::toupper);
 
-        // Check if it's a command (SET, SHOW, LIST, etc.)
-        if (!commandHandler.handleCommand(query)) {
-            // Not a command, execute as a query
+        bool isLikelyCommand = (queryUpper.find("SET ") == 0 ||
+                                queryUpper.find("SHOW") == 0 ||
+                                queryUpper.find("GENERATE") == 0 ||
+                                queryUpper.find("CHECK") == 0 ||
+                                queryUpper.find("DESCRIBE") == 0 ||
+                                queryUpper.find("TEMPLATE") == 0 ||
+                                queryUpper.find("COMPARE") == 0 ||
+                                queryUpper.find("PSEUDONYMISE") == 0 ||
+                                queryUpper.find("LIST") == 0);
+
+        if (isLikelyCommand) {
+            // Initialize context and command handler only for commands
+            ariane_xml::AppContext context;
+            ariane_xml::CommandHandler commandHandler(context);
+
+            // Check if it's a command
+            if (!commandHandler.handleCommand(query)) {
+                // Not actually a command, execute as a query
+                executeQuery(query);
+            }
+        } else {
+            // Regular query - execute directly without command handler overhead
             executeQuery(query);
         }
 
