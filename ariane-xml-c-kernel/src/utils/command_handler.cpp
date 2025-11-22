@@ -1,6 +1,7 @@
 #include "utils/command_handler.h"
 #include "utils/pseudonymisation_checker.h"
 #include "utils/secure_input.h"
+#include "utils/file_list_handler.h"
 #include "parser/lexer.h"
 #include "generator/xsd_parser.h"
 #include "generator/xml_generator.h"
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <iomanip>
 #include <regex>
+#include <variant>
 
 namespace ariane_xml {
 
@@ -70,6 +72,11 @@ bool CommandHandler::handleCommand(const std::string& input) {
     // Check if it's a PSEUDONYMISE command
     if (tokens[0].type == TokenType::PSEUDONYMISE) {
         return handlePseudonymiseCommand(input);
+    }
+
+    // Check if it's a LIST command
+    if (tokens[0].type == TokenType::LIST) {
+        return handleListCommand(input);
     }
 
     // Not a recognized command, treat as query
@@ -1106,6 +1113,70 @@ bool CommandHandler::handlePseudonymiseCommand(const std::string& input) {
     } else {
         std::cout << "\nPseudonymisation completed successfully\n";
     }
+
+    return true;
+}
+
+bool CommandHandler::handleListCommand(const std::string& input) {
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    // Expect: LIST <directory_path>
+    if (tokens.size() < 2) {
+        std::cerr << "Error: LIST command requires a directory path\n";
+        std::cerr << "Usage: LIST <directory_path>\n";
+        std::cerr << "Example: LIST /path/to/directory\n";
+        std::cerr << "         LIST ./data\n";
+        return true;
+    }
+
+    // Collect path from remaining tokens
+    std::string path;
+    for (size_t i = 1; i < tokens.size(); ++i) {
+        if (tokens[i].type == TokenType::END_OF_INPUT) {
+            break;
+        }
+        // Don't add spaces for path separators
+        if (!path.empty() &&
+            tokens[i].type != TokenType::DOT &&
+            tokens[i].type != TokenType::SLASH &&
+            tokens[i-1].type != TokenType::DOT &&
+            tokens[i-1].type != TokenType::SLASH) {
+            path += " ";
+        }
+        path += tokens[i].value;
+    }
+
+    // Remove quotes if present
+    if (!path.empty() && (path.front() == '"' || path.front() == '\'')) {
+        path = path.substr(1, path.length() - 2);
+    }
+
+    // Create FileListHandler
+    FileListHandler handler;
+
+    // List files in the directory
+    auto result = handler.listFiles(path);
+
+    // Check if result is an error
+    if (std::holds_alternative<ArianeError>(result)) {
+        auto error = std::get<ArianeError>(result);
+        std::cerr << error.getFullMessage() << "\n";
+        return true;
+    }
+
+    // Get the file list
+    auto files = std::get<std::vector<FileInfo>>(result);
+
+    // Check if no files found - this is ARX-00000 (normal completion)
+    if (files.empty()) {
+        std::cout << "No XML files found in directory: " << path << "\n";
+        std::cout << ARX_SUCCESS_MSG("No XML files found in directory").getCode() << " [Success]\n";
+        return true;
+    }
+
+    // Display the file list as a table
+    std::cout << FileListHandler::formatAsTable(files);
 
     return true;
 }

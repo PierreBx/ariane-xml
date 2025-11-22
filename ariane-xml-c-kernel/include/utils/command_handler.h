@@ -28,6 +28,7 @@ private:
     bool handleDsnTemplateCommand(const std::string& input);
     bool handleDsnCompareCommand(const std::string& input);
     bool handlePseudonymiseCommand(const std::string& input);
+    bool handleListCommand(const std::string& input);
 
     void setXsdPath(const std::string& path);
     void setDestPath(const std::string& path);

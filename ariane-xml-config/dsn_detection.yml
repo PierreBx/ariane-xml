@@ -1,0 +1,34 @@
+# DSN Detection Configuration
+# This file defines how ariane-xml identifies DSN files vs STANDARD files
+
+# Root elements that indicate a DSN file
+# If an XML file's root element matches any of these names, it will be classified as DSN
+dsn_root_elements:
+  - DSN_FCTU_HY      # DSN Flow Type HY (Hybrid)
+  - DSN_FCTU_M       # DSN Flow Type M (Monthly)
+  - DSN_FCTU         # DSN Flow Type (Generic)
+  - DSN_SITU         # DSN Situation Report
+  - DSN_ANNUL        # DSN Cancellation
+  - DSN_RETRAIT      # DSN Withdrawal
+
+# XPath to DSN version element (if needed for future use)
+# The version is typically found in element S10_G00_00_006
+version_xpath: "//S10_G00_00/S10_G00_00_006"
+
+# DSN version patterns for auto-detection
+# Format: P{major}{minor}V{version}
+# Examples: P25V01, P26V01, P26V02
+version_patterns:
+  - pattern: "^P25V\\d{2}$"
+    version: "P25"
+    description: "DSN Phase 25"
+
+  - pattern: "^P26V\\d{2}$"
+    version: "P26"
+    description: "DSN Phase 26"
+
+# XSD file mapping (for future validation)
+# These paths are relative to ariane-xml-config/xsd/
+xsd_mapping:
+  P25: "P25_schema.xsd"
+  P26: "P26_schema.xsd"
