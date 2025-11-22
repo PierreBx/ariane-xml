@@ -1131,25 +1131,41 @@ bool CommandHandler::handleListCommand(const std::string& input) {
     }
 
     // Collect path from remaining tokens
+    // For paths, we need to extract the raw text after "LIST" to handle
+    // paths with hyphens, spaces, and special characters correctly
     std::string path;
-    for (size_t i = 1; i < tokens.size(); ++i) {
-        if (tokens[i].type == TokenType::END_OF_INPUT) {
-            break;
+
+    // Find "LIST" keyword in the input and extract everything after it
+    size_t listPos = input.find("LIST");
+    if (listPos != std::string::npos) {
+        std::string afterList = input.substr(listPos + 4); // Skip "LIST"
+
+        // Trim leading whitespace
+        size_t firstNonSpace = afterList.find_first_not_of(" \t");
+        if (firstNonSpace != std::string::npos) {
+            path = afterList.substr(firstNonSpace);
+
+            // Trim trailing whitespace and semicolon
+            size_t lastNonSpace = path.find_last_not_of(" \t\n\r;");
+            if (lastNonSpace != std::string::npos) {
+                path = path.substr(0, lastNonSpace + 1);
+            }
+
+            // Remove quotes if present
+            if (!path.empty() && (path.front() == '"' || path.front() == '\'')) {
+                if (path.length() >= 2 && path.back() == path.front()) {
+                    path = path.substr(1, path.length() - 2);
+                }
+            }
         }
-        // Don't add spaces for path separators
-        if (!path.empty() &&
-            tokens[i].type != TokenType::DOT &&
-            tokens[i].type != TokenType::SLASH &&
-            tokens[i-1].type != TokenType::DOT &&
-            tokens[i-1].type != TokenType::SLASH) {
-            path += " ";
-        }
-        path += tokens[i].value;
     }
 
-    // Remove quotes if present
-    if (!path.empty() && (path.front() == '"' || path.front() == '\'')) {
-        path = path.substr(1, path.length() - 2);
+    if (path.empty()) {
+        std::cerr << "Error: LIST command requires a directory path\n";
+        std::cerr << "Usage: LIST <directory_path>\n";
+        std::cerr << "Example: LIST /path/to/directory\n";
+        std::cerr << "         LIST ./data\n";
+        return true;
     }
 
     // Create FileListHandler

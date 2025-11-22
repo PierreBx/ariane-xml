@@ -15,7 +15,8 @@ LIST <directory_path>
 - `<directory_path>` (required): Unix-like path to the directory containing XML files
   - Can be absolute: `/home/user/data`
   - Can be relative: `./data` or `../samples`
-  - Must be quoted if the path contains spaces: `"/path/with spaces"`
+  - Quotes are optional for most paths: `LIST ./ariane-xml-tests/data`
+  - Use quotes if the path contains spaces: `LIST "/path/with spaces"`
 
 ## Output
 
@@ -65,19 +66,25 @@ Once XSD files are available in `ariane-xml-config/xsd/`:
 ### List files in current directory
 
 ```sql
-LIST "."
+LIST .
 ```
 
 ### List files in absolute path
 
 ```sql
-LIST "/home/user/ariane-xml/ariane-xml-tests/data"
+LIST /home/user/ariane-xml/ariane-xml-tests/data
 ```
 
 ### List files in relative path
 
 ```sql
-LIST "./data"
+LIST ./data
+```
+
+### List files with path containing spaces (quotes required)
+
+```sql
+LIST "/path/with spaces/data"
 ```
 
 ### Example Output
@@ -99,7 +106,7 @@ The LIST command uses the unified ARX error numbering system:
 
 | Error Code | Severity | Description |
 |------------|----------|-------------|
-| `ARX-00000` | Success | Normal completion (no XML files found) |
+| `ARX-00000` | Success | Normal completion - directory accessed successfully, no XML files found (no errors) |
 | `ARX-20010` | Error | Directory not found |
 | `ARX-20011` | Error | Permission denied accessing directory |
 | `ARX-20012` | Error | Invalid directory path |
