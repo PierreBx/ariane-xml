@@ -552,6 +552,47 @@ ARX-20005:
   suggestion: "Check the command syntax and try again"
   example: "Use %help <command> for usage information"
 
+# LIST Command Errors
+ARX-20010:
+  category: "Kernel/CLI"
+  severity: Error
+  message: "Directory not found"
+  description: "The directory specified in LIST command does not exist"
+  suggestion: "Verify the directory path is correct and exists"
+  example: "LIST /path/to/directory"
+
+ARX-20011:
+  category: "Kernel/CLI"
+  severity: Error
+  message: "Permission denied accessing directory"
+  description: "Insufficient permissions to read the specified directory"
+  suggestion: "Check directory permissions or run with appropriate privileges"
+  example: "chmod +rx /path/to/directory"
+
+ARX-20012:
+  category: "Kernel/CLI"
+  severity: Error
+  message: "Invalid directory path"
+  description: "The path provided to LIST command is invalid"
+  suggestion: "Use a valid Unix-like directory path"
+  example: "LIST /home/user/data"
+
+ARX-20013:
+  category: "Kernel/CLI"
+  severity: Error
+  message: "Failed to read directory contents"
+  description: "Could not read the contents of the specified directory"
+  suggestion: "Verify the path is a directory and is accessible"
+  example: "ls -la /path/to/directory"
+
+ARX-20014:
+  category: "Kernel/CLI"
+  severity: Success
+  message: "No XML files found in directory"
+  description: "The directory exists but contains no XML files"
+  suggestion: "This is normal completion (ARX-00000 equivalent for LIST)"
+  example: "LIST /empty/directory"
+
 # ============================================================================
 # WARNINGS (80xxx)
 # ============================================================================

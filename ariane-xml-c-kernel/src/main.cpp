@@ -701,7 +701,16 @@ int main(int argc, char* argv[]) {
 
         // Single query mode: execute query from command line
         std::string query = argv[1];
-        executeQuery(query);
+
+        // Initialize context and command handler
+        ariane_xml::AppContext context;
+        ariane_xml::CommandHandler commandHandler(context);
+
+        // Check if it's a command (SET, SHOW, LIST, etc.)
+        if (!commandHandler.handleCommand(query)) {
+            // Not a command, execute as a query
+            executeQuery(query);
+        }
 
         return 0;
 

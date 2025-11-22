@@ -331,6 +331,13 @@ namespace ErrorCodes {
     constexpr int KERNEL_BINARY_NOT_FOUND = 4;
     constexpr int KERNEL_INVALID_ARGUMENTS = 5;
 
+    // LIST Command Errors (20xxx)
+    constexpr int LIST_DIRECTORY_NOT_FOUND = 10;
+    constexpr int LIST_PERMISSION_DENIED = 11;
+    constexpr int LIST_INVALID_PATH = 12;
+    constexpr int LIST_READ_DIRECTORY_FAILED = 13;
+    constexpr int LIST_NO_XML_FILES = 14;
+
     // Warnings (80xxx)
     constexpr int WARN_DEPRECATED_SYNTAX = 1;
     constexpr int WARN_PERFORMANCE_LARGE_DATASET = 2;
