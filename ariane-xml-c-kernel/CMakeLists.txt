@@ -52,6 +52,7 @@ set(SOURCES
     src/dsn/dsn_migration.cpp
     src/utils/pseudonymisation_checker.cpp
     src/utils/secure_input.cpp
+    src/utils/file_list_handler.cpp
 )
 
 # Create executable

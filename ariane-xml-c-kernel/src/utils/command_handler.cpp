@@ -1,6 +1,7 @@
 #include "utils/command_handler.h"
 #include "utils/pseudonymisation_checker.h"
 #include "utils/secure_input.h"
+#include "utils/file_list_handler.h"
 #include "parser/lexer.h"
 #include "generator/xsd_parser.h"
 #include "generator/xml_generator.h"
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <iomanip>
 #include <regex>
+#include <variant>
 
 namespace ariane_xml {
 
@@ -70,6 +72,11 @@ bool CommandHandler::handleCommand(const std::string& input) {
     // Check if it's a PSEUDONYMISE command
     if (tokens[0].type == TokenType::PSEUDONYMISE) {
         return handlePseudonymiseCommand(input);
+    }
+
+    // Check if it's a LIST command
+    if (tokens[0].type == TokenType::LIST) {
+        return handleListCommand(input);
     }
 
     // Not a recognized command, treat as query
@@ -1106,6 +1113,86 @@ bool CommandHandler::handlePseudonymiseCommand(const std::string& input) {
     } else {
         std::cout << "\nPseudonymisation completed successfully\n";
     }
+
+    return true;
+}
+
+bool CommandHandler::handleListCommand(const std::string& input) {
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    // Expect: LIST <directory_path>
+    if (tokens.size() < 2) {
+        std::cerr << "Error: LIST command requires a directory path\n";
+        std::cerr << "Usage: LIST <directory_path>\n";
+        std::cerr << "Example: LIST /path/to/directory\n";
+        std::cerr << "         LIST ./data\n";
+        return true;
+    }
+
+    // Collect path from remaining tokens
+    // For paths, we need to extract the raw text after "LIST" to handle
+    // paths with hyphens, spaces, and special characters correctly
+    std::string path;
+
+    // Find "LIST" keyword in the input and extract everything after it
+    size_t listPos = input.find("LIST");
+    if (listPos != std::string::npos) {
+        std::string afterList = input.substr(listPos + 4); // Skip "LIST"
+
+        // Trim leading whitespace
+        size_t firstNonSpace = afterList.find_first_not_of(" \t");
+        if (firstNonSpace != std::string::npos) {
+            path = afterList.substr(firstNonSpace);
+
+            // Trim trailing whitespace and semicolon
+            size_t lastNonSpace = path.find_last_not_of(" \t\n\r;");
+            if (lastNonSpace != std::string::npos) {
+                path = path.substr(0, lastNonSpace + 1);
+            }
+
+            // Remove quotes if present
+            if (!path.empty() && (path.front() == '"' || path.front() == '\'')) {
+                if (path.length() >= 2 && path.back() == path.front()) {
+                    path = path.substr(1, path.length() - 2);
+                }
+            }
+        }
+    }
+
+    if (path.empty()) {
+        std::cerr << "Error: LIST command requires a directory path\n";
+        std::cerr << "Usage: LIST <directory_path>\n";
+        std::cerr << "Example: LIST /path/to/directory\n";
+        std::cerr << "         LIST ./data\n";
+        return true;
+    }
+
+    // Create FileListHandler
+    FileListHandler handler;
+
+    // List files in the directory
+    auto result = handler.listFiles(path);
+
+    // Check if result is an error
+    if (std::holds_alternative<ArianeError>(result)) {
+        auto error = std::get<ArianeError>(result);
+        std::cerr << error.getFullMessage() << "\n";
+        return true;
+    }
+
+    // Get the file list
+    auto files = std::get<std::vector<FileInfo>>(result);
+
+    // Check if no files found - this is ARX-00000 (normal completion)
+    if (files.empty()) {
+        std::cout << "No XML files found in directory: " << path << "\n";
+        std::cout << ARX_SUCCESS_MSG("No XML files found in directory").getCode() << " [Success]\n";
+        return true;
+    }
+
+    // Display the file list as a table
+    std::cout << FileListHandler::formatAsTable(files);
 
     return true;
 }
