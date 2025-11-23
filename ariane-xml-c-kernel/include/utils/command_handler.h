@@ -22,7 +22,8 @@ private:
 
     bool handleSetCommand(const std::string& input);
     bool handleShowCommand(const std::string& input);
-    bool handleGenerateCommand(const std::string& input);
+    bool handleGenerateCommand(const std::string& input);  // DEPRECATED
+    bool handleCreateCommand(const std::string& input);
     bool handleCheckCommand(const std::string& input);
     bool handleDescribeCommand(const std::string& input);
     bool handleDsnTemplateCommand(const std::string& input);

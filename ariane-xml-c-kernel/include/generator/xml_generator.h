@@ -21,6 +21,12 @@ public:
         const std::string& prefix = "generated_"
     );
 
+    // Generate a single XML file
+    void generateFile(
+        const XsdSchema& schema,
+        const std::string& outputPath
+    );
+
 private:
     DataGenerator data_gen_;
 

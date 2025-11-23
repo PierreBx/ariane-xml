@@ -30,10 +30,15 @@ enum class TokenType {
     SHOW,
     XSD,
     DEST,
-    GENERATE,
+    GENERATE,    // DEPRECATED: Use CREATE instead
+    CREATE,
     XML,
     PREFIX,
     CHECK,
+    VERSION,
+    VALIDATE,
+    FILES,
+    SCHEMA,
     VERBOSE,
     MODE,
     STANDARD,
@@ -216,6 +221,30 @@ struct Query {
         }
         return false;
     }
+};
+
+// CREATE XML Query AST
+struct CreateXmlQuery {
+    // Output specification
+    bool is_batch = false;
+    std::string output_path;        // For single file
+    int file_count = 1;             // For batch
+    std::string directory;          // For batch
+    std::string prefix = "";        // For batch (default empty)
+
+    // Source specification
+    enum class SourceType {
+        XSD_SCHEMA,      // FROM SCHEMA
+        DSN_TYPE,        // FROM DSN
+        CONTEXT          // Use current SET XSD/MODE/DSN_VERSION
+    } source_type = SourceType::CONTEXT;
+
+    std::string xsd_path;           // For XSD_SCHEMA
+    std::string dsn_type;           // For DSN_TYPE (e.g., "S21")
+    std::string dsn_version;        // For DSN_TYPE (e.g., "P26V01")
+
+    // Options
+    bool validate = false;
 };
 
 } // namespace ariane_xml

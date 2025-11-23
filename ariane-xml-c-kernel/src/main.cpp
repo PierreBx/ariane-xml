@@ -720,6 +720,7 @@ int main(int argc, char* argv[]) {
         bool isLikelyCommand = (queryUpper.find("SET ") == 0 ||
                                 queryUpper.find("SHOW") == 0 ||
                                 queryUpper.find("GENERATE") == 0 ||
+                                queryUpper.find("CREATE") == 0 ||
                                 queryUpper.find("CHECK") == 0 ||
                                 queryUpper.find("DESCRIBE") == 0 ||
                                 queryUpper.find("TEMPLATE") == 0 ||

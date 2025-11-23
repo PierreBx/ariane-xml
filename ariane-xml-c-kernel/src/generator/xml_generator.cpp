@@ -45,6 +45,29 @@ void XmlGenerator::generateFiles(
     std::cout << "Successfully generated " << count << " XML files in " << destDir << std::endl;
 }
 
+void XmlGenerator::generateFile(
+    const XsdSchema& schema,
+    const std::string& outputPath
+) {
+    std::cout << "Generating XML file: " << outputPath << std::endl;
+
+    // Create parent directory if it doesn't exist
+    std::filesystem::path path(outputPath);
+    if (path.has_parent_path()) {
+        std::filesystem::create_directories(path.parent_path());
+    }
+
+    // Generate document
+    pugi::xml_document doc = generateDocument(schema);
+
+    // Save document
+    if (!doc.save_file(outputPath.c_str())) {
+        throw std::runtime_error("Failed to save file: " + outputPath);
+    }
+
+    std::cout << "Successfully generated: " << outputPath << std::endl;
+}
+
 pugi::xml_document XmlGenerator::generateDocument(const XsdSchema& schema) {
     pugi::xml_document doc;
 

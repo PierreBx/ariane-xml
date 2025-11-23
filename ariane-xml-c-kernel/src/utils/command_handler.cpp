@@ -44,9 +44,14 @@ bool CommandHandler::handleCommand(const std::string& input) {
         return handleShowCommand(input);
     }
 
-    // Check if it's a GENERATE command
+    // Check if it's a GENERATE command (DEPRECATED)
     if (tokens[0].type == TokenType::GENERATE) {
         return handleGenerateCommand(input);
+    }
+
+    // Check if it's a CREATE command
+    if (tokens[0].type == TokenType::CREATE) {
+        return handleCreateCommand(input);
     }
 
     // Check if it's a CHECK command
@@ -494,6 +499,11 @@ bool CommandHandler::validateAndCreateDestDirectory(const std::string& path) {
 }
 
 bool CommandHandler::handleGenerateCommand(const std::string& input) {
+    // Display deprecation warning
+    std::cerr << "\n⚠️  WARNING: GENERATE command is DEPRECATED and will be removed in a future version.\n";
+    std::cerr << "   Please use CREATE instead.\n";
+    std::cerr << "   Example: CREATE XML 10 FILES IN '/output/' PREFIX 'test_'\n\n";
+
     Lexer lexer(input);
     auto tokens = lexer.tokenize();
 
@@ -565,6 +575,260 @@ bool CommandHandler::handleGenerateCommand(const std::string& input) {
 
     } catch (const std::exception& e) {
         std::cerr << "Error generating XML files: " << e.what() << "\n";
+        return true;
+    }
+
+    return true;
+}
+
+bool CommandHandler::handleCreateCommand(const std::string& input) {
+    Lexer lexer(input);
+    auto tokens = lexer.tokenize();
+
+    // Expect: CREATE XML ...
+    if (tokens.size() < 2 || tokens[1].type != TokenType::XML) {
+        std::cerr << "Error: CREATE command requires XML keyword\n";
+        std::cerr << "Usage: CREATE XML <output_path> [FROM SCHEMA <xsd_path>] [VALIDATE]\n";
+        std::cerr << "       CREATE XML <output_path> FROM DSN <type> VERSION <version> [VALIDATE]\n";
+        std::cerr << "       CREATE XML <count> FILES IN <directory> [PREFIX <prefix>] [FROM SCHEMA <xsd_path>] [VALIDATE]\n";
+        std::cerr << "       CREATE XML <count> FILES IN <directory> [PREFIX <prefix>] FROM DSN <type> VERSION <version> [VALIDATE]\n";
+        return true;
+    }
+
+    size_t idx = 2;  // Current token index
+
+    // Parse CREATE XML query parameters
+    bool is_batch = false;
+    int file_count = 1;
+    std::string output_path;
+    std::string directory;
+    std::string prefix = "";
+
+    // Source specification
+    bool has_source = false;
+    bool is_dsn_source = false;
+    std::string xsd_path;
+    std::string dsn_type;
+    std::string dsn_version;
+
+    bool validate = false;
+
+    // Check if it's batch creation (number after XML)
+    if (idx < tokens.size() && tokens[idx].type == TokenType::NUMBER) {
+        is_batch = true;
+        try {
+            file_count = std::stoi(tokens[idx].value);
+        } catch (...) {
+            std::cerr << "Error: Invalid count value\n";
+            return true;
+        }
+        idx++;
+
+        if (file_count <= 0) {
+            std::cerr << "Error: Count must be positive\n";
+            return true;
+        }
+
+        // Expect FILES keyword
+        if (idx >= tokens.size() || tokens[idx].type != TokenType::FILES) {
+            std::cerr << "Error: Expected FILES after count\n";
+            return true;
+        }
+        idx++;
+
+        // Expect IN keyword
+        if (idx >= tokens.size() || tokens[idx].type != TokenType::IN) {
+            std::cerr << "Error: Expected IN after FILES\n";
+            return true;
+        }
+        idx++;
+
+        // Get directory path
+        if (idx >= tokens.size() || tokens[idx].type != TokenType::STRING_LITERAL) {
+            std::cerr << "Error: Expected directory path after IN\n";
+            return true;
+        }
+        directory = tokens[idx].value;
+        idx++;
+
+        // Check for optional PREFIX
+        if (idx < tokens.size() && tokens[idx].type == TokenType::PREFIX) {
+            idx++;
+            if (idx >= tokens.size() || (tokens[idx].type != TokenType::STRING_LITERAL && tokens[idx].type != TokenType::IDENTIFIER)) {
+                std::cerr << "Error: Expected prefix value after PREFIX\n";
+                return true;
+            }
+            prefix = tokens[idx].value;
+            idx++;
+        }
+    } else {
+        // Single file creation - get output path
+        if (idx >= tokens.size() || tokens[idx].type != TokenType::STRING_LITERAL) {
+            std::cerr << "Error: Expected output path after CREATE XML\n";
+            return true;
+        }
+        output_path = tokens[idx].value;
+        idx++;
+    }
+
+    // Check for optional FROM clause
+    if (idx < tokens.size() && tokens[idx].type == TokenType::FROM) {
+        has_source = true;
+        idx++;
+
+        if (idx >= tokens.size()) {
+            std::cerr << "Error: Expected SCHEMA or DSN after FROM\n";
+            return true;
+        }
+
+        if (tokens[idx].type == TokenType::SCHEMA) {
+            // FROM SCHEMA <xsd_path>
+            idx++;
+            if (idx >= tokens.size() || tokens[idx].type != TokenType::STRING_LITERAL) {
+                std::cerr << "Error: Expected XSD path after SCHEMA\n";
+                return true;
+            }
+            xsd_path = tokens[idx].value;
+            idx++;
+        } else if (tokens[idx].type == TokenType::DSN) {
+            // FROM DSN <type> VERSION <version>
+            is_dsn_source = true;
+            idx++;
+
+            if (idx >= tokens.size() || tokens[idx].type != TokenType::STRING_LITERAL) {
+                std::cerr << "Error: Expected DSN type after DSN\n";
+                return true;
+            }
+            dsn_type = tokens[idx].value;
+            idx++;
+
+            if (idx >= tokens.size() || tokens[idx].type != TokenType::VERSION) {
+                std::cerr << "Error: Expected VERSION after DSN type\n";
+                return true;
+            }
+            idx++;
+
+            if (idx >= tokens.size() || tokens[idx].type != TokenType::STRING_LITERAL) {
+                std::cerr << "Error: Expected version string after VERSION\n";
+                return true;
+            }
+            dsn_version = tokens[idx].value;
+            idx++;
+        } else {
+            std::cerr << "Error: Expected SCHEMA or DSN after FROM\n";
+            return true;
+        }
+    }
+
+    // Check for optional VALIDATE flag
+    if (idx < tokens.size() && tokens[idx].type == TokenType::VALIDATE) {
+        validate = true;
+        idx++;
+    }
+
+    // Now execute the CREATE command
+    try {
+        // Determine XSD path
+        std::string effective_xsd_path;
+
+        if (has_source) {
+            if (is_dsn_source) {
+                // Resolve DSN type and version to XSD path
+                // For now, use a simple resolution (this should match DSN schema directory structure)
+                std::string base_path = "/home/user/ariane-xml/ariane-xml-schemas/";
+                std::string version_prefix = dsn_version.substr(0, 3); // "P26" from "P26V01"
+
+                // Map DSN type to XSD file
+                // TODO: This is simplified - actual implementation should use DSN schema resolver
+                effective_xsd_path = base_path + "xsd_" + version_prefix + "/";
+
+                // Find the main DSN XSD file
+                namespace fs = std::filesystem;
+                if (fs::exists(effective_xsd_path)) {
+                    // Look for the main XSD file (usually DSXXXXXX.xsd or similar)
+                    for (const auto& entry : fs::directory_iterator(effective_xsd_path)) {
+                        if (entry.path().extension() == ".xsd") {
+                            effective_xsd_path = entry.path().string();
+                            break;
+                        }
+                    }
+                } else {
+                    std::cerr << "Error: DSN schema directory not found for version " << dsn_version << "\n";
+                    return true;
+                }
+            } else {
+                effective_xsd_path = xsd_path;
+            }
+        } else {
+            // Use context
+            if (!context_.hasXsdPath()) {
+                std::cerr << "Error: No XSD schema specified. Use FROM SCHEMA or SET XSD first\n";
+                return true;
+            }
+            effective_xsd_path = context_.getXsdPath().value();
+        }
+
+        // Parse XSD schema
+        std::cout << "Parsing XSD schema: " << effective_xsd_path << "\n";
+        auto schema = XsdParser::parse(effective_xsd_path);
+
+        // Generate XML file(s)
+        XmlGenerator generator;
+
+        if (is_batch) {
+            // Create directory if it doesn't exist
+            if (!std::filesystem::exists(directory)) {
+                std::cout << "Creating directory: " << directory << "\n";
+                std::filesystem::create_directories(directory);
+            }
+
+            generator.generateFiles(*schema, file_count, directory, prefix);
+        } else {
+            generator.generateFile(*schema, output_path);
+        }
+
+        // Validate if requested
+        if (validate) {
+            std::cout << "\nValidating generated file(s)...\n";
+            XmlValidator validator;
+
+            std::vector<std::string> files_to_validate;
+            if (is_batch) {
+                // Collect generated files
+                for (int i = 1; i <= file_count; ++i) {
+                    std::ostringstream filename;
+                    filename << directory << "/"
+                             << prefix
+                             << std::setfill('0') << std::setw(4) << i
+                             << ".xml";
+                    files_to_validate.push_back(filename.str());
+                }
+            } else {
+                files_to_validate.push_back(output_path);
+            }
+
+            int valid_count = 0;
+            int invalid_count = 0;
+
+            for (const auto& file : files_to_validate) {
+                auto result = validator.validateFile(file, effective_xsd_path);
+                if (result.isValid) {
+                    valid_count++;
+                } else {
+                    invalid_count++;
+                    std::cerr << "Validation failed for " << file << ":\n";
+                    for (const auto& error : result.errors) {
+                        std::cerr << "  - " << error.message << "\n";
+                    }
+                }
+            }
+
+            std::cout << "Validation complete: " << valid_count << " valid, "
+                      << invalid_count << " invalid\n";
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error creating XML file(s): " << e.what() << "\n";
         return true;
     }
 

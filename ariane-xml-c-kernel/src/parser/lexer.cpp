@@ -191,9 +191,14 @@ TokenType Lexer::identifyKeyword(const std::string& word) const {
     if (upper == "XSD") return TokenType::XSD;
     if (upper == "DEST") return TokenType::DEST;
     if (upper == "GENERATE") return TokenType::GENERATE;
+    if (upper == "CREATE") return TokenType::CREATE;
     if (upper == "XML") return TokenType::XML;
     if (upper == "PREFIX") return TokenType::PREFIX;
     if (upper == "CHECK") return TokenType::CHECK;
+    if (upper == "VERSION") return TokenType::VERSION;
+    if (upper == "VALIDATE") return TokenType::VALIDATE;
+    if (upper == "FILES") return TokenType::FILES;
+    if (upper == "SCHEMA") return TokenType::SCHEMA;
     if (upper == "VERBOSE") return TokenType::VERBOSE;
     if (upper == "MODE") return TokenType::MODE;
     if (upper == "STANDARD") return TokenType::STANDARD;
